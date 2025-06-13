@@ -1,16 +1,198 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar, Users, BookOpen, MapPin, Clock, Star } from 'lucide-react';
 
 const Index = () => {
+  const featuredEvents = [
+    {
+      id: 1,
+      title: "Chicago Stepping Championship",
+      date: "December 15, 2024",
+      time: "7:00 PM",
+      location: "Navy Pier Grand Ballroom",
+      price: "$45",
+      image: "/placeholder.svg",
+      featured: true
+    },
+    {
+      id: 2,
+      title: "Beginner's Stepping Workshop",
+      date: "December 20, 2024",
+      time: "6:30 PM",
+      location: "South Side Cultural Center",
+      price: "$25",
+      image: "/placeholder.svg"
+    },
+    {
+      id: 3,
+      title: "New Year's Eve Stepping Gala",
+      date: "December 31, 2024",
+      time: "8:00 PM",
+      location: "Palmer House Hilton",
+      price: "$85",
+      image: "/placeholder.svg"
+    }
+  ];
+
+  const communityHighlights = [
+    {
+      title: "DJ Services",
+      description: "Professional DJs specializing in stepping music",
+      count: "15+ Services"
+    },
+    {
+      title: "Dance Apparel",
+      description: "Stepping shoes, outfits, and accessories",
+      count: "25+ Stores"
+    },
+    {
+      title: "Event Venues",
+      description: "Perfect spaces for stepping events and parties",
+      count: "30+ Venues"
+    }
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-foreground">SteppersLife.com</h1>
-        <p className="text-xl text-muted-foreground">The Leading Platform for the U.S. Stepping Community</p>
-        <div className="mt-8">
-          <p className="text-base text-foreground">Welcome to your Stepping community hub!</p>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative bg-stepping-gradient text-white py-20 px-4">
+        <div className="container mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Welcome to SteppersLife
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            Chicago's premier platform for the stepping community. Discover events, connect with dancers, and immerse yourself in the culture.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary" asChild>
+              <Link to="/events">Find Events</Link>
+            </Button>
+            <Button size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-stepping-purple" asChild>
+              <Link to="/classes">Learn to Step</Link>
+            </Button>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Featured Events */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Events</h2>
+            <p className="text-xl text-muted-foreground">Don't miss these upcoming stepping events</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {featuredEvents.map((event) => (
+              <Card key={event.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="aspect-video bg-muted rounded-md mb-4"></div>
+                  <CardTitle className="text-lg">{event.title}</CardTitle>
+                  <CardDescription className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {event.date}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      {event.time}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      {event.location}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-semibold text-stepping-purple">{event.price}</span>
+                    <Button size="sm" asChild>
+                      <Link to={`/events/${event.id}`}>View Details</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/events">View All Events</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Community Highlights */}
+      <section className="py-16 px-4 bg-muted/30">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Community Services</h2>
+            <p className="text-xl text-muted-foreground">Discover local businesses and services that support our stepping community</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            {communityHighlights.map((highlight, index) => (
+              <Card key={index} className="text-center">
+                <CardHeader>
+                  <div className="w-16 h-16 bg-stepping-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
+                  <CardTitle className="text-xl">{highlight.title}</CardTitle>
+                  <CardDescription>{highlight.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-stepping-purple">{highlight.count}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/community">Explore Community</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Magazine Preview */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Latest from the Magazine</h2>
+            <p className="text-xl text-muted-foreground">Stay updated with stepping culture, tips, and community stories</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map((article) => (
+              <Card key={article} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="aspect-video bg-muted rounded-md mb-4"></div>
+                  <CardTitle className="text-lg">Mastering the Basic Step: A Complete Guide</CardTitle>
+                  <CardDescription>Learn the fundamentals of Chicago stepping with our comprehensive guide...</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                    <Star className="h-4 w-4" />
+                    Featured Article
+                  </div>
+                  <Button variant="outline" size="sm">Read More</Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/magazine">Read Magazine</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

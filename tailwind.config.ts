@@ -1,4 +1,5 @@
-import type { Config } from "tailwindcss";
+
+import type { Config } from "tailwind.config";
 
 export default {
 	darkMode: ["class"],
@@ -52,16 +53,17 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+				// SteppersLife brand colors
+				stepping: {
+					purple: '#8B5CF6',
+					blue: '#3B82F6',
+					'purple-dark': '#7C3AED',
+					'blue-dark': '#2563EB',
 				}
+			},
+			backgroundImage: {
+				'stepping-gradient': 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
+				'stepping-gradient-dark': 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
