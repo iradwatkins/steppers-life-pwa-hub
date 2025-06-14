@@ -1,73 +1,28 @@
-# Welcome to your Lovable project
+# The BMAD-Method 3.1 (Breakthrough Method of Agile (ai-driven) Development)
 
-## Project info
+Old Versions:
+[Prior Version 1](https://github.com/bmadcode/BMAD-METHOD/tree/V1)
+[Prior Version 2](https://github.com/bmadcode/BMAD-METHOD/tree/V2)
 
-**URL**: https://lovable.dev/projects/d445db4c-0173-422f-9cc1-9c380a84a02c
+## Do This First, and all will make sense
 
-## How can I edit this code?
+There are lots of docs here, but I HIGHLY suggest you just try the Web Agent - it takes just a few minutes to set up in Gemini - and you can use the BMad Agent to explain how this method works, how to set up in the IDE, how to set up in the Web, what should be done in the web or ide (although you can choose your own path also!) - all just by talking to the bmad agent!
 
-There are several ways of editing your application.
+### Web Quickstart Project Setup (Recommended)
 
-**Use Lovable**
+Orchestrator Uber BMad Agent that does it all - already pre-compiled in the `web-build-sample` folder.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d445db4c-0173-422f-9cc1-9c380a84a02c) and start prompting.
+- The contents of [Agent Prompt Sample](web-build-sample/agent-prompt.txt) text get pasted into the Gemini Gem, or ChatPGT customGPT 'Instructions' field.
+- The remaining files in that same folder folder just need to be attached as shown in the screenshot below. Give it a name (such as BMad Agent) and save it, and you now have the BMad Agent available to help you brainstorm, research, plan, execute on your vision, or understand how this all even works!
+- Once its running, start with typing `/help`, and then type option `2` when it presents 3 options to learn about the method!
 
-Changes made via Lovable will be committed automatically to this repo.
+![image info](docs/images/gem-setup.png)
 
-**Use your preferred IDE**
+[More Documentation, Explanations, and IDE Specifics](docs/readme.md) available here!
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## End Matter
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Interested in improving the BMAD Method? See the [contributing guidelines](docs/CONTRIBUTING.md).
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/d445db4c-0173-422f-9cc1-9c380a84a02c) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Thank you and enjoy - BMad!
+[License](docs/LICENSE)
