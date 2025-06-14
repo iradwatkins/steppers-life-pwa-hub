@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
-import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock, Smartphone, Building } = 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock, Smartphone, Building } from 'lucide-react';
 
 const paymentFormSchema = z.object({
   paymentMethod: z.enum(['card', 'paypal', 'apple_pay', 'google_pay']),
