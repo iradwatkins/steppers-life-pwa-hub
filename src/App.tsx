@@ -18,6 +18,7 @@ import Register from "./pages/auth/Register";
 import AuthCallback from "./pages/auth/AuthCallback";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Profile from "./pages/Profile";
+import Dashboard from "./pages/Dashboard";
 import EventDetail from "./pages/EventDetail";
 import ClassDetail from "./pages/ClassDetail";
 import NotFound from "./pages/NotFound";
@@ -43,6 +44,7 @@ const App = () => (
                 <Route path="/community" element={<Community />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
