@@ -101,8 +101,6 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <h3 className="text-lg font-semibold text-center">Sign In</h3>
-          
           {/* Email Field */}
           <div className="space-y-2">
             <Label htmlFor="email">Email Address</Label>
@@ -126,6 +124,15 @@ const Login = () => {
             {isMagicLinkLoading ? 'Sending Magic Link...' : 'Send Magic Link'}
           </Button>
 
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center text-sm uppercase">
+              <span className="bg-background px-2 text-muted-foreground">OR SIGN IN WITH</span>
+            </div>
+          </div>
+
           {/* Google Login */}
           <Button 
             variant="outline" 
@@ -140,37 +147,6 @@ const Login = () => {
             </svg>
             Continue with Google
           </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator />
-            </div>
-            <div className="relative flex justify-center text-sm uppercase">
-              <span className="bg-background px-2 text-muted-foreground">OR SIGN IN WITH PASSWORD</span>
-            </div>
-          </div>
-
-          {/* Password Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-stepping-gradient"
-              disabled={isLoading || !email}
-            >
-              {isLoading ? 'Signing In...' : 'Sign In'}
-            </Button>
-          </form>
 
           <div className="text-center text-sm text-muted-foreground">
             Don't have an account?{' '}
