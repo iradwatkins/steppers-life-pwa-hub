@@ -111,7 +111,7 @@ const Index = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-semibold text-stepping-purple">{event.price}</span>
                     <Button size="sm" asChild>
-                      <Link to={`/events/${event.id}`}>View Details</Link>
+                      <Link to={`/events/${event.id}/tickets`}>Buy Tickets</Link>
                     </Button>
                   </div>
                 </CardContent>
