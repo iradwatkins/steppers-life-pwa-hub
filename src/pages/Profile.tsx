@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { User, Mail, Phone, MapPin, Heart, Shield, Bell, Download } from 'lucide-react';
 import ChangePasswordDialog from '@/components/security/ChangePasswordDialog';
 import DeleteAccountDialog from '@/components/security/DeleteAccountDialog';
+import NotificationPreferences from '@/components/notifications/NotificationPreferences';
 
 const Profile = () => {
   const { user, loading, updateProfile } = useAuth();
@@ -34,11 +35,25 @@ const Profile = () => {
   });
 
   const [preferences, setPreferences] = useState({
+    // Email Notifications
     emailNotifications: true,
-    smsNotifications: false,
-    marketingEmails: true,
     eventReminders: true,
-    weeklyNewsletter: false
+    newEventAlerts: true,
+    marketingEmails: true,
+    weeklyNewsletter: false,
+    instructorUpdates: true,
+    communityDigest: false,
+    emailFrequency: 'immediate',
+    
+    // Push Notifications  
+    pushEventReminders: true,
+    pushLastMinute: false,
+    pushBookingConfirmations: true,
+    
+    // SMS Notifications
+    smsNotifications: false,
+    smsEventReminders: false,
+    smsBookingUpdates: false
   });
 
   const [eventInterests, setEventInterests] = useState({
@@ -83,7 +98,7 @@ const Profile = () => {
     setProfileData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePreferenceChange = (field: string, value: boolean) => {
+  const handlePreferenceChange = (field: string, value: boolean | string) => {
     setPreferences(prev => ({ ...prev, [field]: value }));
   };
 
@@ -335,18 +350,18 @@ const Profile = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {Object.entries(preferences).map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <Label htmlFor={key} className="text-sm">
-                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                    </Label>
-                    <Switch
-                      id={key}
-                      checked={value}
-                      onCheckedChange={(checked) => handlePreferenceChange(key, checked)}
-                    />
-                  </div>
-                ))}
+                <div className="text-center p-6 border-2 border-dashed rounded-lg">
+                  <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2">Comprehensive Notification Settings</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Manage all your email, SMS, and push notification preferences in one place
+                  </p>
+                  <Button asChild className="bg-stepping-gradient">
+                    <Link to="/notifications">
+                      Manage Notifications
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

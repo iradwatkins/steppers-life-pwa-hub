@@ -34,6 +34,13 @@ This document captures learnings, patterns, and solutions discovered during Step
   - Integration with Profile page using dialog state management
   - Proper error handling and user feedback throughout security flows
   - Account deletion limitations documented (requires server-side implementation for Supabase)
+- **Notification Management**: Comprehensive notification preferences system implemented
+  - Dedicated NotificationPreferences component with granular controls
+  - Separate Notifications page for focused notification management
+  - Multi-channel support: Email, SMS, and Push notifications
+  - GDPR/CAN-SPAM compliance features (unsubscribe, frequency control)
+  - Integration with Profile page via navigation link
+  - User metadata persistence for notification preferences
 
 ### PWA Configuration
 - **vite-plugin-pwa Setup**: [To be documented during implementation]
