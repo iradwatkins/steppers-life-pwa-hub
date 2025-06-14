@@ -60,6 +60,11 @@ const Header = () => {
             <Link to="/about" className="text-foreground/80 hover:text-foreground transition-colors">
               About
             </Link>
+            {user && (
+              <Button asChild className="bg-stepping-gradient">
+                <Link to="/create-event">Post Event</Link>
+              </Button>
+            )}
           </nav>
 
           {/* Search Bar */}
@@ -166,6 +171,14 @@ const Header = () => {
               >
                 About
               </Link>
+              
+              {user && (
+                <Button asChild className="bg-stepping-gradient w-fit">
+                  <Link to="/create-event" onClick={() => setIsMenuOpen(false)}>
+                    Post Event
+                  </Link>
+                </Button>
+              )}
               
               {/* Mobile Search */}
               <form onSubmit={handleSearch} className="flex items-center space-x-2 pt-2">

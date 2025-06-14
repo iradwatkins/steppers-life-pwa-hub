@@ -1,0 +1,669 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { 
+  Calendar, 
+  MapPin, 
+  Link as LinkIcon, 
+  Upload, 
+  X, 
+  Plus,
+  Save,
+  Eye,
+  Clock,
+  Users,
+  Tag,
+  Image as ImageIcon
+} from 'lucide-react';
+
+const eventFormSchema = z.object({
+  title: z.string().min(5, 'Event title must be at least 5 characters'),
+  description: z.string().min(20, 'Description must be at least 20 characters'),
+  category: z.string().min(1, 'Please select a category'),
+  startDate: z.string().min(1, 'Start date is required'),
+  startTime: z.string().min(1, 'Start time is required'),
+  endDate: z.string().optional(),
+  endTime: z.string().optional(),
+  isMultiDay: z.boolean().default(false),
+  venue: z.string().min(1, 'Venue is required'),
+  address: z.string().min(10, 'Complete address is required'),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
+  zipCode: z.string().min(5, 'ZIP code is required'),
+  isOnlineEvent: z.boolean().default(false),
+  onlineEventLink: z.string().optional(),
+  capacity: z.string().min(1, 'Capacity is required'),
+  ticketPrice: z.string().min(1, 'Ticket price is required'),
+});
+
+type EventFormData = z.infer<typeof eventFormSchema>;
+
+const CreateEventPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [additionalDates, setAdditionalDates] = useState<Array<{startDate: string; startTime: string; endDate?: string; endTime?: string}>>([]);
+
+  // Mock event categories - in real app would come from API
+  const eventCategories = [
+    'Chicago Stepping Classes',
+    'Chicago Stepping Social',
+    'Chicago Stepping Competition', 
+    'Workshop - Basic Stepping',
+    'Workshop - Intermediate Stepping',
+    'Workshop - Advanced Stepping',
+    'Private Event - Corporate',
+    'Private Event - Wedding',
+    'Community Event',
+    'Fundraiser Event',
+    'Youth Stepping Program',
+    'Senior Stepping Program'
+  ];
+
+  const form = useForm<EventFormData>({
+    resolver: zodResolver(eventFormSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      category: '',
+      startDate: '',
+      startTime: '',
+      endDate: '',
+      endTime: '',
+      isMultiDay: false,
+      venue: '',
+      address: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      isOnlineEvent: false,
+      onlineEventLink: '',
+      capacity: '',
+      ticketPrice: '',
+    }
+  });
+
+  const isMultiDay = form.watch('isMultiDay');
+  const isOnlineEvent = form.watch('isOnlineEvent');
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error(`${file.name} is too large. Maximum size is 5MB.`);
+        return false;
+      }
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not a valid image file.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (uploadedImages.length + validFiles.length > 3) {
+      toast.error('You can upload a maximum of 3 images');
+      return;
+    }
+
+    setUploadedImages(prev => [...prev, ...validFiles]);
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addAdditionalDate = () => {
+    setAdditionalDates(prev => [...prev, { startDate: '', startTime: '', endDate: '', endTime: '' }]);
+  };
+
+  const removeAdditionalDate = (index: number) => {
+    setAdditionalDates(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateAdditionalDate = (index: number, field: string, value: string) => {
+    setAdditionalDates(prev => prev.map((date, i) => 
+      i === index ? { ...date, [field]: value } : date
+    ));
+  };
+
+  const onSubmit = async (data: EventFormData) => {
+    setIsSubmitting(true);
+    try {
+      // Mock API call - in real app would save to backend
+      console.log('Event Data:', data);
+      console.log('Images:', uploadedImages);
+      console.log('Additional Dates:', additionalDates);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast.success('Event created successfully!');
+      navigate('/dashboard');
+    } catch (error) {
+      toast.error('Failed to create event. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle>Access Restricted</CardTitle>
+            <CardDescription>You must be logged in to create events.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate('/login')} className="w-full">
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen py-8 px-4 bg-muted/30">
+      <div className="container mx-auto max-w-4xl">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Create New Event</h1>
+          <p className="text-muted-foreground">Set up your stepping event with all the essential details</p>
+        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Event Details Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Tag className="h-5 w-5" />
+                  Event Details
+                </CardTitle>
+                <CardDescription>
+                  Basic information about your event
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Title *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Chicago Stepping Championship 2024" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Description *</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe your event in detail. Include what attendees can expect, dress code, special guests, etc."
+                          className="min-h-[120px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Category *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select event category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {eventCategories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Date & Time Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Date & Time
+                </CardTitle>
+                <CardDescription>
+                  When will your event take place?
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center space-x-2">
+                  <FormField
+                    control={form.control}
+                    name="isMultiDay"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Multi-day Event</FormLabel>
+                          <div className="text-sm text-muted-foreground">
+                            This event spans multiple days
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date *</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="startTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Time *</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {isMultiDay && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="endDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="endTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Time</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
+                {isMultiDay && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-medium">Additional Dates</Label>
+                      <Button type="button" variant="outline" size="sm" onClick={addAdditionalDate}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Date
+                      </Button>
+                    </div>
+                    {additionalDates.map((date, index) => (
+                      <div key={index} className="grid grid-cols-5 gap-4 items-end">
+                        <div>
+                          <Label>Start Date</Label>
+                          <Input 
+                            type="date" 
+                            value={date.startDate}
+                            onChange={(e) => updateAdditionalDate(index, 'startDate', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label>Start Time</Label>
+                          <Input 
+                            type="time" 
+                            value={date.startTime}
+                            onChange={(e) => updateAdditionalDate(index, 'startTime', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label>End Date</Label>
+                          <Input 
+                            type="date" 
+                            value={date.endDate}
+                            onChange={(e) => updateAdditionalDate(index, 'endDate', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label>End Time</Label>
+                          <Input 
+                            type="time" 
+                            value={date.endTime}
+                            onChange={(e) => updateAdditionalDate(index, 'endTime', e.target.value)}
+                          />
+                        </div>
+                        <Button type="button" variant="outline" size="sm" onClick={() => removeAdditionalDate(index)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Location Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Location
+                </CardTitle>
+                <CardDescription>
+                  Where will your event take place?
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center space-x-2">
+                  <FormField
+                    control={form.control}
+                    name="isOnlineEvent"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Online Event</FormLabel>
+                          <div className="text-sm text-muted-foreground">
+                            This is a virtual event
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {isOnlineEvent ? (
+                  <FormField
+                    control={form.control}
+                    name="onlineEventLink"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Link</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="https://zoom.us/j/123456789"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="venue"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Venue Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Navy Pier Grand Ballroom" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Street Address *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="600 E Grand Ave" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Chicago" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="IL" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="zipCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>ZIP Code *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="60611" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Event Images Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Event Images
+                </CardTitle>
+                <CardDescription>
+                  Upload up to 3 images for your event (Max 5MB each)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <div className="text-lg font-medium mb-2">Upload Event Images</div>
+                  <div className="text-sm text-muted-foreground mb-4">
+                    Recommended: 1200x630px for social media optimization
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <Button type="button" variant="outline" asChild>
+                    <label htmlFor="image-upload" className="cursor-pointer">
+                      Choose Images
+                    </label>
+                  </Button>
+                </div>
+
+                {uploadedImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-4">
+                    {uploadedImages.map((file, index) => (
+                      <div key={index} className="relative">
+                        <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Upload ${index + 1}`}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <div className="mt-2 text-sm text-center truncate">
+                          {file.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Event Details Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Event Details
+                </CardTitle>
+                <CardDescription>
+                  Capacity and pricing information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="capacity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Capacity *</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="150" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="ticketPrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ticket Price *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="45.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Submit Buttons */}
+            <div className="flex gap-4 justify-end">
+              <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="bg-stepping-gradient">
+                {isSubmitting ? (
+                  <>Creating Event...</>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Create Event
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </div>
+  );
+};
+
+export default CreateEventPage;

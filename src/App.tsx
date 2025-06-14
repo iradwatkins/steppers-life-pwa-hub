@@ -27,6 +27,7 @@ import TicketSelectionPage from "./pages/TicketSelectionPage";
 import CheckoutDetailsPage from "./pages/CheckoutDetailsPage";
 import CheckoutPaymentPage from "./pages/CheckoutPaymentPage";
 import CheckoutConfirmationPage from "./pages/CheckoutConfirmationPage";
+import CreateEventPage from "./pages/CreateEventPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
                   <Route path="/checkout/details" element={<CheckoutDetailsPage />} />
                   <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
                   <Route path="/checkout/confirmation" element={<CheckoutConfirmationPage />} />
+                  <Route path="/create-event" element={<CreateEventPage />} />
                   <Route path="/classes" element={<Classes />} />
                   <Route path="/classes/:id" element={<ClassDetail />} />
                   <Route path="/community" element={<Community />} />
