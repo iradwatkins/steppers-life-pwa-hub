@@ -10,29 +10,29 @@
 
 ## Acceptance Criteria (ACs)
 
-1. **AC1:** Profile page includes "My Tickets" tab for ticket management
-2. **AC2:** Displays list of all purchased tickets (upcoming and past)
-3. **AC3:** Shows QR code placeholders for each ticket
-4. **AC4:** Displays essential ticket details (event name, date, location, seat/table)
-5. **AC5:** Tickets are organized and easily scannable
-6. **AC6:** Mobile-optimized display for ticket scanning
-7. **AC7:** Integration with mock ticket data for development
+- [x] **AC1:** Profile page includes "My Tickets" tab for ticket management
+- [x] **AC2:** Displays list of all purchased tickets (upcoming and past)
+- [x] **AC3:** Shows QR code placeholders for each ticket
+- [x] **AC4:** Displays essential ticket details (event name, date, location, seat/table)
+- [x] **AC5:** Tickets are organized and easily scannable
+- [x] **AC6:** Mobile-optimized display for ticket scanning
+- [x] **AC7:** Integration with mock ticket data for development
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update Profile.tsx component (AC: 1)
-  - [ ] Add "My Tickets" tab to profile interface
-  - [ ] Implement tab navigation functionality
-- [ ] Task 2: Create ticket display interface (AC: 2, 3, 4)
-  - [ ] Design ticket card layout
-  - [ ] Add QR code placeholder components
-  - [ ] Display ticket information (event, date, seat)
-- [ ] Task 3: Implement ticket organization (AC: 5)
-  - [ ] Sort tickets by date and status
-  - [ ] Group upcoming vs past tickets
-- [ ] Task 4: Mobile optimization (AC: 6, 7)
-  - [ ] Ensure responsive design for mobile scanning
-  - [ ] Test with mock ticket data
+- [x] Task 1: Update Profile.tsx component (AC: 1)
+  - [x] Add "My Tickets" tab to profile interface
+  - [x] Implement tab navigation functionality
+- [x] Task 2: Create ticket display interface (AC: 2, 3, 4)
+  - [x] Design ticket card layout
+  - [x] Add QR code placeholder components
+  - [x] Display ticket information (event, date, seat)
+- [x] Task 3: Implement ticket organization (AC: 5)
+  - [x] Sort tickets by date and status
+  - [x] Group upcoming vs past tickets
+- [x] Task 4: Mobile optimization (AC: 6, 7)
+  - [x] Ensure responsive design for mobile scanning
+  - [x] Test with mock ticket data
 
 ## Dev Technical Guidance
 

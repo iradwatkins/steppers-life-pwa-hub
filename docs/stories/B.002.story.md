@@ -10,43 +10,43 @@
 
 ## Acceptance Criteria (ACs)
 
-1. **AC1:** System provides a 4-step checkout flow: Selection → Details → Payment → Confirmation
-2. **AC2:** TicketSelectionPage allows users to select tickets with quantity and type options
-3. **AC3:** CheckoutDetailsPage collects attendee information and validates required fields
-4. **AC4:** CheckoutPaymentPage integrates secure payment processing with multiple gateway options
-5. **AC5:** CheckoutConfirmationPage displays order summary and confirmation details
-6. **AC6:** Navigation between steps is intuitive with clear progress indicators
-7. **AC7:** Cart state is maintained throughout the checkout process
-8. **AC8:** All forms include proper validation and error handling
-9. **AC9:** Mobile-responsive design works across all checkout steps
-10. **AC10:** Integration with mock data for testing and development
+- [x] **AC1:** System provides a 4-step checkout flow: Selection → Details → Payment → Confirmation
+- [x] **AC2:** TicketSelectionPage allows users to select tickets with quantity and type options
+- [x] **AC3:** CheckoutDetailsPage collects attendee information and validates required fields
+- [x] **AC4:** CheckoutPaymentPage integrates secure payment processing with multiple gateway options
+- [x] **AC5:** CheckoutConfirmationPage displays order summary and confirmation details
+- [x] **AC6:** Navigation between steps is intuitive with clear progress indicators
+- [x] **AC7:** Cart state is maintained throughout the checkout process
+- [x] **AC8:** All forms include proper validation and error handling
+- [x] **AC9:** Mobile-responsive design works across all checkout steps
+- [x] **AC10:** Integration with mock data for testing and development
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create TicketSelectionPage component (AC: 1, 2)
-  - [ ] Implement ticket type selection interface
-  - [ ] Add quantity selector functionality
-  - [ ] Create cart state management
-- [ ] Task 2: Create CheckoutDetailsPage component (AC: 1, 3)
-  - [ ] Build attendee information form
-  - [ ] Implement form validation
-  - [ ] Handle required field validation
-- [ ] Task 3: Create CheckoutPaymentPage component (AC: 1, 4)
-  - [ ] Integrate payment gateway options
-  - [ ] Add secure payment form handling
-  - [ ] Implement payment validation
-- [ ] Task 4: Create CheckoutConfirmationPage component (AC: 1, 5)
-  - [ ] Display order summary
-  - [ ] Show confirmation details
-  - [ ] Provide order reference information
-- [ ] Task 5: Implement routing and navigation (AC: 6)
-  - [ ] Add routes for each checkout step
-  - [ ] Create progress indicators
-  - [ ] Enable step-by-step navigation
-- [ ] Task 6: Integration and testing (AC: 7, 8, 9, 10)
-  - [ ] Test mobile responsiveness
-  - [ ] Verify cart state persistence
-  - [ ] Add mock data integration
+- [x] Task 1: Create TicketSelectionPage component (AC: 1, 2)
+  - [x] Implement ticket type selection interface
+  - [x] Add quantity selector functionality
+  - [x] Create cart state management
+- [x] Task 2: Create CheckoutDetailsPage component (AC: 1, 3)
+  - [x] Build attendee information form
+  - [x] Implement form validation
+  - [x] Handle required field validation
+- [x] Task 3: Create CheckoutPaymentPage component (AC: 1, 4)
+  - [x] Integrate payment gateway options
+  - [x] Add secure payment form handling
+  - [x] Implement payment validation
+- [x] Task 4: Create CheckoutConfirmationPage component (AC: 1, 5)
+  - [x] Display order summary
+  - [x] Show confirmation details
+  - [x] Provide order reference information
+- [x] Task 5: Implement routing and navigation (AC: 6)
+  - [x] Add routes for each checkout step
+  - [x] Create progress indicators
+  - [x] Enable step-by-step navigation
+- [x] Task 6: Integration and testing (AC: 7, 8, 9, 10)
+  - [x] Test mobile responsiveness
+  - [x] Verify cart state persistence
+  - [x] Add mock data integration
 
 ## Dev Technical Guidance
 
