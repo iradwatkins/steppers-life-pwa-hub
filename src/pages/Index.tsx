@@ -61,11 +61,10 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative bg-stepping-gradient text-white py-20 px-4">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-yellow-400">
-            🚨 TESTING LOVABLE SYNC 🚨
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Welcome to SteppersLife
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto bg-red-500 text-white p-4 rounded">
-            IF YOU SEE THIS MESSAGE ON LOVABLE.DEV, THEN SYNC IS WORKING!
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
             Chicago's premier platform for the stepping community. Discover events, connect with dancers, and immerse yourself in the culture.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
