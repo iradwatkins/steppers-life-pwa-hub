@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Calendar, Users, BookOpen, MapPin, Clock, Star } from 'lucide-react';
 
 const Index = () => {
+  // SYNC TEST: This page should match Lovable exactly - SteppersLife Custom Page
   const featuredEvents = [
     {
       id: 1,
