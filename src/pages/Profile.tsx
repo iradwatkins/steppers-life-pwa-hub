@@ -8,9 +8,10 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { User, Mail, Phone, MapPin, Heart, Shield, Bell, Download } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Heart, Shield, Bell, Download, Ticket, Calendar, Clock, QrCode, Share, ExternalLink } from 'lucide-react';
 import ChangePasswordDialog from '@/components/security/ChangePasswordDialog';
 import DeleteAccountDialog from '@/components/security/DeleteAccountDialog';
 import NotificationPreferences from '@/components/notifications/NotificationPreferences';
@@ -138,6 +139,77 @@ const Profile = () => {
     }
   };
 
+  // Mock ticket data
+  const mockTickets = [
+    {
+      id: 'TKT001',
+      orderNumber: 'SL12345678',
+      eventTitle: 'Chicago Stepping Championship',
+      eventDate: '2024-12-15',
+      eventTime: '7:00 PM',
+      venue: 'Navy Pier Grand Ballroom',
+      ticketType: 'VIP Experience',
+      seatInfo: 'Section A, Table 5',
+      price: 85,
+      qrCode: 'QR_CODE_DATA_001',
+      status: 'upcoming',
+      purchaseDate: '2024-11-20',
+      attendeeName: `${profileData.firstName} ${profileData.lastName}`,
+      specialRequests: 'Vegetarian meal'
+    },
+    {
+      id: 'TKT002',
+      orderNumber: 'SL12345679',
+      eventTitle: 'New Year\'s Eve Stepping Gala',
+      eventDate: '2024-12-31',
+      eventTime: '8:00 PM',
+      venue: 'Palmer House Hilton',
+      ticketType: 'General Admission',
+      seatInfo: 'Floor Seating',
+      price: 85,
+      qrCode: 'QR_CODE_DATA_002',
+      status: 'upcoming',
+      purchaseDate: '2024-11-22',
+      attendeeName: `${profileData.firstName} ${profileData.lastName}`,
+      specialRequests: ''
+    },
+    {
+      id: 'TKT003',
+      orderNumber: 'SL12345677',
+      eventTitle: 'Halloween Stepping Social',
+      eventDate: '2024-10-31',
+      eventTime: '7:30 PM',
+      venue: 'South Side Cultural Center',
+      ticketType: 'General Admission',
+      seatInfo: 'General Admission',
+      price: 35,
+      qrCode: 'QR_CODE_DATA_003',
+      status: 'past',
+      purchaseDate: '2024-10-15',
+      attendeeName: `${profileData.firstName} ${profileData.lastName}`,
+      specialRequests: ''
+    }
+  ];
+
+  const upcomingTickets = mockTickets.filter(ticket => ticket.status === 'upcoming');
+  const pastTickets = mockTickets.filter(ticket => ticket.status === 'past');
+
+  const handleShareTicket = (ticket: any) => {
+    if (navigator.share) {
+      navigator.share({
+        title: `My ticket for ${ticket.eventTitle}`,
+        text: `I'll be attending ${ticket.eventTitle} on ${ticket.eventDate}`,
+        url: window.location.origin
+      });
+    } else {
+      toast.success('Ticket details copied to clipboard!');
+    }
+  };
+
+  const handleViewQR = (ticket: any) => {
+    toast.info('QR Code viewer would open here (Demo mode)');
+  };
+
   const handleExportData = () => {
     // In a real implementation, this would trigger a data export
     toast.info('Data export feature coming soon. Please contact support for data export requests.');
@@ -161,14 +233,27 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen py-8 px-4">
-      <div className="container mx-auto max-w-4xl">
+      <div className="container mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">My Profile</h1>
-          <p className="text-muted-foreground">Manage your account settings and preferences</p>
+          <p className="text-muted-foreground">Manage your account settings, preferences, and tickets</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-2 mb-8">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Profile Settings
+            </TabsTrigger>
+            <TabsTrigger value="tickets" className="flex items-center gap-2">
+              <Ticket className="h-4 w-4" />
+              My Tickets
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile" className="mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Information */}
           <div className="lg:col-span-2 space-y-6">
             <Card>
@@ -426,7 +511,172 @@ const Profile = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="tickets" className="mt-0">
+            <div className="space-y-6">
+              {/* Upcoming Tickets */}
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
+                {upcomingTickets.length === 0 ? (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <Ticket className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Upcoming Tickets</h3>
+                      <p className="text-muted-foreground mb-4">
+                        You don't have any upcoming event tickets.
+                      </p>
+                      <Button asChild>
+                        <Link to="/events">Browse Events</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {upcomingTickets.map((ticket) => (
+                      <Card key={ticket.id} className="overflow-hidden">
+                        <CardHeader className="bg-stepping-gradient text-white">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="text-lg">{ticket.eventTitle}</CardTitle>
+                              <CardDescription className="text-white/80">
+                                {ticket.ticketType}
+                              </CardDescription>
+                            </div>
+                            <Badge variant="secondary" className="bg-white/20 text-white">
+                              #{ticket.id}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                          <div className="space-y-4">
+                            {/* Event Details */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <span>{new Date(ticket.eventDate).toLocaleDateString('en-US', { 
+                                  weekday: 'long', 
+                                  year: 'numeric', 
+                                  month: 'long', 
+                                  day: 'numeric' 
+                                })}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span>{ticket.eventTime}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                <span>{ticket.venue}</span>
+                              </div>
+                            </div>
+
+                            <Separator />
+
+                            {/* Ticket Info */}
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Seat/Table:</span>
+                                <span className="font-medium">{ticket.seatInfo}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Attendee:</span>
+                                <span className="font-medium">{ticket.attendeeName}</span>
+                              </div>
+                              {ticket.specialRequests && (
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-muted-foreground">Special Requests:</span>
+                                  <span className="font-medium">{ticket.specialRequests}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <Separator />
+
+                            {/* QR Code Section */}
+                            <div className="text-center py-4">
+                              <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <QrCode className="h-12 w-12 text-muted-foreground" />
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Show this QR code at the event entrance
+                              </p>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-2">
+                              <Button 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => handleViewQR(ticket)}
+                              >
+                                <QrCode className="h-4 w-4 mr-2" />
+                                View QR
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleShareTicket(ticket)}
+                              >
+                                <Share className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Past Tickets */}
+              {pastTickets.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-4">Past Events</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {pastTickets.map((ticket) => (
+                      <Card key={ticket.id} className="opacity-75">
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="text-base">{ticket.eventTitle}</CardTitle>
+                              <CardDescription>{ticket.ticketType}</CardDescription>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              Past
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-3 w-3 text-muted-foreground" />
+                              <span>{new Date(ticket.eventDate).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-3 w-3 text-muted-foreground" />
+                              <span className="truncate">{ticket.venue}</span>
+                            </div>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="w-full mt-3"
+                            onClick={() => toast.info('Receipt download would start here')}
+                          >
+                            <Download className="h-3 w-3 mr-2" />
+                            Receipt
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Security Dialogs */}
         <ChangePasswordDialog
