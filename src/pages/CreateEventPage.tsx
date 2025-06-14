@@ -37,7 +37,7 @@ const eventFormSchema = z.object({
   startDate: z.string().min(1, 'Start date is required'),
   startTime: z.string().min(1, 'Start time is required'),
   endDate: z.string().optional(),
-  endTime: z.string().optional(),
+  endTime: z.string().min(1, 'End time is required'),
   isMultiDay: z.boolean().default(false),
   venue: z.string().min(1, 'Venue is required'),
   address: z.string().min(10, 'Complete address is required'),
@@ -82,9 +82,9 @@ const CreateEventPage = () => {
       description: '',
       category: '',
       startDate: '',
-      startTime: '',
+      startTime: '19:00', // Default to 7:00 PM
       endDate: '',
-      endTime: '',
+      endTime: '02:00', // Default to 2:00 AM
       isMultiDay: false,
       venue: '',
       address: '',
@@ -100,6 +100,18 @@ const CreateEventPage = () => {
 
   const isMultiDay = form.watch('isMultiDay');
   const isOnlineEvent = form.watch('isOnlineEvent');
+
+  // Helper function to format date for display
+  const formatDateDisplay = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long',
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -128,7 +140,12 @@ const CreateEventPage = () => {
   };
 
   const addAdditionalDate = () => {
-    setAdditionalDates(prev => [...prev, { startDate: '', startTime: '', endDate: '', endTime: '' }]);
+    setAdditionalDates(prev => [...prev, { 
+      startDate: '', 
+      startTime: '19:00', // Default to 7:00 PM
+      endDate: '', 
+      endTime: '02:00' // Default to 2:00 AM
+    }]);
   };
 
   const removeAdditionalDate = (index: number) => {
@@ -152,8 +169,11 @@ const CreateEventPage = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      toast.success('Event created successfully!');
-      navigate('/dashboard');
+      // Mock event ID generation
+      const mockEventId = `event_${Date.now()}`;
+      
+      toast.success('Event created successfully! Now configure your tickets.');
+      navigate(`/organizer/event/${mockEventId}/ticketing`);
     } catch (error) {
       toast.error('Failed to create event. Please try again.');
     } finally {
@@ -265,7 +285,7 @@ const CreateEventPage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+                  <Calendar className="h-5 w-5 text-blue-600" />
                   Date & Time
                 </CardTitle>
                 <CardDescription>
@@ -302,9 +322,19 @@ const CreateEventPage = () => {
                     name="startDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Start Date *</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-blue-600" />
+                          Start Date *
+                        </FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <div className="space-y-2">
+                            <Input type="date" {...field} className="cursor-pointer" />
+                            {field.value && (
+                              <div className="text-sm text-muted-foreground bg-blue-50 p-2 rounded border">
+                                📅 {formatDateDisplay(field.value)}
+                              </div>
+                            )}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -315,9 +345,12 @@ const CreateEventPage = () => {
                     name="startTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Start Time *</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-green-600" />
+                          Start Time *
+                        </FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} />
+                          <Input type="time" {...field} className="cursor-pointer" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -325,36 +358,50 @@ const CreateEventPage = () => {
                   />
                 </div>
 
-                {isMultiDay && (
-                  <div className="grid grid-cols-2 gap-4">
+                {/* Always show end time section */}
+                <div className="grid grid-cols-2 gap-4">
+                  {isMultiDay && (
                     <FormField
                       control={form.control}
                       name="endDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>End Date</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-blue-600" />
+                            End Date
+                          </FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <div className="space-y-2">
+                              <Input type="date" {...field} className="cursor-pointer" />
+                              {field.value && (
+                                <div className="text-sm text-muted-foreground bg-blue-50 p-2 rounded border">
+                                  📅 {formatDateDisplay(field.value)}
+                                </div>
+                              )}
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="endTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>End Time</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
+                  )}
+                  <FormField
+                    control={form.control}
+                    name="endTime"
+                    render={({ field }) => (
+                      <FormItem className={isMultiDay ? "" : "col-span-2"}>
+                        <FormLabel className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-red-600" />
+                          End Time *
+                        </FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} className="cursor-pointer" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {isMultiDay && (
                   <div className="space-y-4">
@@ -368,35 +415,65 @@ const CreateEventPage = () => {
                     {additionalDates.map((date, index) => (
                       <div key={index} className="grid grid-cols-5 gap-4 items-end">
                         <div>
-                          <Label>Start Date</Label>
-                          <Input 
-                            type="date" 
-                            value={date.startDate}
-                            onChange={(e) => updateAdditionalDate(index, 'startDate', e.target.value)}
-                          />
+                          <Label className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-blue-600" />
+                            Start Date
+                          </Label>
+                          <div className="space-y-2">
+                            <Input 
+                              type="date" 
+                              value={date.startDate}
+                              onChange={(e) => updateAdditionalDate(index, 'startDate', e.target.value)}
+                              className="cursor-pointer"
+                            />
+                            {date.startDate && (
+                              <div className="text-xs text-muted-foreground bg-blue-50 p-1 rounded text-center">
+                                {formatDateDisplay(date.startDate)}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div>
-                          <Label>Start Time</Label>
+                          <Label className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-green-600" />
+                            Start Time
+                          </Label>
                           <Input 
                             type="time" 
                             value={date.startTime}
                             onChange={(e) => updateAdditionalDate(index, 'startTime', e.target.value)}
+                            className="cursor-pointer"
                           />
                         </div>
                         <div>
-                          <Label>End Date</Label>
-                          <Input 
-                            type="date" 
-                            value={date.endDate}
-                            onChange={(e) => updateAdditionalDate(index, 'endDate', e.target.value)}
-                          />
+                          <Label className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-blue-600" />
+                            End Date
+                          </Label>
+                          <div className="space-y-2">
+                            <Input 
+                              type="date" 
+                              value={date.endDate}
+                              onChange={(e) => updateAdditionalDate(index, 'endDate', e.target.value)}
+                              className="cursor-pointer"
+                            />
+                            {date.endDate && (
+                              <div className="text-xs text-muted-foreground bg-blue-50 p-1 rounded text-center">
+                                {formatDateDisplay(date.endDate)}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div>
-                          <Label>End Time</Label>
+                          <Label className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-red-600" />
+                            End Time
+                          </Label>
                           <Input 
                             type="time" 
                             value={date.endTime}
                             onChange={(e) => updateAdditionalDate(index, 'endTime', e.target.value)}
+                            className="cursor-pointer"
                           />
                         </div>
                         <Button type="button" variant="outline" size="sm" onClick={() => removeAdditionalDate(index)}>
