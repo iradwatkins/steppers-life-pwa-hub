@@ -62,7 +62,7 @@ const Index = () => {
       <section className="relative bg-stepping-gradient text-white py-20 px-4">
         <div className="container mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Welcome to SteppersLife
+            Welcome to SteppersLife - CUSTOM PAGE
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
             Chicago's premier platform for the stepping community. Discover events, connect with dancers, and immerse yourself in the culture.
