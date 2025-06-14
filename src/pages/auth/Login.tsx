@@ -75,16 +75,57 @@ const Login = () => {
     }
   };
 
+  const handleEmailOnlySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    
+    // If password is provided, do regular login
+    if (password) {
+      await handleSubmit(e);
+    } else {
+      // Otherwise, send magic link
+      await handleMagicLink();
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-muted/30">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to SteppersLife!</CardTitle>
           <CardDescription>
-            Sign in to your SteppersLife account
+            Sign in to your stepping community account
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <h3 className="text-lg font-semibold text-center">Sign In</h3>
+          
+          {/* Email Field */}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Send Magic Link Button */}
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={handleMagicLink}
+            disabled={!email || isMagicLinkLoading}
+          >
+            {isMagicLinkLoading ? 'Sending Magic Link...' : 'Send Magic Link'}
+          </Button>
+
           {/* Google Login */}
           <Button 
             variant="outline" 
@@ -104,29 +145,19 @@ const Login = () => {
             <div className="absolute inset-0 flex items-center">
               <Separator />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">or</span>
+            <div className="relative flex justify-center text-sm uppercase">
+              <span className="bg-background px-2 text-muted-foreground">OR SIGN IN WITH PASSWORD</span>
             </div>
           </div>
 
-          {/* Email/Password Form */}
+          {/* Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -135,36 +166,17 @@ const Login = () => {
             <Button 
               type="submit" 
               className="w-full bg-stepping-gradient"
-              disabled={isLoading}
+              disabled={isLoading || !email}
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 
-          {/* Magic Link */}
-          <div className="text-center">
-            <Button 
-              variant="link" 
-              className="text-stepping-purple"
-              onClick={handleMagicLink}
-              disabled={!email || isMagicLinkLoading}
-            >
-              {isMagicLinkLoading ? 'Sending...' : 'Send Magic Link'}
-            </Button>
-          </div>
-
-          <div className="text-center space-y-2">
-            <div>
-              <Link to="/forgot-password" className="text-sm text-stepping-purple hover:underline">
-                Forgot your password?
-              </Link>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-stepping-purple hover:underline">
-                Join SteppersLife
-              </Link>
-            </div>
+          <div className="text-center text-sm text-muted-foreground">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-stepping-purple hover:underline">
+              Sign up here
+            </Link>
           </div>
         </CardContent>
       </Card>

@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
@@ -16,12 +15,12 @@ const Register = () => {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    agreeToTerms: false
+    confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
   const navigate = useNavigate();
-  const { signUp, signInWithGoogle, user } = useAuth();
+  const { signUp, signInWithGoogle, sendMagicLink, user } = useAuth();
 
   useEffect(() => {
     // Redirect if already authenticated
@@ -59,10 +58,6 @@ const Register = () => {
       toast.error('Passwords do not match');
       return false;
     }
-    if (!formData.agreeToTerms) {
-      toast.error('Please agree to the terms and conditions');
-      return false;
-    }
     return true;
   };
 
@@ -91,16 +86,79 @@ const Register = () => {
     }
   };
 
+  const handleMagicLink = async () => {
+    if (!formData.email) {
+      toast.error('Please enter your email address first');
+      return;
+    }
+
+    setIsMagicLinkLoading(true);
+    try {
+      await sendMagicLink(formData.email);
+    } catch (error) {
+      // Error handling is done in the useAuth hook
+    } finally {
+      setIsMagicLinkLoading(false);
+    }
+  };
+
+  const handleEmailOnlySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    
+    // If additional fields are provided, do regular signup
+    if (formData.firstName || formData.lastName || formData.password) {
+      await handleSubmit(e);
+    } else {
+      // Otherwise, send magic link
+      await handleMagicLink();
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-muted/30">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Join SteppersLife</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to SteppersLife!</CardTitle>
           <CardDescription>
-            Create your account and become part of the stepping community
+            What's your email?
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Email Form */}
+          <form onSubmit={handleEmailOnlySubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                required
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full bg-stepping-gradient"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Continuing...' : 'Continue'}
+            </Button>
+          </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">OR</span>
+            </div>
+          </div>
+
           {/* Google Signup */}
           <Button 
             variant="outline" 
@@ -113,106 +171,41 @@ const Register = () => {
               <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Sign up with Google
+            Continue with Google
           </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">or</span>
-            </div>
+          <div className="text-xs text-center text-muted-foreground">
+            By clicking Continue or using a social sign-in, you agree to SteppersLife's{' '}
+            <Link to="/terms" className="text-stepping-purple hover:underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="text-stepping-purple hover:underline">
+              Privacy Policy
+            </Link>
+            .
           </div>
 
-          {/* Registration Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  placeholder="John"
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  placeholder="Doe"
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  required
-                />
-              </div>
+          <div className="text-center space-y-2">
+            <div className="text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link to="/login" className="text-stepping-purple hover:underline">
+                Sign in
+              </Link>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                required
-              />
+            <div>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={handleMagicLink}
+                disabled={!formData.email || isMagicLinkLoading}
+              >
+                {isMagicLinkLoading ? 'Sending Magic Link...' : 'Send Magic Link'}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Prefer passwordless login? Send Magic Link
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="terms"
-                checked={formData.agreeToTerms}
-                onCheckedChange={(checked) => handleInputChange('agreeToTerms', checked)}
-              />
-              <Label htmlFor="terms" className="text-sm">
-                I agree to the{' '}
-                <Link to="/terms" className="text-stepping-purple hover:underline">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link to="/privacy" className="text-stepping-purple hover:underline">
-                  Privacy Policy
-                </Link>
-              </Label>
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-stepping-gradient"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
-            </Button>
-          </form>
-
-          <div className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link to="/login" className="text-stepping-purple hover:underline">
-              Sign in here
-            </Link>
           </div>
         </CardContent>
       </Card>
