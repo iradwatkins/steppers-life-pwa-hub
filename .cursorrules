@@ -1,0 +1,37 @@
+# SteppersLife PWA - Cursor Rules
+
+## Project Foundation Rules
+- Follow BMAD methodology strictly - switch between Scrum Master and Developer personas as needed
+- Use Technical Preferences as source of truth over any conflicting documentation
+- Start simple, scale when necessary - avoid over-engineering
+
+## Tech Stack Enforcement
+- Framework: React + Vite + TypeScript ONLY
+- Styling: Tailwind CSS ONLY (no CSS-in-JS)
+- UI Components: shadcn/ui ONLY
+- Backend: Supabase BaaS ONLY (no Express/NestJS)
+- State: Start with useState/useEffect, scale to TanStack Query if needed
+- PWA: vite-plugin-pwa ONLY
+
+## Authentication Rules
+- Email/password authentication ONLY
+- Google OAuth ONLY (no Facebook/Apple)
+- Magic link authentication ONLY
+- Use Supabase Auth exclusively
+
+## Code Organization
+- Use monorepo structure
+- Feature-based directory organization when scaling
+- Co-locate tests with components
+- Follow TypeScript strict mode
+
+## Development Process
+- Developer takes notes for Scrum Master
+- Document recurring issues in *italics* to prevent repetition
+- Major unresolved issues go in technical documentation
+- All learnings must be exportable for future projects
+
+## Story Implementation
+- Break large stories into smaller, manageable pieces
+- Complete all acceptance criteria before moving to next story
+- Validate against technical preferences before implementation

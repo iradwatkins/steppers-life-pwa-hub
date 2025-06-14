@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -19,34 +21,74 @@ const Register = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signUp, signInWithGoogle, user } = useAuth();
+
+  useEffect(() => {
+    // Redirect if already authenticated
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateForm = () => {
+    if (!formData.firstName.trim()) {
+      toast.error('First name is required');
+      return false;
+    }
+    if (!formData.lastName.trim()) {
+      toast.error('Last name is required');
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast.error('Email is required');
+      return false;
+    }
+    if (!formData.password) {
+      toast.error('Password is required');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return false;
+    }
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
-      return;
+      toast.error('Passwords do not match');
+      return false;
     }
     if (!formData.agreeToTerms) {
-      alert('Please agree to the terms and conditions');
-      return;
+      toast.error('Please agree to the terms and conditions');
+      return false;
     }
-    
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate('/');
-    }, 2000);
+    return true;
   };
 
-  const handleGoogleSignup = () => {
-    // Handle Google OAuth signup
-    console.log('Google signup clicked');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    try {
+      await signUp(formData.email, formData.password, formData.firstName, formData.lastName);
+      // Success message is shown in the useAuth hook
+      // User will need to verify email before they can login
+    } catch (error) {
+      // Error handling is done in the useAuth hook
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      // Error handling is done in the useAuth hook
+    }
   };
 
   return (

@@ -10,11 +10,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Search, Menu, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const Header = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,9 +24,13 @@ const Header = () => {
     }
   };
 
-  const handleSignOut = () => {
-    setIsAuthenticated(false);
-    // Add actual sign out logic here
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      // Error handling is done in the useAuth hook
+    }
   };
 
   return (
@@ -72,7 +77,7 @@ const Header = () => {
 
         {/* Auth Section */}
         <div className="flex items-center space-x-4">
-          {!isAuthenticated ? (
+          {!user ? (
             <>
               <Button variant="ghost" asChild className="hidden md:inline-flex">
                 <Link to="/login">Sign In</Link>
@@ -124,7 +129,7 @@ const Header = () => {
               <DropdownMenuItem asChild>
                 <Link to="/about">About</Link>
               </DropdownMenuItem>
-              {!isAuthenticated && (
+              {!user && (
                 <>
                   <DropdownMenuItem asChild>
                     <Link to="/login">Sign In</Link>

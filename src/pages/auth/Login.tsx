@@ -1,37 +1,78 @@
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { signIn, signInWithGoogle, sendMagicLink, user } = useAuth();
+
+  useEffect(() => {
+    // Check for auth errors in URL params
+    const error = searchParams.get('error');
+    if (error === 'auth_failed') {
+      toast.error('Authentication failed. Please try again.');
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    // Redirect if already authenticated
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await signIn(email, password);
       navigate('/');
-    }, 1500);
+    } catch (error) {
+      // Error handling is done in the useAuth hook
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    // Handle Google OAuth login
-    console.log('Google login clicked');
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      // Error handling is done in the useAuth hook
+    }
   };
 
-  const handleMagicLink = () => {
-    // Handle magic link login
-    console.log('Magic link requested for:', email);
+  const handleMagicLink = async () => {
+    if (!email) {
+      toast.error('Please enter your email address first');
+      return;
+    }
+
+    setIsMagicLinkLoading(true);
+    try {
+      await sendMagicLink(email);
+    } catch (error) {
+      // Error handling is done in the useAuth hook
+    } finally {
+      setIsMagicLinkLoading(false);
+    }
   };
 
   return (
@@ -106,9 +147,9 @@ const Login = () => {
               variant="link" 
               className="text-stepping-purple"
               onClick={handleMagicLink}
-              disabled={!email}
+              disabled={!email || isMagicLinkLoading}
             >
-              Send Magic Link
+              {isMagicLinkLoading ? 'Sending...' : 'Send Magic Link'}
             </Button>
           </div>
 
