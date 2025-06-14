@@ -31,33 +31,46 @@ import CreateEventPage from "./pages/CreateEventPage";
 import EventTicketingPage from "./pages/EventTicketingPage";
 import EventSeatingPage from "./pages/EventSeatingPage";
 import EventSeatingChartPage from "./pages/EventSeatingChartPage";
+import TestSeatingPage from "./pages/TestSeatingPage";
+import AdvancedSeatingPage from "./pages/AdvancedSeatingPage";
+import EnhancedPurchasePage from "./pages/EnhancedPurchasePage";
 import NotFound from "./pages/NotFound";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <AuthProvider>
-          <CartProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Layout>
-                <Routes>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <AuthProvider>
+            <CartProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Layout>
+                  <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/magazine" element={<Magazine />} />
                   <Route path="/events" element={<Events />} />
-                  <Route path="/events/:id" element={<EventDetail />} />
-                  <Route path="/events/:eventId/tickets" element={<TicketSelectionPage />} />
-                  <Route path="/checkout/details" element={<CheckoutDetailsPage />} />
-                  <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
-                  <Route path="/checkout/confirmation" element={<CheckoutConfirmationPage />} />
                   <Route path="/create-event" element={<CreateEventPage />} />
+                  
+                  {/* Organizer routes - must come before general event routes */}
                   <Route path="/organizer/event/:eventId/ticketing" element={<EventTicketingPage />} />
                   <Route path="/organizer/event/:eventId/seating" element={<EventSeatingPage />} />
                   <Route path="/organizer/event/:eventId/seating-chart" element={<EventSeatingChartPage />} />
+                  <Route path="/organizer/event/:eventId/seating/advanced" element={<AdvancedSeatingPage />} />
+                  
+                  {/* Event routes */}
+                  <Route path="/events/:eventId/purchase" element={<EnhancedPurchasePage />} />
+                  <Route path="/events/:eventId/tickets" element={<TicketSelectionPage />} />
+                  <Route path="/events/:id" element={<EventDetail />} />
+                  
+                  {/* Checkout routes */}
+                  <Route path="/checkout/details" element={<CheckoutDetailsPage />} />
+                  <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
+                  <Route path="/checkout/confirmation" element={<CheckoutConfirmationPage />} />
                   <Route path="/classes" element={<Classes />} />
                   <Route path="/classes/:id" element={<ClassDetail />} />
                   <Route path="/community" element={<Community />} />
@@ -70,14 +83,15 @@ const App = () => (
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Layout>
-            </BrowserRouter>
-          </CartProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+                  </Routes>
+                </Layout>
+              </BrowserRouter>
+            </CartProvider>
+          </AuthProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
