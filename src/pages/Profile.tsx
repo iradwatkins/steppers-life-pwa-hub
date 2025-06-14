@@ -10,13 +10,17 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { User, Mail, Phone, MapPin, Heart, Shield, Bell } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Heart, Shield, Bell, Download } from 'lucide-react';
+import ChangePasswordDialog from '@/components/security/ChangePasswordDialog';
+import DeleteAccountDialog from '@/components/security/DeleteAccountDialog';
 
 const Profile = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
 
   const [profileData, setProfileData] = useState({
     firstName: '',
@@ -94,17 +98,34 @@ const Profile = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Here we would typically update user profile via Supabase
-      // For now, just simulate saving
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update user profile via Supabase
+      const userData = {
+        first_name: profileData.firstName,
+        last_name: profileData.lastName,
+        full_name: `${profileData.firstName} ${profileData.lastName}`,
+        phone: profileData.phone,
+        address: profileData.address,
+        city: profileData.city,
+        state: profileData.state,
+        zip_code: profileData.zipCode,
+        // Include preferences in user metadata
+        event_interests: eventInterests,
+        notification_preferences: preferences,
+        privacy_settings: privacySettings,
+      };
       
-      toast.success('Profile updated successfully!');
+      await updateProfile(userData);
       setIsEditing(false);
     } catch (error) {
-      toast.error('Failed to update profile. Please try again.');
+      // Error handling is done in the useAuth hook
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleExportData = () => {
+    // In a real implementation, this would trigger a data export
+    toast.info('Data export feature coming soon. Please contact support for data export requests.');
   };
 
   const handleCancel = () => {
@@ -365,19 +386,43 @@ const Profile = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setShowChangePassword(true)}
+                >
                   Change Password
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={handleExportData}
+                >
+                  <Download className="mr-2 h-4 w-4" />
                   Download My Data
                 </Button>
-                <Button variant="destructive" className="w-full justify-start">
+                <Button 
+                  variant="destructive" 
+                  className="w-full justify-start"
+                  onClick={() => setShowDeleteAccount(true)}
+                >
                   Delete Account
                 </Button>
               </CardContent>
             </Card>
           </div>
         </div>
+
+        {/* Security Dialogs */}
+        <ChangePasswordDialog
+          open={showChangePassword}
+          onOpenChange={setShowChangePassword}
+        />
+        
+        <DeleteAccountDialog
+          open={showDeleteAccount}
+          onOpenChange={setShowDeleteAccount}
+        />
       </div>
     </div>
   );

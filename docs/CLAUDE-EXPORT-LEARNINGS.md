@@ -28,6 +28,12 @@ This document captures learnings, patterns, and solutions discovered during Step
   - User data available throughout app via useAuth hook
 - **Error Handling**: Centralized error handling with toast notifications using Sonner
 - **Technical Preference Alignment**: Authentication pages correctly exclude Facebook/Apple OAuth per technical preferences
+- **Security Features**: Comprehensive security dialog components implemented
+  - ChangePasswordDialog with password strength validation and visibility toggles
+  - DeleteAccountDialog with multi-step confirmation and data export option
+  - Integration with Profile page using dialog state management
+  - Proper error handling and user feedback throughout security flows
+  - Account deletion limitations documented (requires server-side implementation for Supabase)
 
 ### PWA Configuration
 - **vite-plugin-pwa Setup**: [To be documented during implementation]

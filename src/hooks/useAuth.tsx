@@ -13,6 +13,9 @@ interface AuthContextType {
   sendMagicLink: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  updateProfile: (userData: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -165,6 +168,68 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      if (!user?.email) {
+        throw new Error('No user email found');
+      }
+
+      // First verify current password by attempting to sign in
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (verifyError) {
+        throw new Error('Current password is incorrect');
+      }
+
+      // Update to new password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      toast.success('Password updated successfully!');
+    } catch (error) {
+      const authError = error as Error;
+      toast.error(authError.message || 'An error occurred updating password');
+      throw error;
+    }
+  };
+
+  const updateProfile = async (userData: any) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: userData,
+      });
+
+      if (error) throw error;
+
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      const authError = error as AuthError;
+      toast.error(authError.message || 'An error occurred updating profile');
+      throw error;
+    }
+  };
+
+  const deleteAccount = async () => {
+    try {
+      // Note: Supabase doesn't have a direct delete user method in client-side
+      // This would typically require a server-side function or admin API call
+      // For now, we'll provide a warning and redirect to support
+      
+      toast.error('Account deletion requires contacting support. Please email hello@stepperslife.com');
+      throw new Error('Account deletion not available - contact support');
+    } catch (error) {
+      const authError = error as Error;
+      toast.error(authError.message || 'An error occurred with account deletion');
+      throw error;
+    }
+  };
+
   const value = {
     user,
     session,
@@ -175,6 +240,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     sendMagicLink,
     signOut,
     resetPassword,
+    updatePassword,
+    updateProfile,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
