@@ -31,6 +31,20 @@
 - Major unresolved issues go in technical documentation
 - All learnings must be exportable for future projects
 
+## Server Configuration
+- **CRITICAL**: Only use ports 8080-8085 for local development
+- Default to port 8080 unless there are conflicts
+- Configure vite server with host: "::" for network access (original working config)
+- Never use ports outside the 8080-8085 range
+
+## Server Debugging Protocol
+- **CRITICAL ISSUE**: If Vite shows "ready" but browser shows "connection refused"
+- *Root cause*: React runtime errors crash server after "ready" message
+- *Immediate check*: Run `lsof -i :8080` - if empty, server died
+- *Prevention*: Always run `npm run build` before adding new components to routes
+- *Isolation*: Test components individually before adding to App.tsx
+- *Recovery*: Comment out new imports/routes, add back one by one to find issue
+
 ## Story Implementation
 - Break large stories into smaller, manageable pieces
 - Complete all acceptance criteria before moving to next story
