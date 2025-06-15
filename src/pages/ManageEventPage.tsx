@@ -190,7 +190,7 @@ const ManageEventPage: React.FC = () => {
       title: 'Event Details',
       description: 'Basic event information, description, and scheduling',
       icon: <Calendar className="h-5 w-5" />,
-      path: `/create-event?edit=${eventId}`,
+      path: `/events/create?edit=${eventId}`,
       completed: true,
       items: ['Title', 'Description', 'Date & Time', 'Venue', 'Category']
     },
@@ -217,6 +217,14 @@ const ManageEventPage: React.FC = () => {
       path: `/organizer/event/${eventId}/custom-questions`,
       completed: false,
       items: ['Registration Questions', 'Required Fields', 'Question Types']
+    },
+    {
+      title: 'Promo Codes',
+      description: 'Create and manage promotional discount codes',
+      icon: <DollarSign className="h-5 w-5" />,
+      path: `/organizer/event/${eventId}/promo-codes`,
+      completed: false,
+      items: ['Discount Codes', 'Usage Tracking', 'Validity Periods']
     },
     {
       title: 'Event Media',

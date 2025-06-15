@@ -62,7 +62,7 @@ const Header = () => {
             </Link>
             {user && (
               <Button asChild className="bg-stepping-gradient">
-                <Link to="/create-event">Post Event</Link>
+                <Link to="/events/create">Post Event</Link>
               </Button>
             )}
           </nav>
@@ -174,7 +174,7 @@ const Header = () => {
               
               {user && (
                 <Button asChild className="bg-stepping-gradient w-fit">
-                  <Link to="/create-event" onClick={() => setIsMenuOpen(false)}>
+                  <Link to="/events/create" onClick={() => setIsMenuOpen(false)}>
                     Post Event
                   </Link>
                 </Button>

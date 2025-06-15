@@ -90,6 +90,30 @@ export interface TableReservation {
   attendee_phone?: string;
 }
 
+// Promo Code Types
+export interface PromoCode {
+  id: number;
+  event_id: number;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  description?: string;
+  is_active: boolean;
+  valid_from: string;
+  valid_until: string;
+  usage_limit?: number;
+  used_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PromoCodeApplication {
+  promo_code: string;
+  discount_amount: number;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+}
+
 // Payment Types
 export interface PaymentIntent {
   id: string;
@@ -109,7 +133,10 @@ export interface Order {
   attendee_name: string;
   attendee_email: string;
   attendee_phone?: string;
+  subtotal_amount: number;
+  discount_amount?: number;
   total_amount: number;
+  promo_code_applied?: string;
   status: 'pending' | 'completed' | 'cancelled';
   created_at: string;
   updated_at: string;

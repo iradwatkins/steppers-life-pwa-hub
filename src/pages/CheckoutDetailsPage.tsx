@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { useCart, type AttendeeInfo } from '@/contexts/CartContext';
+import PromoCodeInput from '@/components/checkout/PromoCodeInput';
 import { ArrowLeft, ArrowRight, User, ShoppingCart } from 'lucide-react';
 
 const formSchema = z.object({
@@ -26,7 +27,7 @@ const formSchema = z.object({
 
 const CheckoutDetailsPage = () => {
   const navigate = useNavigate();
-  const { state, setAttendeeInfo, setStep } = useCart();
+  const { state, setAttendeeInfo, setPromoCode, setStep } = useCart();
 
   const form = useForm<AttendeeInfo>({
     resolver: zodResolver(formSchema),
@@ -278,10 +279,36 @@ const CheckoutDetailsPage = () => {
                       </div>
                     </div>
                   ))}
+                  
                   <Separator />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>${state.total}</span>
+                  
+                  {/* Promo Code Section */}
+                  <PromoCodeInput 
+                    eventId={parseInt(state.eventId || '1')}
+                    subtotal={state.subtotal}
+                    onPromoCodeApplied={setPromoCode}
+                    appliedPromoCode={state.promoCodeApplication}
+                  />
+                  
+                  <Separator />
+                  
+                  {/* Order Totals */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span>${state.subtotal.toFixed(2)}</span>
+                    </div>
+                    {state.discountAmount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount</span>
+                        <span>-${state.discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Total</span>
+                      <span>${state.total.toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               </CardContent>

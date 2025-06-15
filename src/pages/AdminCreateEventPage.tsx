@@ -17,7 +17,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
+import { useRoles } from '@/hooks/useRoles';
 import { toast } from 'sonner';
+import { AdminRoute } from '@/components/auth/ProtectedRoute';
 import { 
   Calendar, 
   MapPin, 
@@ -84,6 +86,7 @@ interface Promoter {
 
 const AdminCreateEventPage = () => {
   const { user } = useAuth();
+  const { canAccessAdmin } = useRoles();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
@@ -254,27 +257,11 @@ const AdminCreateEventPage = () => {
     toast.success('Promoter assignment removed.');
   };
 
-  // Check if user has admin privileges (mock check)
-  const isAdmin = user?.email?.includes('admin') || user?.firstName === 'Admin';
-
-  if (!user || !isAdmin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4">
-        <div className="max-w-4xl mx-auto">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Access denied. You need admin privileges to create events on behalf of promoters.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen py-8 px-4 bg-muted/30">
-      <div className="container mx-auto max-w-4xl">
+    <AdminRoute>
+      <div className="min-h-screen py-8 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-4xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
@@ -814,8 +801,9 @@ const AdminCreateEventPage = () => {
             </div>
           </form>
         </Form>
+        </div>
       </div>
-    </div>
+    </AdminRoute>
   );
 };
 

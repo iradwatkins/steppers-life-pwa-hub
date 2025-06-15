@@ -14,7 +14,11 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
+import { useRoles } from '@/hooks/useRoles';
 import { toast } from 'sonner';
+import { EventService, type CreateEventData } from '@/services/eventService';
+import { useEffect } from 'react';
+import { OrganizerRoute } from '@/components/auth/ProtectedRoute';
 import { 
   Calendar, 
   MapPin, 
@@ -54,26 +58,13 @@ type EventFormData = z.infer<typeof eventFormSchema>;
 
 const CreateEventPage = () => {
   const { user } = useAuth();
+  const { organizerId, hasOrganizer } = useRoles();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [additionalDates, setAdditionalDates] = useState<Array<{startDate: string; startTime: string; endDate?: string; endTime?: string}>>([]);
 
-  // Mock event categories - in real app would come from API
-  const eventCategories = [
-    'Chicago Stepping Classes',
-    'Chicago Stepping Social',
-    'Chicago Stepping Competition', 
-    'Workshop - Basic Stepping',
-    'Workshop - Intermediate Stepping',
-    'Workshop - Advanced Stepping',
-    'Private Event - Corporate',
-    'Private Event - Wedding',
-    'Community Event',
-    'Fundraiser Event',
-    'Youth Stepping Program',
-    'Senior Stepping Program'
-  ];
+  const eventCategories = EventService.getEventCategories();
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
@@ -159,54 +150,93 @@ const CreateEventPage = () => {
   };
 
   const onSubmit = async (data: EventFormData) => {
+    if (!user?.id) {
+      toast.error('You must be logged in to create events.');
+      return;
+    }
+
+    if (!hasOrganizer || !organizerId) {
+      toast.error('You need to set up an organizer profile first.');
+      navigate('/organizer/setup');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Mock API call - in real app would save to backend
-      console.log('Event Data:', data);
-      console.log('Images:', uploadedImages);
-      console.log('Additional Dates:', additionalDates);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock event ID generation
-      const mockEventId = `event_${Date.now()}`;
+      // Prepare event data for the service
+      const startDateTime = `${data.startDate}T${data.startTime}:00`;
+      const endDateTime = data.endDate 
+        ? `${data.endDate}T${data.endTime}:00` 
+        : `${data.startDate}T${data.endTime}:00`;
+
+      const eventData: CreateEventData = {
+        title: data.title,
+        description: data.description,
+        shortDescription: data.description.substring(0, 150),
+        category: data.category,
+        startDate: startDateTime,
+        endDate: endDateTime,
+        timezone: 'America/Chicago', // Default to Chicago timezone
+        isOnline: data.isOnlineEvent,
+        onlineLink: data.onlineEventLink,
+        maxAttendees: parseInt(data.capacity),
+        ticketTypes: [
+          {
+            name: 'General Admission',
+            description: 'Standard event ticket',
+            price: parseFloat(data.ticketPrice),
+            quantityAvailable: parseInt(data.capacity),
+            maxPerOrder: 10,
+          }
+        ],
+      };
+
+      // Add venue data if it's not an online event
+      if (!data.isOnlineEvent) {
+        eventData.venue = {
+          name: data.venue,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          zipCode: data.zipCode,
+          capacity: parseInt(data.capacity),
+        };
+      }
+
+      // TODO: Handle image uploads to storage service
+      if (uploadedImages.length > 0) {
+        // In real implementation, upload images and get URLs
+        console.log('Images to upload:', uploadedImages);
+      }
+
+      // TODO: Handle additional dates for multi-day events
+      if (additionalDates.length > 0) {
+        console.log('Additional dates:', additionalDates);
+      }
+
+      // Create the event
+      const createdEvent = await EventService.createEvent(eventData, organizerId);
       
       toast.success('Event created successfully! You can now manage all event settings.');
-      navigate(`/organizer/events/${mockEventId}`);
-    } catch (error) {
-      toast.error('Failed to create event. Please try again.');
+      navigate(`/events/${createdEvent.id}`);
+    } catch (error: any) {
+      console.error('Error creating event:', error);
+      toast.error(error.message || 'Failed to create event. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-96">
-          <CardHeader>
-            <CardTitle>Access Restricted</CardTitle>
-            <CardDescription>You must be logged in to create events.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/login')} className="w-full">
-              Sign In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen py-8 px-4 bg-muted/30">
-      <div className="container mx-auto max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Create New Event</h1>
-          <p className="text-muted-foreground">Set up your stepping event with all the essential details</p>
-        </div>
+    <OrganizerRoute>
+      <div className="min-h-screen py-8 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-4xl">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Create New Event</h1>
+            <p className="text-muted-foreground">Set up your stepping event with all the essential details</p>
+          </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -738,8 +768,9 @@ const CreateEventPage = () => {
             </div>
           </form>
         </Form>
+        </div>
       </div>
-    </div>
+    </OrganizerRoute>
   );
 };
 

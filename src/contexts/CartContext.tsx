@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import type { PromoCodeApplication } from '@/types/ticket';
 
 export interface TicketType {
   id: string;
@@ -26,10 +27,13 @@ export interface AttendeeInfo {
 
 export interface CheckoutState {
   items: CartItem[];
+  subtotal: number;
+  discountAmount: number;
   total: number;
   eventId: string | null;
   eventTitle: string | null;
   attendeeInfo: AttendeeInfo | null;
+  promoCodeApplication: PromoCodeApplication | null;
   currentStep: number;
 }
 
@@ -39,17 +43,30 @@ type CartAction =
   | { type: 'UPDATE_QUANTITY'; payload: { ticketTypeId: string; quantity: number } }
   | { type: 'SET_EVENT'; payload: { eventId: string; eventTitle: string } }
   | { type: 'SET_ATTENDEE_INFO'; payload: AttendeeInfo }
+  | { type: 'SET_PROMO_CODE'; payload: PromoCodeApplication | null }
   | { type: 'SET_STEP'; payload: number }
   | { type: 'CLEAR_CART' };
 
 const initialState: CheckoutState = {
   items: [],
+  subtotal: 0,
+  discountAmount: 0,
   total: 0,
   eventId: null,
   eventTitle: null,
   attendeeInfo: null,
+  promoCodeApplication: null,
   currentStep: 1,
 };
+
+// Helper function to calculate totals
+function calculateTotals(items: CartItem[], promoCodeApplication: PromoCodeApplication | null) {
+  const subtotal = items.reduce((sum, item) => sum + (item.ticketType.price * item.quantity), 0);
+  const discountAmount = promoCodeApplication ? promoCodeApplication.discount_amount : 0;
+  const total = Math.max(0, subtotal - discountAmount);
+  
+  return { subtotal, discountAmount, total };
+}
 
 function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
   switch (action.type) {
@@ -69,14 +86,14 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
         newItems = [...state.items, action.payload];
       }
 
-      const total = newItems.reduce((sum, item) => sum + (item.ticketType.price * item.quantity), 0);
-      return { ...state, items: newItems, total };
+      const { subtotal, discountAmount, total } = calculateTotals(newItems, state.promoCodeApplication);
+      return { ...state, items: newItems, subtotal, discountAmount, total };
     }
 
     case 'REMOVE_ITEM': {
       const newItems = state.items.filter(item => item.ticketType.id !== action.payload.ticketTypeId);
-      const total = newItems.reduce((sum, item) => sum + (item.ticketType.price * item.quantity), 0);
-      return { ...state, items: newItems, total };
+      const { subtotal, discountAmount, total } = calculateTotals(newItems, state.promoCodeApplication);
+      return { ...state, items: newItems, subtotal, discountAmount, total };
     }
 
     case 'UPDATE_QUANTITY': {
@@ -86,8 +103,8 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
           : item
       ).filter(item => item.quantity > 0);
 
-      const total = newItems.reduce((sum, item) => sum + (item.ticketType.price * item.quantity), 0);
-      return { ...state, items: newItems, total };
+      const { subtotal, discountAmount, total } = calculateTotals(newItems, state.promoCodeApplication);
+      return { ...state, items: newItems, subtotal, discountAmount, total };
     }
 
     case 'SET_EVENT':
@@ -95,6 +112,17 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
 
     case 'SET_ATTENDEE_INFO':
       return { ...state, attendeeInfo: action.payload };
+
+    case 'SET_PROMO_CODE': {
+      const { subtotal, discountAmount, total } = calculateTotals(state.items, action.payload);
+      return { 
+        ...state, 
+        promoCodeApplication: action.payload, 
+        subtotal, 
+        discountAmount, 
+        total 
+      };
+    }
 
     case 'SET_STEP':
       return { ...state, currentStep: action.payload };
@@ -114,6 +142,7 @@ interface CartContextType {
   updateQuantity: (ticketTypeId: string, quantity: number) => void;
   setEvent: (eventId: string, eventTitle: string) => void;
   setAttendeeInfo: (info: AttendeeInfo) => void;
+  setPromoCode: (application: PromoCodeApplication | null) => void;
   setStep: (step: number) => void;
   clearCart: () => void;
 }
@@ -143,6 +172,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_ATTENDEE_INFO', payload: info });
   };
 
+  const setPromoCode = (application: PromoCodeApplication | null) => {
+    dispatch({ type: 'SET_PROMO_CODE', payload: application });
+  };
+
   const setStep = (step: number) => {
     dispatch({ type: 'SET_STEP', payload: step });
   };
@@ -159,6 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateQuantity,
       setEvent,
       setAttendeeInfo,
+      setPromoCode,
       setStep,
       clearCart
     }}>
