@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Debug Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div style="padding: 20px; font-family: Arial, sans-serif;">
+        <h1>SteppersLife Admin Debug Tool</h1>
+        
+        <div style="margin: 20px 0;">
+            <button onclick="checkAuth()">Check Current Auth Status</button>
+            <button onclick="ensureAdmin()">Ensure Admin Role</button>
+            <button onclick="checkUserRoles()">Check User Roles Table</button>
+        </div>
+        
+        <div id="output" style="background: #f5f5f5; padding: 15px; margin: 20px 0; white-space: pre-wrap; font-family: monospace;"></div>
+    </div>
+
+    <script>
+        // Initialize Supabase (using the project URL and anon key)
+        const supabaseUrl = 'https://qlxxjwanrlgsrxmrltql.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFseHhqd2Fucmxnc3J4bXJsdHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2ODY1NDksImV4cCI6MjA1MTI2MjU0OX0.D4VwrELp6zJdGvJtq5JE6rJh3-aR7k0c8ZYP0zVvScs'
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+
+        function log(message) {
+            const output = document.getElementById('output');
+            output.textContent += new Date().toISOString() + ': ' + message + '\n';
+        }
+
+        async function checkAuth() {
+            log('=== Checking Authentication Status ===');
+            
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (error) {
+                log('Error getting session: ' + error.message);
+                return;
+            }
+            
+            if (!session) {
+                log('No active session found. Please login to the main app first.');
+                return;
+            }
+            
+            log('User authenticated: ' + session.user.email);
+            log('User ID: ' + session.user.id);
+            log('User metadata: ' + JSON.stringify(session.user.user_metadata, null, 2));
+            
+            // Check user roles
+            const { data: roles, error: rolesError } = await supabase
+                .from('user_roles')
+                .select('*')
+                .eq('user_id', session.user.id);
+                
+            if (rolesError) {
+                log('Error fetching user roles: ' + rolesError.message);
+            } else {
+                log('User roles from database: ' + JSON.stringify(roles, null, 2));
+            }
+        }
+
+        async function ensureAdmin() {
+            log('=== Ensuring Admin Role ===');
+            
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (error || !session) {
+                log('Not authenticated. Please login first.');
+                return;
+            }
+            
+            if (session.user.email !== 'irawatkins@gmail.com') {
+                log('This admin setup is only for irawatkins@gmail.com');
+                return;
+            }
+            
+            // Check if user already has admin role
+            const { data: existingRole, error: fetchError } = await supabase
+                .from('user_roles')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .eq('role', 'admin')
+                .single();
+                
+            if (existingRole) {
+                log('User already has admin role: ' + JSON.stringify(existingRole, null, 2));
+                return;
+            }
+            
+            // Get user profile
+            const { data: profile, error: profileError } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .single();
+                
+            if (profileError) {
+                log('Error fetching user profile: ' + profileError.message);
+                return;
+            }
+            
+            log('User profile: ' + JSON.stringify(profile, null, 2));
+            
+            // Check existing roles
+            const { data: userRoles, error: userRolesError } = await supabase
+                .from('user_roles')
+                .select('*')
+                .eq('user_id', session.user.id);
+                
+            if (userRolesError) {
+                log('Error fetching existing roles: ' + userRolesError.message);
+                return;
+            }
+            
+            log('Existing user roles: ' + JSON.stringify(userRoles, null, 2));
+            
+            // If user has existing roles, update the primary one to admin
+            if (userRoles && userRoles.length > 0) {
+                const { error: updateError } = await supabase
+                    .from('user_roles')
+                    .update({ role: 'admin' })
+                    .eq('user_id', session.user.id)
+                    .eq('is_primary', true);
+                    
+                if (updateError) {
+                    log('Error updating role to admin: ' + updateError.message);
+                } else {
+                    log('Successfully updated role to admin');
+                }
+            } else {
+                // Create new admin role
+                const { error: insertError } = await supabase
+                    .from('user_roles')
+                    .insert({
+                        user_id: session.user.id,
+                        profile_id: profile.id,
+                        role: 'admin',
+                        is_primary: true
+                    });
+                    
+                if (insertError) {
+                    log('Error creating admin role: ' + insertError.message);
+                } else {
+                    log('Successfully created admin role');
+                }
+            }
+            
+            // Update user metadata
+            const { error: metadataError } = await supabase.auth.updateUser({
+                data: { role: 'admin' }
+            });
+            
+            if (metadataError) {
+                log('Error updating user metadata: ' + metadataError.message);
+            } else {
+                log('Successfully updated user metadata with admin role');
+            }
+            
+            log('Admin role setup complete. Please refresh the main app.');
+        }
+
+        async function checkUserRoles() {
+            log('=== Checking User Roles Table ===');
+            
+            const { data: roles, error } = await supabase
+                .from('user_roles')
+                .select(`
+                    *,
+                    user_profiles (*)
+                `);
+                
+            if (error) {
+                log('Error fetching user roles: ' + error.message);
+            } else {
+                log('All user roles: ' + JSON.stringify(roles, null, 2));
+            }
+        }
+    </script>
+</body>
+</html>

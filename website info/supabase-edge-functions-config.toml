@@ -1,0 +1,66 @@
+# Supabase Configuration for SteppersLife Edge Functions
+# This file configures your Supabase project for 100% Supabase deployment
+
+project_id = "your-project-id-here"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+site_url = "http://localhost:8081"
+additional_redirect_urls = ["https://your-app.vercel.app", "http://localhost:3000"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+security_refresh_token_reuse_interval = 10
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+
+[auth.jwt]
+default_group = "authenticated"
+admin_group = "admin"
+
+[storage]
+enabled = true
+file_size_limit = "50MB"
+
+[edge_functions]
+enabled = true
+
+[db]
+port = 54322
+shadow_port = 54323
+major_version = 15
+
+[functions.create-payment]
+[functions.create-payment.env]
+SQUARE_ACCESS_TOKEN = "env(SQUARE_ACCESS_TOKEN)"
+SQUARE_APPLICATION_ID = "env(SQUARE_APPLICATION_ID)"
+SQUARE_ENVIRONMENT = "env(SQUARE_ENVIRONMENT)"
+PAYPAL_CLIENT_ID = "env(PAYPAL_CLIENT_ID)"
+PAYPAL_CLIENT_SECRET = "env(PAYPAL_CLIENT_SECRET)"
+PAYPAL_ENVIRONMENT = "env(PAYPAL_ENVIRONMENT)"
+FRONTEND_URL = "env(FRONTEND_URL)"
+
+[functions.send-email]
+[functions.send-email.env]
+SENDGRID_API_KEY = "env(SENDGRID_API_KEY)"
+FROM_EMAIL = "env(FROM_EMAIL)"
+FROM_NAME = "env(FROM_NAME)"
+FRONTEND_URL = "env(FRONTEND_URL)"
+
+[functions.manage-account]
+[functions.manage-account.env]
+# No additional environment variables needed beyond defaults

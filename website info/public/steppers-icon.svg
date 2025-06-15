@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#2563eb" stroke="#1d4ed8" stroke-width="4"/>
+  
+  <!-- Main steps/stairs icon representing SteppersLife -->
+  <g transform="translate(128, 180)">
+    <!-- Step 1 -->
+    <rect x="0" y="120" width="60" height="20" fill="#ffffff" rx="4"/>
+    <rect x="0" y="100" width="20" height="40" fill="#ffffff" rx="4"/>
+    
+    <!-- Step 2 -->
+    <rect x="80" y="90" width="60" height="20" fill="#ffffff" rx="4"/>
+    <rect x="80" y="70" width="20" height="40" fill="#ffffff" rx="4"/>
+    
+    <!-- Step 3 -->
+    <rect x="160" y="60" width="60" height="20" fill="#ffffff" rx="4"/>
+    <rect x="160" y="40" width="20" height="40" fill="#ffffff" rx="4"/>
+    
+    <!-- Step 4 -->
+    <rect x="240" y="30" width="60" height="20" fill="#ffffff" rx="4"/>
+    <rect x="240" y="10" width="20" height="40" fill="#ffffff" rx="4"/>
+  </g>
+  
+  <!-- Event management icons -->
+  <g transform="translate(140, 320)">
+    <!-- Calendar/Event icon -->
+    <rect x="0" y="0" width="40" height="40" fill="#ffffff" rx="6"/>
+    <rect x="6" y="12" width="28" height="22" fill="#2563eb" rx="2"/>
+    <circle cx="12" cy="6" r="2" fill="#2563eb"/>
+    <circle cx="28" cy="6" r="2" fill="#2563eb"/>
+    
+    <!-- People/Users icon -->
+    <g transform="translate(60, 0)">
+      <circle cx="12" cy="12" r="8" fill="#ffffff"/>
+      <circle cx="28" cy="12" r="8" fill="#ffffff"/>
+      <path d="M4 32c0-8 4-12 8-12s8 4 8 12" stroke="#ffffff" stroke-width="2" fill="none"/>
+      <path d="M20 32c0-8 4-12 8-12s8 4 8 12" stroke="#ffffff" stroke-width="2" fill="none"/>
+    </g>
+    
+    <!-- Check/Success icon -->
+    <g transform="translate(120, 0)">
+      <circle cx="20" cy="20" r="18" fill="#ffffff"/>
+      <path d="M8 20l6 6 12-12" stroke="#2563eb" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  
+  <!-- Company text -->
+  <text x="256" y="450" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" font-weight="bold">SL</text>
+</svg> 

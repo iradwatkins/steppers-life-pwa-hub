@@ -1,0 +1,265 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Mobile Device Responsive Utilities */
+
+/* Base mobile optimization */
+.mobile-optimized {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch target optimization */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ultra-narrow screens (smallest phones) */
+@media (max-width: 320px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .hero-title {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.875rem;
+  }
+}
+
+/* iPhone SE and similar small devices */
+@media (min-width: 320px) and (max-width: 374px) {
+  .hero-title {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+  
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Samsung Galaxy Z Fold closed state */
+@media (min-width: 374px) and (max-width: 384px) {
+  .fold-closed-optimized {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .hero-title {
+    font-size: 2.25rem;
+  }
+}
+
+/* Standard mobile phones (iPhone 12/13/14/15, most Android) */
+@media (min-width: 375px) and (max-width: 428px) {
+  .standard-mobile {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* iPhone Plus models and larger phones */
+@media (min-width: 428px) and (max-width: 480px) {
+  .large-mobile {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+  
+  .hero-title {
+    font-size: 2.75rem;
+  }
+  
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Tablet portrait and Samsung Galaxy Z Fold open */
+@media (min-width: 768px) and (max-width: 884px) {
+  .tablet-fold-open {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  .hero-title {
+    font-size: 3.5rem;
+  }
+  
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Samsung Galaxy Z Fold fully open landscape */
+@media (min-width: 884px) and (orientation: landscape) and (max-height: 600px) {
+  .fold-landscape {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .hero-section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+  
+  .hero-title {
+    font-size: 3rem;
+    line-height: 1.1;
+  }
+  
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Orientation-specific optimizations */
+@media (orientation: portrait) {
+  .portrait-optimized {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .landscape-optimized {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .hero-section {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .section-spacing {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
+
+/* High DPI display optimization */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi-optimized {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+}
+
+/* Dark mode specific mobile optimizations */
+@media (prefers-color-scheme: dark) {
+  .mobile-dark-optimized {
+    background-color: rgba(0, 0, 0, 0.95);
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .motion-safe {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Safe area handling for notched devices */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Specific device optimizations */
+.device-optimized {
+  /* iPhone notch handling */
+  supports(padding: max(0px)): {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Smooth scrolling for mobile */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent bounce scrolling on iOS */
+.no-bounce {
+  overscroll-behavior-y: none;
+}

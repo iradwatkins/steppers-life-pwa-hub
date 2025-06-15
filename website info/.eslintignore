@@ -1,0 +1,23 @@
+# Build outputs
+dist/
+dev-dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Generated files
+*.generated.*
+workbox-*.js
+registerSW.js
+manifest.webmanifest
+
+# Cache and temporary files
+.cache/
+*.tsbuildinfo
+
+# PWA generated files
+sw.js
+
+# Generated TypeScript declarations
+*.d.ts 
