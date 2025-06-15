@@ -1,6 +1,6 @@
 # Story A.006: Organizer Event Draft, Review & Publish Workflow
 
-## Status: Pending
+## Status: Completed
 
 ## Story
 
@@ -23,25 +23,25 @@
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create ManageEventPage component (AC: 1, 2, 10)
-  - [ ] Build event management interface
-  - [ ] Display event status (Draft, Published, etc.)
-  - [ ] Add clear visual status indicators
-- [ ] Task 2: Publication status management (AC: 3, 7)
-  - [ ] Implement actions to change event status
-  - [ ] Add publication status validation
-  - [ ] Check requirements before publishing
-- [ ] Task 3: Event review interface (AC: 4)
-  - [ ] Create comprehensive event details review
-  - [ ] Display all configured event information
-  - [ ] Provide editing access to all sections
-- [ ] Task 4: Navigation and workflow (AC: 5, 6, 9)
-  - [ ] Add navigation to other event config pages
-  - [ ] Implement redirection from CreateEventPage
-  - [ ] Integrate with all event configuration workflows
-- [ ] Task 5: Mobile optimization (AC: 8)
-  - [ ] Ensure mobile-responsive design
-  - [ ] Test workflow on mobile devices
+- [x] Task 1: Create ManageEventPage component (AC: 1, 2, 10)
+  - [x] Build event management interface
+  - [x] Display event status (Draft, Published, etc.)
+  - [x] Add clear visual status indicators
+- [x] Task 2: Publication status management (AC: 3, 7)
+  - [x] Implement actions to change event status
+  - [x] Add publication status validation
+  - [x] Check requirements before publishing
+- [x] Task 3: Event review interface (AC: 4)
+  - [x] Create comprehensive event details review
+  - [x] Display all configured event information
+  - [x] Provide editing access to all sections
+- [x] Task 4: Navigation and workflow (AC: 5, 6, 9)
+  - [x] Add navigation to other event config pages
+  - [x] Implement redirection from CreateEventPage
+  - [x] Integrate with all event configuration workflows
+- [x] Task 5: Mobile optimization (AC: 8)
+  - [x] Ensure mobile-responsive design
+  - [x] Test workflow on mobile devices
 
 ## Dev Technical Guidance
 

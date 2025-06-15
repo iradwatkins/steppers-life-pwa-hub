@@ -31,6 +31,11 @@ import CreateEventPage from "./pages/CreateEventPage";
 import EventTicketingPage from "./pages/EventTicketingPage";
 import EventSeatingPage from "./pages/EventSeatingPage";
 import EventSeatingChartPage from "./pages/EventSeatingChartPage";
+import EventCustomQuestionsPage from "./pages/EventCustomQuestionsPage";
+import ManageEventPage from "./pages/ManageEventPage";
+import ClaimableEventsPage from "./pages/ClaimableEventsPage";
+import EventClaimsPage from "./pages/EventClaimsPage";
+import AdminCreateEventPage from "./pages/AdminCreateEventPage";
 import TestSeatingPage from "./pages/TestSeatingPage";
 import AdvancedSeatingPage from "./pages/AdvancedSeatingPage";
 import EnhancedPurchasePage from "./pages/EnhancedPurchasePage";
@@ -57,9 +62,11 @@ const App = () => (
                   <Route path="/create-event" element={<CreateEventPage />} />
                   
                   {/* Organizer routes - must come before general event routes */}
+                  <Route path="/organizer/events/:eventId" element={<ManageEventPage />} />
                   <Route path="/organizer/event/:eventId/ticketing" element={<EventTicketingPage />} />
                   <Route path="/organizer/event/:eventId/seating" element={<EventSeatingPage />} />
                   <Route path="/organizer/event/:eventId/seating-chart" element={<EventSeatingChartPage />} />
+                  <Route path="/organizer/event/:eventId/custom-questions" element={<EventCustomQuestionsPage />} />
                   <Route path="/organizer/event/:eventId/seating/advanced" element={<AdvancedSeatingPage />} />
                   
                   {/* Event routes */}
@@ -78,6 +85,9 @@ const App = () => (
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/claimable-events" element={<ClaimableEventsPage />} />
+                  <Route path="/admin/event-claims" element={<EventClaimsPage />} />
+                  <Route path="/admin/create-event" element={<AdminCreateEventPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />

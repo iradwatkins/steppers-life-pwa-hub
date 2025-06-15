@@ -172,8 +172,8 @@ const CreateEventPage = () => {
       // Mock event ID generation
       const mockEventId = `event_${Date.now()}`;
       
-      toast.success('Event created successfully! Now configure your tickets.');
-      navigate(`/organizer/event/${mockEventId}/ticketing`);
+      toast.success('Event created successfully! You can now manage all event settings.');
+      navigate(`/organizer/events/${mockEventId}`);
     } catch (error) {
       toast.error('Failed to create event. Please try again.');
     } finally {

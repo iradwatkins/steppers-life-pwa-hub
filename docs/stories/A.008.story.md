@@ -1,6 +1,6 @@
 # Story A.008: Admin Direct Event Setup & Assignment to Promoter UI
 
-## Status: Pending
+## Status: Completed
 
 ## Story
 
@@ -23,24 +23,24 @@
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create AdminCreateEventPage component (AC: 1, 6)
-  - [ ] Build admin interface for event creation
-  - [ ] Integrate with existing event creation workflow
-- [ ] Task 2: Promoter assignment functionality (AC: 2, 4)
-  - [ ] Add promoter selection interface
-  - [ ] Implement search/browse for available promoters
-  - [ ] Enable direct assignment during event creation
-- [ ] Task 3: Admin capabilities and permissions (AC: 3, 7)
-  - [ ] Grant admin access to full event creation features
-  - [ ] Implement admin override capabilities
-  - [ ] Add administrative controls for event management
-- [ ] Task 4: Notification and audit systems (AC: 5, 8)
-  - [ ] Create assignment notification system for promoters
-  - [ ] Implement audit trail for admin-created events
-- [ ] Task 5: Dashboard integration (AC: 9, 10)
-  - [ ] Add link from Admin dashboard
-  - [ ] Ensure mobile-responsive design
-  - [ ] Integrate with admin panel navigation
+- [x] Task 1: Create AdminCreateEventPage component (AC: 1, 6)
+  - [x] Build admin interface for event creation
+  - [x] Integrate with existing event creation workflow
+- [x] Task 2: Promoter assignment functionality (AC: 2, 4)
+  - [x] Add promoter selection interface
+  - [x] Implement search/browse for available promoters
+  - [x] Enable direct assignment during event creation
+- [x] Task 3: Admin capabilities and permissions (AC: 3, 7)
+  - [x] Grant admin access to full event creation features
+  - [x] Implement admin override capabilities
+  - [x] Add administrative controls for event management
+- [x] Task 4: Notification and audit systems (AC: 5, 8)
+  - [x] Create assignment notification system for promoters
+  - [x] Implement audit trail for admin-created events
+- [x] Task 5: Dashboard integration (AC: 9, 10)
+  - [x] Add link from Admin dashboard
+  - [x] Ensure mobile-responsive design
+  - [x] Integrate with admin panel navigation
 
 ## Dev Technical Guidance
 

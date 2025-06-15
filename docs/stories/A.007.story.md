@@ -1,6 +1,6 @@
 # Story A.007: Event Claiming Workflow (Promoter & Admin UIs)
 
-## Status: Pending
+## Status: Completed
 
 ## Story
 
@@ -23,26 +23,26 @@
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create ClaimableEventsPage for promoters (AC: 2, 3)
-  - [ ] Build interface for promoters to find unclaimed events
-  - [ ] Implement claim request submission
-  - [ ] Link from Profile page for easy access
-- [ ] Task 2: Create EventClaimsPage for admins (AC: 4, 5)
-  - [ ] Build admin interface to review claims
-  - [ ] Implement approve/reject claim functionality
-  - [ ] Link event to promoter dashboard on approval
-- [ ] Task 3: Automated notification system (AC: 6, 7, 8)
-  - [ ] Create notification system for potential event matches
-  - [ ] Implement "Is this your event?" notification workflow
-  - [ ] Add confirmation system for promoter responses
-- [ ] Task 4: Admin review workflow (AC: 9, 10)
-  - [ ] Add admin review option for automatic notifications
-  - [ ] Integrate with admin dashboard
-  - [ ] Link from admin panel for claims management
-- [ ] Task 5: Dashboard integration
-  - [ ] Add claimable events access from promoter profile
-  - [ ] Add claims management access from admin dashboard
-  - [ ] Ensure mobile-responsive interfaces
+- [x] Task 1: Create ClaimableEventsPage for promoters (AC: 2, 3)
+  - [x] Build interface for promoters to find unclaimed events
+  - [x] Implement claim request submission
+  - [x] Link from Profile page for easy access
+- [x] Task 2: Create EventClaimsPage for admins (AC: 4, 5)
+  - [x] Build admin interface to review claims
+  - [x] Implement approve/reject claim functionality
+  - [x] Link event to promoter dashboard on approval
+- [x] Task 3: Automated notification system (AC: 6, 7, 8)
+  - [x] Create notification system for potential event matches
+  - [x] Implement "Is this your event?" notification workflow
+  - [x] Add confirmation system for promoter responses
+- [x] Task 4: Admin review workflow (AC: 9, 10)
+  - [x] Add admin review option for automatic notifications
+  - [x] Integrate with admin dashboard
+  - [x] Link from admin panel for claims management
+- [x] Task 5: Dashboard integration
+  - [x] Add claimable events access from promoter profile
+  - [x] Add claims management access from admin dashboard
+  - [x] Ensure mobile-responsive interfaces
 
 ## Dev Technical Guidance
 

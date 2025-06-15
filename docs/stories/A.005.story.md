@@ -1,6 +1,6 @@
 # Story A.005: Organizer Custom Attendee Information Questions UI
 
-## Status: Pending
+## Status: Completed
 
 ## Story
 
@@ -23,24 +23,24 @@
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create EventCustomQuestionsPage component (AC: 1, 8)
-  - [ ] Build custom questions management interface
-  - [ ] Implement form validation for question setup
-- [ ] Task 2: Question type implementation (AC: 2, 3)
-  - [ ] Add text input question type
-  - [ ] Add multiple choice question type
-  - [ ] Create question type selection interface
-- [ ] Task 3: Question management functionality (AC: 4, 5)
-  - [ ] Implement add/edit/delete question operations
-  - [ ] Add question reordering capability
-  - [ ] Set required vs optional designation
-- [ ] Task 4: Preview and integration (AC: 6, 7, 10)
-  - [ ] Create attendee view preview of questions
-  - [ ] Integrate with event registration workflow
-  - [ ] Ensure standard fields remain required
-- [ ] Task 5: Routing and mobile optimization (AC: 9)
-  - [ ] Add route /organizer/event/:eventId/custom-questions
-  - [ ] Ensure mobile-responsive design
+- [x] Task 1: Create EventCustomQuestionsPage component (AC: 1, 8)
+  - [x] Build custom questions management interface
+  - [x] Implement form validation for question setup
+- [x] Task 2: Question type implementation (AC: 2, 3)
+  - [x] Add text input question type
+  - [x] Add multiple choice question type
+  - [x] Create question type selection interface
+- [x] Task 3: Question management functionality (AC: 4, 5)
+  - [x] Implement add/edit/delete question operations
+  - [x] Add question reordering capability
+  - [x] Set required vs optional designation
+- [x] Task 4: Preview and integration (AC: 6, 7, 10)
+  - [x] Create attendee view preview of questions
+  - [x] Integrate with event registration workflow
+  - [x] Ensure standard fields remain required
+- [x] Task 5: Routing and mobile optimization (AC: 9)
+  - [x] Add route /organizer/event/:eventId/custom-questions
+  - [x] Ensure mobile-responsive design
 
 ## Dev Technical Guidance
 
