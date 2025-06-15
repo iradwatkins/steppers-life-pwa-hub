@@ -56,6 +56,8 @@ if (env.isDevelopment) {
     environment: env.appEnv,
     supabaseUrl: env.supabaseUrl,
     appUrl: env.appUrl,
-    hasValidKey: env.supabaseAnonKey !== 'PRODUCTION_KEY_NEEDED'
+    hasValidKey: env.supabaseAnonKey !== 'PRODUCTION_KEY_NEEDED',
+    database: env.supabaseUrl.includes('nwoteszpvvefbopbbvrl') ? 'Development' : 'Production',
+    branch: env.supabaseUrl.includes('nwoteszpvvefbopbbvrl') ? 'development' : 'main'
   });
 }

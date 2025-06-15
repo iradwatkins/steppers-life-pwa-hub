@@ -2,6 +2,7 @@
 import React from 'react';
 import Header from './Header';
 import Footer from './Footer';
+import EnvironmentIndicator from '@/components/dev/EnvironmentIndicator';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ const Layout = ({ children }: LayoutProps) => {
         {children}
       </main>
       <Footer />
+      <EnvironmentIndicator />
     </div>
   );
 };
