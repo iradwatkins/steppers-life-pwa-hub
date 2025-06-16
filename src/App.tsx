@@ -27,6 +27,7 @@ import TicketSelectionPage from "./pages/TicketSelectionPage";
 import CheckoutDetailsPage from "./pages/CheckoutDetailsPage";
 import CheckoutPaymentPage from "./pages/CheckoutPaymentPage";
 import CheckoutConfirmationPage from "./pages/CheckoutConfirmationPage";
+import CashPaymentPage from "./pages/CashPaymentPage";
 import CreateEventPage from "./pages/CreateEventPage";
 import EventTicketingPage from "./pages/EventTicketingPage";
 import EventSeatingPage from "./pages/EventSeatingPage";
@@ -44,6 +45,7 @@ import AdvancedSeatingPage from "./pages/AdvancedSeatingPage";
 import EnhancedPurchasePage from "./pages/EnhancedPurchasePage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -62,38 +64,119 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/magazine" element={<Magazine />} />
                   <Route path="/events" element={<Events />} />
-                  <Route path="/events/create" element={<CreateEventPage />} />
-                  <Route path="/organizer/setup" element={<OrganizerSetupPage />} />
+                  <Route path="/events/create" element={
+                    <OrganizerRoute>
+                      <CreateEventPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/organizer/setup" element={
+                    <AuthRoute>
+                      <OrganizerSetupPage />
+                    </AuthRoute>
+                  } />
                   
                   {/* Organizer routes - must come before general event routes */}
-                  <Route path="/organizer/events/:eventId" element={<ManageEventPage />} />
-                  <Route path="/organizer/event/:eventId/ticketing" element={<EventTicketingPage />} />
-                  <Route path="/organizer/event/:eventId/seating" element={<EventSeatingPage />} />
-                  <Route path="/organizer/event/:eventId/seating-chart" element={<EventSeatingChartPage />} />
-                  <Route path="/organizer/event/:eventId/custom-questions" element={<EventCustomQuestionsPage />} />
-                  <Route path="/organizer/event/:eventId/promo-codes" element={<EventPromoCodesPage />} />
-                  <Route path="/organizer/event/:eventId/seating/advanced" element={<AdvancedSeatingPage />} />
+                  <Route path="/organizer/events/:eventId" element={
+                    <OrganizerRoute>
+                      <ManageEventPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/organizer/event/:eventId/ticketing" element={
+                    <OrganizerRoute>
+                      <EventTicketingPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/organizer/event/:eventId/seating" element={
+                    <OrganizerRoute>
+                      <EventSeatingPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/organizer/event/:eventId/seating-chart" element={
+                    <OrganizerRoute>
+                      <EventSeatingChartPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/organizer/event/:eventId/custom-questions" element={
+                    <OrganizerRoute>
+                      <EventCustomQuestionsPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/organizer/event/:eventId/promo-codes" element={
+                    <OrganizerRoute>
+                      <EventPromoCodesPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/organizer/event/:eventId/seating/advanced" element={
+                    <OrganizerRoute>
+                      <AdvancedSeatingPage />
+                    </OrganizerRoute>
+                  } />
                   
                   {/* Event routes */}
                   <Route path="/events/:eventId/purchase" element={<EnhancedPurchasePage />} />
                   <Route path="/events/:eventId/tickets" element={<TicketSelectionPage />} />
                   <Route path="/events/:id" element={<EventDetail />} />
                   
-                  {/* Checkout routes */}
-                  <Route path="/checkout/details" element={<CheckoutDetailsPage />} />
-                  <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
-                  <Route path="/checkout/confirmation" element={<CheckoutConfirmationPage />} />
+                  {/* Checkout routes - require authentication */}
+                  <Route path="/checkout/details" element={
+                    <AuthRoute>
+                      <CheckoutDetailsPage />
+                    </AuthRoute>
+                  } />
+                  <Route path="/checkout/payment" element={
+                    <AuthRoute>
+                      <CheckoutPaymentPage />
+                    </AuthRoute>
+                  } />
+                  <Route path="/checkout/confirmation" element={
+                    <AuthRoute>
+                      <CheckoutConfirmationPage />
+                    </AuthRoute>
+                  } />
+                  <Route path="/cash-payment" element={
+                    <AuthRoute>
+                      <CashPaymentPage />
+                    </AuthRoute>
+                  } />
+                  
+                  {/* Public routes */}
                   <Route path="/classes" element={<Classes />} />
                   <Route path="/classes/:id" element={<ClassDetail />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/about" element={<About />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/claimable-events" element={<ClaimableEventsPage />} />
+                  
+                  {/* Protected user routes */}
+                  <Route path="/profile" element={
+                    <AuthRoute>
+                      <Profile />
+                    </AuthRoute>
+                  } />
+                  <Route path="/dashboard" element={
+                    <AuthRoute>
+                      <Dashboard />
+                    </AuthRoute>
+                  } />
+                  <Route path="/notifications" element={
+                    <AuthRoute>
+                      <Notifications />
+                    </AuthRoute>
+                  } />
+                  <Route path="/claimable-events" element={
+                    <AuthRoute>
+                      <ClaimableEventsPage />
+                    </AuthRoute>
+                  } />
+                  
+                  {/* Admin routes */}
+                  <Route path="/admin/test" element={<div>Admin Test Route Works!</div>} />
                   <Route path="/admin/event-claims" element={<EventClaimsPage />} />
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/create-event" element={<AdminCreateEventPage />} />
+                  <Route path="/admin/settings" element={<div className="p-8"><h1 className="text-2xl font-bold">Admin Settings</h1><p>Settings page coming soon...</p></div>} />
+                  <Route path="/admin/users" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Users</h1><p>User management page coming soon...</p></div>} />
+                  <Route path="/admin/events" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Events</h1><p>Event management page coming soon...</p></div>} />
+                  <Route path="/admin/organizers" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Organizers</h1><p>Organizer management page coming soon...</p></div>} />
+                  <Route path="/admin/reports" element={<div className="p-8"><h1 className="text-2xl font-bold">View Reports</h1><p>Reports page coming soon...</p></div>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />

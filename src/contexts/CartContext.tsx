@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import type { PromoCodeApplication } from '@/types/ticket';
+
+export interface PromoCodeApplication {
+  promoCode: string;
+  discountAmount: number;
+  discountType: 'percentage' | 'fixed_amount';
+  discountValue: number;
+}
 
 export interface TicketType {
   id: string;
@@ -29,10 +35,12 @@ export interface CheckoutState {
   items: CartItem[];
   subtotal: number;
   discountAmount: number;
+  discount: number;
   total: number;
   eventId: string | null;
   eventTitle: string | null;
   attendeeInfo: AttendeeInfo | null;
+  promoCode: string | null;
   promoCodeApplication: PromoCodeApplication | null;
   currentStep: number;
 }
@@ -51,10 +59,12 @@ const initialState: CheckoutState = {
   items: [],
   subtotal: 0,
   discountAmount: 0,
+  discount: 0,
   total: 0,
   eventId: null,
   eventTitle: null,
   attendeeInfo: null,
+  promoCode: null,
   promoCodeApplication: null,
   currentStep: 1,
 };
@@ -62,10 +72,10 @@ const initialState: CheckoutState = {
 // Helper function to calculate totals
 function calculateTotals(items: CartItem[], promoCodeApplication: PromoCodeApplication | null) {
   const subtotal = items.reduce((sum, item) => sum + (item.ticketType.price * item.quantity), 0);
-  const discountAmount = promoCodeApplication ? promoCodeApplication.discount_amount : 0;
+  const discountAmount = promoCodeApplication ? promoCodeApplication.discountAmount : 0;
   const total = Math.max(0, subtotal - discountAmount);
   
-  return { subtotal, discountAmount, total };
+  return { subtotal, discountAmount, discount: discountAmount, total };
 }
 
 function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
@@ -86,8 +96,8 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
         newItems = [...state.items, action.payload];
       }
 
-      const { subtotal, discountAmount, total } = calculateTotals(newItems, state.promoCodeApplication);
-      return { ...state, items: newItems, subtotal, discountAmount, total };
+      const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.promoCodeApplication);
+      return { ...state, items: newItems, subtotal, discountAmount, discount, total };
     }
 
     case 'REMOVE_ITEM': {
@@ -114,12 +124,14 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
       return { ...state, attendeeInfo: action.payload };
 
     case 'SET_PROMO_CODE': {
-      const { subtotal, discountAmount, total } = calculateTotals(state.items, action.payload);
+      const { subtotal, discountAmount, discount, total } = calculateTotals(state.items, action.payload);
       return { 
         ...state, 
+        promoCode: action.payload?.promoCode || null,
         promoCodeApplication: action.payload, 
         subtotal, 
-        discountAmount, 
+        discountAmount,
+        discount, 
         total 
       };
     }

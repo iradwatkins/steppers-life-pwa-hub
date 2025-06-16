@@ -4,45 +4,24 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { PromoCodeService } from '@/services/promoCodeService';
 import { toast } from 'sonner';
 import { Percent, X, Check } from 'lucide-react';
-import type { PromoCodeApplication } from '@/types/ticket';
+
+export interface PromoCodeApplication {
+  promo_code: string;
+  discount_amount: number;
+  discount_type: 'percentage' | 'fixed_amount';
+  discount_value: number;
+}
 
 interface PromoCodeInputProps {
-  eventId: number;
+  eventId: string;
   subtotal: number;
   onPromoCodeApplied: (application: PromoCodeApplication | null) => void;
   appliedPromoCode?: PromoCodeApplication | null;
   disabled?: boolean;
 }
-
-// Mock promo codes for validation - replace with actual API call
-const mockPromoCodes = [
-  {
-    code: 'EARLY20',
-    type: 'percentage' as const,
-    value: 20,
-    isActive: true,
-    validFrom: '2024-01-01T00:00:00Z',
-    validUntil: '2024-12-31T23:59:59Z'
-  },
-  {
-    code: 'SAVE50',
-    type: 'fixed' as const,
-    value: 50,
-    isActive: true,
-    validFrom: '2024-01-01T00:00:00Z',
-    validUntil: '2024-12-31T23:59:59Z'
-  },
-  {
-    code: 'STUDENT15',
-    type: 'percentage' as const,
-    value: 15,
-    isActive: true,
-    validFrom: '2024-01-01T00:00:00Z',
-    validUntil: '2024-12-31T23:59:59Z'
-  }
-];
 
 const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
   eventId,
@@ -54,40 +33,24 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
   const [promoCode, setPromoCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
 
-  const calculateDiscount = (type: 'percentage' | 'fixed', value: number, subtotal: number): number => {
-    if (type === 'percentage') {
-      return Math.round((subtotal * value / 100) * 100) / 100;
-    } else {
-      return Math.min(value, subtotal);
-    }
-  };
-
   const validatePromoCode = async (code: string): Promise<PromoCodeApplication | null> => {
-    // Mock validation - replace with actual API call
-    const foundCode = mockPromoCodes.find(
-      pc => pc.code.toUpperCase() === code.toUpperCase() && pc.isActive
-    );
+    try {
+      const validation = await PromoCodeService.validatePromoCode(code.trim(), eventId, subtotal);
+      
+      if (!validation.isValid) {
+        throw new Error(validation.errorMessage || 'Invalid promo code');
+      }
 
-    if (!foundCode) {
-      throw new Error('Invalid promo code');
+      return {
+        promo_code: code.trim().toUpperCase(),
+        discount_amount: validation.discountAmount,
+        discount_type: validation.promoCode!.discount_type,
+        discount_value: validation.promoCode!.discount_value
+      };
+    } catch (error) {
+      console.error('Error validating promo code:', error);
+      throw error;
     }
-
-    const now = new Date();
-    const validFrom = new Date(foundCode.validFrom);
-    const validUntil = new Date(foundCode.validUntil);
-
-    if (now < validFrom || now > validUntil) {
-      throw new Error('Promo code has expired');
-    }
-
-    const discountAmount = calculateDiscount(foundCode.type, foundCode.value, subtotal);
-
-    return {
-      promo_code: foundCode.code,
-      discount_amount: discountAmount,
-      discount_type: foundCode.type,
-      discount_value: foundCode.value
-    };
   };
 
   const handleApplyPromoCode = async () => {
@@ -118,7 +81,7 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
     if (application.discount_type === 'percentage') {
       return `${application.discount_value}% off`;
     } else {
-      return `$${application.discount_amount.toFixed(2)} off`;
+      return `$${application.discount_value.toFixed(2)} off`;
     }
   };
 
@@ -188,10 +151,6 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
               </Button>
             </div>
             
-            {/* Sample promo codes for demo */}
-            <div className="text-xs text-muted-foreground">
-              <p>Try: EARLY20, SAVE50, or STUDENT15</p>
-            </div>
           </div>
         )}
       </CardContent>

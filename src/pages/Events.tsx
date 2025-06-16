@@ -1,122 +1,84 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, MapPin, Clock, Search, Filter, Users, DollarSign } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EventService } from '@/services/eventService';
+import { Calendar, MapPin, Clock, Search, Filter, Users, DollarSign, Star } from 'lucide-react';
+import type { Database } from '@/integrations/supabase/types';
+
+type Event = Database['public']['Tables']['events']['Row'] & {
+  organizers?: any;
+  venues?: any;
+  ticket_types?: any[];
+};
 
 const Events = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
   const [selectedDateRange, setSelectedDateRange] = useState('all');
+  const [events, setEvents] = useState<Event[]>([]);
+  const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalEvents, setTotalEvents] = useState(0);
 
-  const events = [
-    {
-      id: 1,
-      title: "Chicago Stepping Championship",
-      description: "The premier stepping competition featuring the best dancers from across the Midwest.",
-      date: "December 15, 2024",
-      time: "7:00 PM - 11:00 PM",
-      location: "Navy Pier Grand Ballroom",
-      address: "600 E Grand Ave, Chicago, IL",
-      price: "$45",
-      category: "competition",
-      capacity: 500,
-      attending: 342,
-      featured: true,
-      image: "/placeholder.svg"
-    },
-    {
-      id: 2,
-      title: "Beginner's Stepping Workshop",
-      description: "Perfect for newcomers to learn the basics of Chicago stepping in a supportive environment.",
-      date: "December 20, 2024",
-      time: "6:30 PM - 8:30 PM",
-      location: "South Side Cultural Center",
-      address: "4506 S Martin Luther King Jr Dr, Chicago, IL",
-      price: "$25",
-      category: "workshop",
-      capacity: 50,
-      attending: 38,
-      image: "/placeholder.svg"
-    },
-    {
-      id: 3,
-      title: "New Year's Eve Stepping Gala",
-      description: "Ring in the new year with an elegant evening of stepping, dining, and celebration.",
-      date: "December 31, 2024",
-      time: "8:00 PM - 2:00 AM",
-      location: "Palmer House Hilton",
-      address: "17 E Monroe St, Chicago, IL",
-      price: "$85",
-      category: "social",
-      capacity: 300,
-      attending: 156,
-      featured: true,
-      image: "/placeholder.svg"
-    },
-    {
-      id: 4,
-      title: "Advanced Technique Masterclass",
-      description: "Elevate your stepping with advanced techniques taught by master instructors.",
-      date: "January 5, 2025",
-      time: "2:00 PM - 5:00 PM",
-      location: "Chicago Dance Academy",
-      address: "1016 N Dearborn St, Chicago, IL",
-      price: "$60",
-      category: "workshop",
-      capacity: 30,
-      attending: 22,
-      image: "/placeholder.svg"
-    },
-    {
-      id: 5,
-      title: "Monthly Social Dance",
-      description: "Join the community for a fun night of social dancing and networking.",
-      date: "January 12, 2025",
-      time: "7:00 PM - 11:00 PM",
-      location: "Millennium Ballroom",
-      address: "2047 W Division St, Chicago, IL",
-      price: "$20",
-      category: "social",
-      capacity: 200,
-      attending: 89,
-      image: "/placeholder.svg"
-    },
-    {
-      id: 6,
-      title: "Youth Stepping Program Showcase",
-      description: "Watch the next generation of steppers showcase their talents.",
-      date: "January 18, 2025",
-      time: "6:00 PM - 8:00 PM",
-      location: "Youth Center Auditorium",
-      address: "456 S State St, Chicago, IL",
-      price: "Free",
-      category: "showcase",
-      capacity: 150,
-      attending: 67,
-      image: "/placeholder.svg"
-    }
-  ];
+  // Load events on component mount and when filters change
+  useEffect(() => {
+    const loadEvents = async () => {
+      setIsLoading(true);
+      try {
+        const { events: searchResults, total } = await EventService.searchEvents({
+          query: searchQuery || undefined,
+          category: selectedCategory !== 'all' ? selectedCategory : undefined,
+          location: selectedLocation !== 'all' ? selectedLocation : undefined,
+          dateRange: selectedDateRange !== 'all' ? selectedDateRange as any : undefined,
+          limit: 20
+        });
+
+        setEvents(searchResults);
+        setTotalEvents(total);
+
+        // Also load featured events if no search is active
+        if (!searchQuery && selectedCategory === 'all' && selectedLocation === 'all' && selectedDateRange === 'all') {
+          const featured = await EventService.getFeaturedEvents(3);
+          setFeaturedEvents(featured);
+        } else {
+          setFeaturedEvents([]);
+        }
+      } catch (error) {
+        console.error('Error loading events:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, [searchQuery, selectedCategory, selectedLocation, selectedDateRange]);
 
   const categories = [
     { value: 'all', label: 'All Events' },
     { value: 'competition', label: 'Competitions' },
-    { value: 'workshop', label: 'Workshops' },
+    { value: 'classes', label: 'Classes' },
     { value: 'social', label: 'Social Events' },
-    { value: 'showcase', label: 'Showcases' }
+    { value: 'workshop', label: 'Workshops' },
+    { value: 'community', label: 'Community Events' },
+    { value: 'youth', label: 'Youth Programs' },
+    { value: 'senior', label: 'Senior Programs' }
   ];
 
   const locations = [
     { value: 'all', label: 'All Locations' },
-    { value: 'downtown', label: 'Downtown' },
+    { value: 'chicago', label: 'Chicago' },
+    { value: 'downtown', label: 'Downtown Chicago' },
     { value: 'south-side', label: 'South Side' },
     { value: 'north-side', label: 'North Side' },
-    { value: 'west-side', label: 'West Side' }
+    { value: 'west-side', label: 'West Side' },
+    { value: 'suburbs', label: 'Chicago Suburbs' }
   ];
 
   const dateRanges = [
@@ -127,22 +89,72 @@ const Events = () => {
     { value: 'next-month', label: 'Next Month' }
   ];
 
-  const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
+  // Helper functions
   const getCategoryBadgeColor = (category: string) => {
-    switch (category) {
-      case 'competition': return 'bg-red-500';
-      case 'workshop': return 'bg-blue-500';
-      case 'social': return 'bg-green-500';
-      case 'showcase': return 'bg-purple-500';
-      default: return 'bg-gray-500';
+    const categoryLower = category.toLowerCase();
+    if (categoryLower.includes('competition')) return 'bg-red-500';
+    if (categoryLower.includes('workshop')) return 'bg-blue-500';
+    if (categoryLower.includes('social')) return 'bg-green-500';
+    if (categoryLower.includes('class')) return 'bg-purple-500';
+    if (categoryLower.includes('youth')) return 'bg-orange-500';
+    if (categoryLower.includes('community')) return 'bg-teal-500';
+    return 'bg-gray-500';
+  };
+
+  const formatEventDate = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const formatOptions: Intl.DateTimeFormatOptions = {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    };
+    
+    if (start.toDateString() === end.toDateString()) {
+      return start.toLocaleDateString('en-US', formatOptions);
+    } else {
+      return `${start.toLocaleDateString('en-US', formatOptions)} - ${end.toLocaleDateString('en-US', formatOptions)}`;
     }
+  };
+
+  const formatEventTime = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    };
+    
+    return `${start.toLocaleTimeString('en-US', timeOptions)} - ${end.toLocaleTimeString('en-US', timeOptions)}`;
+  };
+
+  const getEventPrice = (ticketTypes: any[]) => {
+    if (!ticketTypes || ticketTypes.length === 0) return 'Free';
+    
+    const prices = ticketTypes.map(tt => tt.price).filter(p => p > 0);
+    if (prices.length === 0) return 'Free';
+    
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    
+    if (minPrice === maxPrice) {
+      return `$${minPrice}`;
+    } else {
+      return `$${minPrice} - $${maxPrice}`;
+    }
+  };
+
+  const getAttendanceInfo = (ticketTypes: any[]) => {
+    if (!ticketTypes || ticketTypes.length === 0) return { sold: 0, capacity: 0 };
+    
+    const sold = ticketTypes.reduce((sum, tt) => sum + (tt.quantity_sold || 0), 0);
+    const capacity = ticketTypes.reduce((sum, tt) => sum + (tt.quantity_available || 0), 0);
+    
+    return { sold, capacity: sold + capacity };
   };
 
   return (
@@ -213,61 +225,208 @@ const Events = () => {
           </div>
         </div>
 
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
-            <Card key={event.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="aspect-video bg-muted rounded-md mb-4 relative">
-                  {event.featured && (
-                    <Badge className="absolute top-2 left-2 bg-stepping-gradient">Featured</Badge>
-                  )}
-                </div>
-                <div className="flex items-center justify-between mb-2">
-                  <Badge className={`text-white ${getCategoryBadgeColor(event.category)}`}>
-                    {categories.find(cat => cat.value === event.category)?.label}
-                  </Badge>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Users className="h-3 w-3" />
-                    {event.attending}/{event.capacity}
-                  </div>
-                </div>
-                <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
-                <CardDescription className="line-clamp-2">{event.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    {event.date}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    {event.time}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    {event.location}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4 text-stepping-purple" />
-                    <span className="text-lg font-semibold text-stepping-purple">{event.price}</span>
-                  </div>
-                  <Button size="sm" asChild className="bg-stepping-gradient">
-                    <Link to={`/events/${event.id}`}>View Details</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        {/* Featured Events Section */}
+        {featuredEvents.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Star className="h-6 w-6 text-yellow-500" />
+              Featured Events
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {featuredEvents.map((event) => {
+                const attendanceInfo = getAttendanceInfo(event.ticket_types || []);
+                return (
+                  <Card key={event.id} className="hover:shadow-lg transition-shadow border-yellow-200">
+                    <CardHeader>
+                      <div className="aspect-video bg-muted rounded-md mb-4 relative">
+                        <Badge className="absolute top-2 left-2 bg-yellow-500 text-yellow-900">
+                          <Star className="h-3 w-3 mr-1" />
+                          Featured
+                        </Badge>
+                        {event.featured_image_url && (
+                          <img 
+                            src={event.featured_image_url} 
+                            alt={event.title}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className={`text-white ${getCategoryBadgeColor(event.category)}`}>
+                          {event.category}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Users className="h-3 w-3" />
+                          {attendanceInfo.sold}/{attendanceInfo.capacity}
+                        </div>
+                      </div>
+                      <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
+                      <CardDescription className="line-clamp-2">
+                        {event.short_description || event.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          {formatEventDate(event.start_date, event.end_date)}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          {formatEventTime(event.start_date, event.end_date)}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          {event.is_online ? 'Online Event' : (event.venues as any)?.name || 'TBD'}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-4 w-4 text-stepping-purple" />
+                          <span className="text-lg font-semibold text-stepping-purple">
+                            {getEventPrice(event.ticket_types || [])}
+                          </span>
+                        </div>
+                        <Button size="sm" asChild className="bg-stepping-gradient">
+                          <Link to={`/events/${event.id}`}>View Details</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* All Events Section */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-6">
+            {searchQuery || selectedCategory !== 'all' || selectedLocation !== 'all' || selectedDateRange !== 'all' 
+              ? 'Search Results' 
+              : 'All Events'
+            }
+          </h2>
+          
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="aspect-video w-full mb-4" />
+                    <div className="flex justify-between mb-2">
+                      <Skeleton className="h-5 w-20" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 mb-4">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </div>
+                    <div className="flex justify-between">
+                      <Skeleton className="h-6 w-16" />
+                      <Skeleton className="h-8 w-24" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : events.length === 0 ? (
+            <div className="text-center py-12">
+              <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2">No events found</h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your search criteria or check back later for new events.
+              </p>
+              <Button 
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                  setSelectedLocation('all');
+                  setSelectedDateRange('all');
+                }}
+                variant="outline"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {events.map((event) => {
+                const attendanceInfo = getAttendanceInfo(event.ticket_types || []);
+                return (
+                  <Card key={event.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="aspect-video bg-muted rounded-md mb-4 relative">
+                        {event.is_featured && (
+                          <Badge className="absolute top-2 left-2 bg-stepping-gradient">Featured</Badge>
+                        )}
+                        {event.featured_image_url && (
+                          <img 
+                            src={event.featured_image_url} 
+                            alt={event.title}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className={`text-white ${getCategoryBadgeColor(event.category)}`}>
+                          {event.category}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Users className="h-3 w-3" />
+                          {attendanceInfo.sold}/{attendanceInfo.capacity}
+                        </div>
+                      </div>
+                      <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
+                      <CardDescription className="line-clamp-2">
+                        {event.short_description || event.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          {formatEventDate(event.start_date, event.end_date)}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          {formatEventTime(event.start_date, event.end_date)}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          {event.is_online ? 'Online Event' : (event.venues as any)?.name || 'TBD'}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-4 w-4 text-stepping-purple" />
+                          <span className="text-lg font-semibold text-stepping-purple">
+                            {getEventPrice(event.ticket_types || [])}
+                          </span>
+                        </div>
+                        <Button size="sm" asChild className="bg-stepping-gradient">
+                          <Link to={`/events/${event.id}`}>View Details</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Results count */}
-        <div className="text-center mt-8 text-muted-foreground">
-          Showing {filteredEvents.length} of {events.length} events
-        </div>
+        {!isLoading && (
+          <div className="text-center mt-8 text-muted-foreground">
+            Showing {events.length} of {totalEvents} events
+          </div>
+        )}
       </div>
     </div>
   );

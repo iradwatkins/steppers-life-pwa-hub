@@ -338,6 +338,249 @@ export class EventService {
     }
   }
 
+  // Search and filter events
+  static async searchEvents(params: {
+    query?: string;
+    category?: string;
+    location?: string;
+    dateRange?: 'this-week' | 'next-week' | 'this-month' | 'next-month' | 'all';
+    priceRange?: { min?: number; max?: number };
+    limit?: number;
+    offset?: number;
+  }): Promise<{ events: Event[]; total: number }> {
+    try {
+      let query = supabase
+        .from('events')
+        .select(`
+          *,
+          organizers (
+            organization_name
+          ),
+          venues (
+            name,
+            city,
+            state,
+            address
+          ),
+          ticket_types (
+            id,
+            name,
+            price,
+            quantity_available,
+            quantity_sold
+          )
+        `, { count: 'exact' })
+        .eq('status', 'published')
+        .gte('start_date', new Date().toISOString());
+
+      // Text search
+      if (params.query) {
+        query = query.or(`title.ilike.%${params.query}%,description.ilike.%${params.query}%,category.ilike.%${params.query}%`);
+      }
+
+      // Category filter
+      if (params.category && params.category !== 'all') {
+        query = query.ilike('category', `%${params.category}%`);
+      }
+
+      // Location filter (city/state from venue)
+      if (params.location && params.location !== 'all') {
+        // This will need to be handled with a join or separate query
+        // For now, we'll filter after fetching
+      }
+
+      // Date range filter
+      if (params.dateRange && params.dateRange !== 'all') {
+        const now = new Date();
+        let startDate: Date;
+        let endDate: Date;
+
+        switch (params.dateRange) {
+          case 'this-week':
+            startDate = new Date(now);
+            endDate = new Date(now);
+            endDate.setDate(now.getDate() + 7);
+            break;
+          case 'next-week':
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() + 7);
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 7);
+            break;
+          case 'this-month':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            break;
+          case 'next-month':
+            startDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+            break;
+          default:
+            startDate = now;
+            endDate = new Date(now);
+            endDate.setFullYear(now.getFullYear() + 1);
+        }
+
+        query = query
+          .gte('start_date', startDate.toISOString())
+          .lte('start_date', endDate.toISOString());
+      }
+
+      // Pagination
+      if (params.offset) {
+        query = query.range(params.offset, params.offset + (params.limit || 20) - 1);
+      } else if (params.limit) {
+        query = query.limit(params.limit);
+      }
+
+      // Order by start date
+      query = query.order('start_date', { ascending: true });
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      let events = data || [];
+
+      // Post-process location filtering if needed
+      if (params.location && params.location !== 'all') {
+        events = events.filter(event => {
+          if (!event.venues) return false;
+          const venue = event.venues as any;
+          const locationLower = params.location!.toLowerCase();
+          return (
+            venue.city?.toLowerCase().includes(locationLower) ||
+            venue.state?.toLowerCase().includes(locationLower)
+          );
+        });
+      }
+
+      // Post-process price filtering if needed
+      if (params.priceRange) {
+        events = events.filter(event => {
+          const ticketTypes = event.ticket_types as any[];
+          if (!ticketTypes?.length) return false;
+          
+          const minPrice = Math.min(...ticketTypes.map(tt => tt.price));
+          const maxPrice = Math.max(...ticketTypes.map(tt => tt.price));
+          
+          const meetsMin = !params.priceRange!.min || minPrice >= params.priceRange!.min;
+          const meetsMax = !params.priceRange!.max || maxPrice <= params.priceRange!.max;
+          
+          return meetsMin && meetsMax;
+        });
+      }
+
+      return {
+        events,
+        total: count || 0
+      };
+    } catch (error) {
+      console.error('Error searching events:', error);
+      return { events: [], total: 0 };
+    }
+  }
+
+  // Get featured events
+  static async getFeaturedEvents(limit = 6): Promise<Event[]> {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select(`
+          *,
+          organizers (
+            organization_name
+          ),
+          venues (
+            name,
+            city,
+            state
+          ),
+          ticket_types (
+            id,
+            name,
+            price,
+            quantity_available,
+            quantity_sold
+          )
+        `)
+        .eq('status', 'published')
+        .eq('is_featured', true)
+        .gte('start_date', new Date().toISOString())
+        .order('start_date', { ascending: true })
+        .limit(limit);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching featured events:', error);
+      return [];
+    }
+  }
+
+  // Get events by category
+  static async getEventsByCategory(category: string, limit?: number): Promise<Event[]> {
+    try {
+      let query = supabase
+        .from('events')
+        .select(`
+          *,
+          organizers (
+            organization_name
+          ),
+          venues (
+            name,
+            city,
+            state
+          ),
+          ticket_types (
+            id,
+            name,
+            price,
+            quantity_available,
+            quantity_sold
+          )
+        `)
+        .eq('status', 'published')
+        .ilike('category', `%${category}%`)
+        .gte('start_date', new Date().toISOString())
+        .order('start_date', { ascending: true });
+
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching events by category:', error);
+      return [];
+    }
+  }
+
+  // Get upcoming events for a specific location
+  static async getEventsByLocation(city: string, state?: string, limit?: number): Promise<Event[]> {
+    try {
+      // This requires a more complex query with venue joins
+      const events = await this.getPublishedEvents();
+      
+      return events.filter(event => {
+        const venue = event.venues as any;
+        if (!venue) return false;
+        
+        const cityMatch = venue.city?.toLowerCase().includes(city.toLowerCase());
+        const stateMatch = !state || venue.state?.toLowerCase().includes(state.toLowerCase());
+        
+        return cityMatch && stateMatch;
+      }).slice(0, limit);
+    } catch (error) {
+      console.error('Error fetching events by location:', error);
+      return [];
+    }
+  }
+
   // Event categories helper
   static getEventCategories(): string[] {
     return [
@@ -353,6 +596,24 @@ export class EventService {
       'Fundraiser Event',
       'Youth Stepping Program',
       'Senior Stepping Program'
+    ];
+  }
+
+  // Get popular search tags
+  static getPopularTags(): string[] {
+    return [
+      'beginner-friendly',
+      'advanced',
+      'competition',
+      'social',
+      'workshop',
+      'live-music',
+      'food-included',
+      'youth',
+      'senior',
+      'couples',
+      'singles',
+      'free'
     ];
   }
 }

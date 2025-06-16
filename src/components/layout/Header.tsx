@@ -102,6 +102,14 @@ const Header = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/notifications">Notifications</Link>
                   </DropdownMenuItem>
+                  {user?.email === 'iradwatkins@gmail.com' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/dashboard">Admin Dashboard</Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="h-4 w-4 mr-2" />

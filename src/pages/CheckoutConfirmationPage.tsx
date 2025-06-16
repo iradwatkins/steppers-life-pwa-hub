@@ -5,7 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/hooks/useAuth';
+import { OrderService, CreateOrderData } from '@/services/orderService';
+import { EmailService } from '@/services/emailService';
+import { TicketPDFService } from '@/services/ticketPDFService';
+import type { OrderWithItems } from '@/services/orderService';
 import { 
   CheckCircle, 
   Calendar, 
@@ -17,53 +23,231 @@ import {
   Share,
   ArrowRight,
   Ticket,
-  User
+  User,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 const CheckoutConfirmationPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuth();
   const { state, clearCart, setStep } = useCart();
-  const [orderNumber] = useState(() => `SL${Date.now().toString().slice(-8)}`);
+  const [order, setOrder] = useState<OrderWithItems | null>(null);
+  const [isProcessing, setIsProcessing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     setStep(4);
     // Redirect if no items in cart or no attendee info
-    if (state.items.length === 0 || !state.attendeeInfo) {
+    if (state.items.length === 0 || !state.attendeeInfo || !user) {
       navigate('/events');
+      return;
     }
-  }, [setStep, state.items.length, state.attendeeInfo, navigate]);
+
+    // Process the order
+    processOrder();
+  }, [setStep, state.items.length, state.attendeeInfo, user, navigate]);
+
+  const processOrder = async () => {
+    if (!user || !state.attendeeInfo || state.items.length === 0) return;
+
+    try {
+      setIsProcessing(true);
+      setError(null);
+
+      // Calculate totals
+      const subtotal = state.total;
+      const processingFee = subtotal * 0.029 + 0.30;
+      const totalAmount = subtotal + processingFee;
+
+      // Prepare order data
+      const orderData: CreateOrderData = {
+        userId: user.id,
+        eventId: state.eventId || '',
+        totalAmount: subtotal,
+        feesAmount: processingFee,
+        finalAmount: totalAmount,
+        billingDetails: {
+          firstName: state.attendeeInfo.firstName,
+          lastName: state.attendeeInfo.lastName,
+          email: state.attendeeInfo.email,
+          phone: state.attendeeInfo.phone,
+          dietaryRestrictions: state.attendeeInfo.dietaryRestrictions,
+          specialRequests: state.attendeeInfo.specialRequests
+        },
+        items: state.items.map(item => ({
+          ticketTypeId: item.ticketType.id,
+          quantity: item.quantity,
+          price: item.ticketType.price,
+          attendeeName: `${state.attendeeInfo!.firstName} ${state.attendeeInfo!.lastName}`,
+          attendeeEmail: state.attendeeInfo!.email
+        })),
+        paymentIntentId: 'mock_payment_intent_' + Date.now()
+      };
+
+      // Create order in database
+      const createdOrder = await OrderService.createOrder(orderData);
+      if (!createdOrder) {
+        throw new Error('Failed to create order');
+      }
+
+      // Get full order details
+      const orderWithDetails = await OrderService.getOrderWithDetails(createdOrder.id);
+      if (!orderWithDetails) {
+        throw new Error('Failed to retrieve order details');
+      }
+
+      setOrder(orderWithDetails);
+
+      // Send email receipt
+      try {
+        const emailSent = await EmailService.sendReceiptEmail({
+          order: orderWithDetails,
+          customerEmail: state.attendeeInfo.email,
+          customerName: `${state.attendeeInfo.firstName} ${state.attendeeInfo.lastName}`
+        });
+        setEmailSent(emailSent);
+        
+        if (emailSent) {
+          toast({
+            title: "Receipt Sent",
+            description: "Order confirmation sent to your email"
+          });
+        }
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+      }
+
+    } catch (error) {
+      console.error('Order processing failed:', error);
+      setError(error instanceof Error ? error.message : 'Failed to process order');
+      toast({
+        title: "Order Processing Failed",
+        description: "There was an error processing your order. Please contact support.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleNewOrder = () => {
     clearCart();
     navigate('/events');
   };
 
-  const handleDownloadTickets = () => {
-    // Mock ticket download
-    alert('Tickets downloaded! (This is a demo)');
-  };
+  const handleDownloadTickets = async () => {
+    if (!order) return;
 
-  const handleShareEvent = () => {
-    // Mock sharing functionality
-    if (navigator.share) {
-      navigator.share({
-        title: state.eventTitle || 'Event',
-        text: `Check out this event: ${state.eventTitle}`,
-        url: window.location.origin + `/events/${state.eventId}`
+    try {
+      setIsDownloading(true);
+      const success = await TicketPDFService.downloadTickets(order);
+      
+      if (success) {
+        toast({
+          title: "Tickets Downloaded",
+          description: "Your tickets have been downloaded successfully"
+        });
+      } else {
+        throw new Error('Download failed');
+      }
+    } catch (error) {
+      console.error('Ticket download failed:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download tickets. Please try again.",
+        variant: "destructive"
       });
-    } else {
-      // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(`${window.location.origin}/events/${state.eventId}`);
-      alert('Event link copied to clipboard!');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
-  if (state.items.length === 0 || !state.attendeeInfo) {
+  const handleShareEvent = async () => {
+    if (!order) return;
+
+    const shareData = {
+      title: order.event.title,
+      text: `Check out this amazing event: ${order.event.title}`,
+      url: `${window.location.origin}/events/${order.event_id}`
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast({
+          title: "Event Shared",
+          description: "Event shared successfully"
+        });
+      } else {
+        // Fallback for browsers that don't support Web Share API
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: "Link Copied",
+          description: "Event link copied to clipboard"
+        });
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Sharing failed:', error);
+        toast({
+          title: "Sharing Failed",
+          description: "Failed to share event",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  if (state.items.length === 0 || !state.attendeeInfo || !user) {
     return null; // Will redirect
   }
 
-  const processingFee = state.total * 0.029 + 0.30;
-  const totalAmount = state.total + processingFee;
+  // Show loading state while processing
+  if (isProcessing || !order) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Processing Your Order
+            </CardTitle>
+            <CardDescription>
+              Please wait while we confirm your purchase...
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-5 w-5" />
+              Order Processing Failed
+            </CardTitle>
+            <CardDescription>
+              {error}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate('/events')} className="w-full">
+              Return to Events
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -95,8 +279,13 @@ const CheckoutConfirmationPage = () => {
             Your tickets have been confirmed and sent to your email.
           </p>
           <Badge variant="secondary" className="text-sm">
-            Order #{orderNumber}
+            Order #{order.order_number}
           </Badge>
+          {emailSent && (
+            <Badge variant="outline" className="text-sm ml-2 text-green-600 border-green-200">
+              ✓ Receipt Emailed
+            </Badge>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -111,19 +300,31 @@ const CheckoutConfirmationPage = () => {
             <CardContent className="space-y-6">
               {/* Event Information */}
               <div>
-                <h3 className="font-semibold mb-3">{state.eventTitle}</h3>
+                <h3 className="font-semibold mb-3">{order.event.title}</h3>
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    December 15, 2024
+                    {new Date(order.event.start_date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    7:00 PM
+                    {new Date(order.event.start_date).toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    Navy Pier Grand Ballroom
+                    {order.event.venue ? 
+                      `${order.event.venue.name}, ${order.event.venue.city}, ${order.event.venue.state}` : 
+                      'Venue TBD'
+                    }
                   </div>
                 </div>
               </div>
@@ -134,18 +335,18 @@ const CheckoutConfirmationPage = () => {
               <div>
                 <h3 className="font-semibold mb-3">Tickets</h3>
                 <div className="space-y-3">
-                  {state.items.map((item) => (
-                    <div key={item.ticketType.id} className="flex justify-between items-center">
+                  {order.order_items.map((item, index) => (
+                    <div key={item.id} className="flex justify-between items-center">
                       <div>
-                        <div className="font-medium">{item.ticketType.name}</div>
+                        <div className="font-medium">Ticket #{item.id.slice(-8).toUpperCase()}</div>
                         <div className="text-sm text-muted-foreground">
-                          Quantity: {item.quantity}
+                          {item.attendee_name}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium">${item.ticketType.price * item.quantity}</div>
+                        <div className="font-medium">${item.price.toFixed(2)}</div>
                         <div className="text-sm text-muted-foreground">
-                          ${item.ticketType.price} each
+                          General Admission
                         </div>
                       </div>
                     </div>
@@ -161,16 +362,22 @@ const CheckoutConfirmationPage = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${state.total.toFixed(2)}</span>
+                    <span>${order.total_amount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Processing Fee</span>
-                    <span>${processingFee.toFixed(2)}</span>
+                    <span>${order.fees_amount.toFixed(2)}</span>
                   </div>
+                  {order.discount_amount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Discount</span>
+                      <span>-${order.discount_amount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total Paid</span>
-                    <span>${totalAmount.toFixed(2)}</span>
+                    <span>${order.final_amount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -191,30 +398,30 @@ const CheckoutConfirmationPage = () => {
                 <div className="space-y-3">
                   <div>
                     <div className="font-medium">
-                      {state.attendeeInfo.firstName} {state.attendeeInfo.lastName}
+                      {(order.billing_details as any).firstName} {(order.billing_details as any).lastName}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Mail className="h-4 w-4" />
-                    {state.attendeeInfo.email}
+                    {(order.billing_details as any).email}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Phone className="h-4 w-4" />
-                    {state.attendeeInfo.phone}
+                    {(order.billing_details as any).phone}
                   </div>
-                  {state.attendeeInfo.dietaryRestrictions && (
+                  {(order.billing_details as any).dietaryRestrictions && (
                     <div className="text-sm">
                       <span className="font-medium">Dietary Restrictions:</span>
                       <p className="text-muted-foreground mt-1">
-                        {state.attendeeInfo.dietaryRestrictions}
+                        {(order.billing_details as any).dietaryRestrictions}
                       </p>
                     </div>
                   )}
-                  {state.attendeeInfo.specialRequests && (
+                  {(order.billing_details as any).specialRequests && (
                     <div className="text-sm">
                       <span className="font-medium">Special Requests:</span>
                       <p className="text-muted-foreground mt-1">
-                        {state.attendeeInfo.specialRequests}
+                        {(order.billing_details as any).specialRequests}
                       </p>
                     </div>
                   )}
@@ -231,9 +438,18 @@ const CheckoutConfirmationPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button onClick={handleDownloadTickets} className="w-full" variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Tickets
+                <Button 
+                  onClick={handleDownloadTickets} 
+                  className="w-full" 
+                  variant="outline"
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  {isDownloading ? 'Generating...' : 'Download Tickets'}
                 </Button>
                 
                 <Button onClick={handleShareEvent} className="w-full" variant="outline">

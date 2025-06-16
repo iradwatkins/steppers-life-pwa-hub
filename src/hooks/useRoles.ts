@@ -48,7 +48,7 @@ export const useRoles = () => {
         setError(null);
 
         // Fetch user profile to get role
-        const { data: profile, error: profileError } = await supabase
+        let { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)

@@ -134,25 +134,22 @@ const AdminDashboard = () => {
 
   if (isLoading) {
     return (
-      <AdminRoute>
-        <div className="min-h-screen flex items-center justify-center">
-          <Card className="w-96">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 animate-pulse" />
-                Loading Dashboard
-              </CardTitle>
-              <CardDescription>Fetching admin dashboard data...</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </AdminRoute>
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 animate-pulse" />
+              Loading Dashboard
+            </CardTitle>
+            <CardDescription>Fetching admin dashboard data...</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <AdminRoute>
-      <div className="min-h-screen py-8 px-4 bg-muted/30">
+    <div className="min-h-screen py-8 px-4 bg-muted/30">
         <div className="container mx-auto max-w-7xl">
           {/* Header */}
           <div className="mb-8">
@@ -344,7 +341,6 @@ const AdminDashboard = () => {
           </Card>
         </div>
       </div>
-    </AdminRoute>
   );
 };
 

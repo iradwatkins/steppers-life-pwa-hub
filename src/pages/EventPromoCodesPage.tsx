@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
+import { PromoCodeService } from '@/services/promoCodeService';
 import { toast } from 'sonner';
 import { 
   Plus,
@@ -22,18 +23,22 @@ import {
   ArrowLeft,
   Edit3,
   Eye,
-  BarChart3
+  BarChart3,
+  RefreshCw
 } from 'lucide-react';
-import type { PromoCode } from '@/types/ticket';
+import type { Database } from '@/integrations/supabase/types';
+
+type PromoCode = Database['public']['Tables']['promo_codes']['Row'];
 
 const promoCodeSchema = z.object({
   code: z.string().min(3, 'Code must be at least 3 characters').max(20, 'Code must be less than 20 characters'),
-  type: z.enum(['percentage', 'fixed']),
-  value: z.string().min(1, 'Value is required'),
+  discountType: z.enum(['percentage', 'fixed_amount']),
+  discountValue: z.string().min(1, 'Value is required'),
   description: z.string().optional(),
-  validFrom: z.string().min(1, 'Start date is required'),
-  validUntil: z.string().min(1, 'End date is required'),
-  usageLimit: z.string().optional(),
+  validFrom: z.string().optional(),
+  validUntil: z.string().optional(),
+  maxUses: z.string().optional(),
+  minimumOrderAmount: z.string().optional(),
   isActive: z.boolean().default(true)
 });
 
@@ -52,90 +57,92 @@ const EventPromoCodesPage: React.FC = () => {
     resolver: zodResolver(promoCodeSchema),
     defaultValues: {
       code: '',
-      type: 'percentage',
-      value: '',
+      discountType: 'percentage',
+      discountValue: '',
       description: '',
       validFrom: '',
       validUntil: '',
-      usageLimit: '',
+      maxUses: '',
+      minimumOrderAmount: '',
       isActive: true
     }
   });
 
-  // Mock data - replace with actual API calls
+  // Load promo codes from database
   useEffect(() => {
-    const mockPromoCodes: PromoCode[] = [
-      {
-        id: 1,
-        event_id: parseInt(eventId || '1'),
-        code: 'EARLY20',
-        type: 'percentage',
-        value: 20,
-        description: 'Early bird discount',
-        is_active: true,
-        valid_from: '2024-01-01T00:00:00Z',
-        valid_until: '2024-12-31T23:59:59Z',
-        usage_limit: 100,
-        used_count: 25,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      },
-      {
-        id: 2,
-        event_id: parseInt(eventId || '1'),
-        code: 'SAVE50',
-        type: 'fixed',
-        value: 50,
-        description: 'Fixed $50 discount',
-        is_active: false,
-        valid_from: '2024-06-01T00:00:00Z',
-        valid_until: '2024-06-30T23:59:59Z',
-        usage_limit: 50,
-        used_count: 12,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+    const loadPromoCodes = async () => {
+      if (!eventId) return;
+      
+      setIsLoading(true);
+      try {
+        const codes = await PromoCodeService.getPromoCodesByEvent(eventId);
+        setPromoCodes(codes);
+      } catch (error) {
+        console.error('Error loading promo codes:', error);
+        toast.error('Failed to load promo codes');
+      } finally {
+        setIsLoading(false);
       }
-    ];
-    
-    setPromoCodes(mockPromoCodes);
-    setIsLoading(false);
+    };
+
+    loadPromoCodes();
   }, [eventId]);
 
   const onSubmit = async (data: PromoCodeFormData) => {
+    if (!eventId) return;
+    
     setIsSubmitting(true);
     try {
-      const newPromoCode: PromoCode = {
-        id: Date.now(), // Mock ID generation
-        event_id: parseInt(eventId || '1'),
-        code: data.code.toUpperCase(),
-        type: data.type,
-        value: parseFloat(data.value),
-        description: data.description,
-        is_active: data.isActive,
-        valid_from: new Date(data.validFrom).toISOString(),
-        valid_until: new Date(data.validUntil).toISOString(),
-        usage_limit: data.usageLimit ? parseInt(data.usageLimit) : undefined,
-        used_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
       if (editingCode) {
         // Update existing promo code
-        setPromoCodes(prev => prev.map(pc => 
-          pc.id === editingCode.id ? { ...newPromoCode, id: editingCode.id, used_count: editingCode.used_count } : pc
-        ));
-        toast('Promo code updated successfully');
-        setEditingCode(null);
+        const updated = await PromoCodeService.updatePromoCode(editingCode.id, {
+          code: data.code.toUpperCase(),
+          discount_type: data.discountType,
+          discount_value: parseFloat(data.discountValue),
+          description: data.description || null,
+          valid_from: data.validFrom || null,
+          valid_until: data.validUntil || null,
+          max_uses: data.maxUses ? parseInt(data.maxUses) : null,
+          minimum_order_amount: data.minimumOrderAmount ? parseFloat(data.minimumOrderAmount) : null,
+          is_active: data.isActive,
+        });
+
+        if (updated) {
+          setPromoCodes(prev => prev.map(pc => 
+            pc.id === editingCode.id ? updated : pc
+          ));
+          toast.success('Promo code updated successfully');
+          setEditingCode(null);
+        } else {
+          throw new Error('Failed to update promo code');
+        }
       } else {
-        // Add new promo code
-        setPromoCodes(prev => [...prev, newPromoCode]);
-        toast('Promo code created successfully');
+        // Create new promo code
+        const created = await PromoCodeService.createPromoCode({
+          eventId,
+          code: data.code.toUpperCase(),
+          discountType: data.discountType,
+          discountValue: parseFloat(data.discountValue),
+          description: data.description || undefined,
+          validFrom: data.validFrom || undefined,
+          validUntil: data.validUntil || undefined,
+          maxUses: data.maxUses ? parseInt(data.maxUses) : undefined,
+          minimumOrderAmount: data.minimumOrderAmount ? parseFloat(data.minimumOrderAmount) : undefined,
+          isActive: data.isActive,
+        });
+
+        if (created) {
+          setPromoCodes(prev => [...prev, created]);
+          toast.success('Promo code created successfully');
+        } else {
+          throw new Error('Failed to create promo code');
+        }
       }
 
       form.reset();
     } catch (error) {
-      toast('Failed to save promo code. Please try again.');
+      console.error('Error saving promo code:', error);
+      toast.error('Failed to save promo code. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -145,31 +152,55 @@ const EventPromoCodesPage: React.FC = () => {
     setEditingCode(promoCode);
     form.reset({
       code: promoCode.code,
-      type: promoCode.type,
-      value: promoCode.value.toString(),
+      discountType: promoCode.discount_type,
+      discountValue: promoCode.discount_value.toString(),
       description: promoCode.description || '',
-      validFrom: promoCode.valid_from.split('T')[0],
-      validUntil: promoCode.valid_until.split('T')[0],
-      usageLimit: promoCode.usage_limit?.toString() || '',
+      validFrom: promoCode.valid_from ? promoCode.valid_from.split('T')[0] : '',
+      validUntil: promoCode.valid_until ? promoCode.valid_until.split('T')[0] : '',
+      maxUses: promoCode.max_uses?.toString() || '',
+      minimumOrderAmount: promoCode.minimum_order_amount?.toString() || '',
       isActive: promoCode.is_active
     });
   };
 
-  const handleToggleActive = async (promoCodeId: number) => {
-    setPromoCodes(prev => prev.map(pc => 
-      pc.id === promoCodeId ? { ...pc, is_active: !pc.is_active } : pc
-    ));
-    toast('Promo code status updated');
-  };
+  const handleToggleActive = async (promoCodeId: string) => {
+    try {
+      const promoCode = promoCodes.find(pc => pc.id === promoCodeId);
+      if (!promoCode) return;
 
-  const handleDelete = async (promoCodeId: number) => {
-    if (window.confirm('Are you sure you want to delete this promo code?')) {
-      setPromoCodes(prev => prev.filter(pc => pc.id !== promoCodeId));
-      toast('Promo code deleted successfully');
+      const success = await PromoCodeService.togglePromoCodeStatus(promoCodeId, !promoCode.is_active);
+      if (success) {
+        setPromoCodes(prev => prev.map(pc => 
+          pc.id === promoCodeId ? { ...pc, is_active: !pc.is_active } : pc
+        ));
+        toast.success('Promo code status updated');
+      } else {
+        toast.error('Failed to update promo code status');
+      }
+    } catch (error) {
+      console.error('Error toggling promo code status:', error);
+      toast.error('Failed to update promo code status');
     }
   };
 
-  const formatValue = (type: 'percentage' | 'fixed', value: number) => {
+  const handleDelete = async (promoCodeId: string) => {
+    if (window.confirm('Are you sure you want to delete this promo code?')) {
+      try {
+        const success = await PromoCodeService.deletePromoCode(promoCodeId);
+        if (success) {
+          setPromoCodes(prev => prev.filter(pc => pc.id !== promoCodeId));
+          toast.success('Promo code deleted successfully');
+        } else {
+          toast.error('Failed to delete promo code');
+        }
+      } catch (error) {
+        console.error('Error deleting promo code:', error);
+        toast.error('Failed to delete promo code');
+      }
+    }
+  };
+
+  const formatValue = (type: 'percentage' | 'fixed_amount', value: number) => {
     return type === 'percentage' ? `${value}%` : `$${value}`;
   };
 
@@ -225,7 +256,7 @@ const EventPromoCodesPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="type"
+                    name="discountType"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Discount Type</FormLabel>
@@ -237,7 +268,7 @@ const EventPromoCodesPage: React.FC = () => {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="percentage">Percentage</SelectItem>
-                            <SelectItem value="fixed">Fixed Amount</SelectItem>
+                            <SelectItem value="fixed_amount">Fixed Amount</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -247,19 +278,19 @@ const EventPromoCodesPage: React.FC = () => {
 
                   <FormField
                     control={form.control}
-                    name="value"
+                    name="discountValue"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          {form.watch('type') === 'percentage' ? 'Percentage' : 'Dollar Amount'}
+                          {form.watch('discountType') === 'percentage' ? 'Percentage' : 'Dollar Amount'}
                         </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            step={form.watch('type') === 'percentage' ? '1' : '0.01'}
+                            step={form.watch('discountType') === 'percentage' ? '1' : '0.01'}
                             min="0"
-                            max={form.watch('type') === 'percentage' ? '100' : undefined}
-                            placeholder={form.watch('type') === 'percentage' ? '20' : '50.00'}
+                            max={form.watch('discountType') === 'percentage' ? '100' : undefined}
+                            placeholder={form.watch('discountType') === 'percentage' ? '20' : '50.00'}
                             {...field}
                           />
                         </FormControl>
@@ -313,24 +344,46 @@ const EventPromoCodesPage: React.FC = () => {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="usageLimit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Usage Limit (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="1"
-                          placeholder="100"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="maxUses"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Usage Limit (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            placeholder="100"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="minimumOrderAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Minimum Order Amount (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="50.00"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
@@ -378,13 +431,30 @@ const EventPromoCodesPage: React.FC = () => {
         {/* Existing Promo Codes */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Existing Promo Codes ({promoCodes.length})
-            </CardTitle>
-            <CardDescription>
-              Manage your current promotional codes
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Existing Promo Codes ({promoCodes.length})
+                </CardTitle>
+                <CardDescription>
+                  Manage your current promotional codes
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (eventId) {
+                    setIsLoading(true);
+                    PromoCodeService.getPromoCodesByEvent(eventId).then(setPromoCodes).finally(() => setIsLoading(false));
+                  }
+                }}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {promoCodes.length === 0 ? (
@@ -408,7 +478,7 @@ const EventPromoCodesPage: React.FC = () => {
                             {promoCode.is_active ? 'Active' : 'Inactive'}
                           </Badge>
                           <Badge variant="outline">
-                            {formatValue(promoCode.type, promoCode.value)} off
+                            {formatValue(promoCode.discount_type, promoCode.discount_value)} off
                           </Badge>
                         </div>
                         {promoCode.description && (
@@ -448,13 +518,15 @@ const EventPromoCodesPage: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">Valid Period</p>
-                        <p>{formatDate(promoCode.valid_from)} - {formatDate(promoCode.valid_until)}</p>
+                        <p>
+                          {promoCode.valid_from ? formatDate(promoCode.valid_from) : 'No start date'} - {promoCode.valid_until ? formatDate(promoCode.valid_until) : 'No end date'}
+                        </p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Usage</p>
                         <p>
                           {promoCode.used_count}
-                          {promoCode.usage_limit && ` / ${promoCode.usage_limit}`} used
+                          {promoCode.max_uses && ` / ${promoCode.max_uses}`} used
                         </p>
                       </div>
                     </div>

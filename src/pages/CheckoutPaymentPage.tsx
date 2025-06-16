@@ -13,10 +13,10 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
-import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock, Smartphone, Building } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock, Smartphone, Building, DollarSign } from 'lucide-react';
 
 const paymentFormSchema = z.object({
-  paymentMethod: z.enum(['card', 'paypal', 'apple_pay', 'google_pay']),
+  paymentMethod: z.enum(['card', 'paypal', 'apple_pay', 'google_pay', 'cash']),
   cardNumber: z.string().optional(),
   expiryDate: z.string().optional(),
   cvv: z.string().optional(),
@@ -70,14 +70,25 @@ const CheckoutPaymentPage = () => {
   const onSubmit = async (data: PaymentFormData) => {
     setIsProcessing(true);
     
-    // Mock payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // In a real app, you would process the payment here
-    console.log('Processing payment:', data);
-    
-    setIsProcessing(false);
-    navigate('/checkout/confirmation');
+    try {
+      if (data.paymentMethod === 'cash') {
+        // Redirect to cash payment page
+        navigate('/cash-payment');
+        return;
+      }
+      
+      // Mock payment processing for other methods
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // In a real app, you would process the payment here
+      console.log('Processing payment:', data);
+      
+      navigate('/checkout/confirmation');
+    } catch (error) {
+      console.error('Payment processing error:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleBack = () => {
@@ -94,6 +105,12 @@ const CheckoutPaymentPage = () => {
       name: 'Credit/Debit Card',
       icon: CreditCard,
       description: 'Visa, Mastercard, American Express'
+    },
+    {
+      id: 'cash',
+      name: 'Pay Cash at Venue',
+      icon: DollarSign,
+      description: 'Reserve tickets and pay cash at the event'
     },
     {
       id: 'paypal',
