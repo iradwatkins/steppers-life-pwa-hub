@@ -5,14 +5,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCart, type TicketType } from '@/contexts/CartContext';
-import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { useInventory, useBulkInventory, useInventoryHold } from '@/hooks/useInventory';
+import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus, AlertTriangle, Zap } from 'lucide-react';
 
 const TicketSelectionPage = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { state, addItem, updateQuantity, removeItem, setEvent, setStep } = useCart();
   const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
+  const { createHold, releaseHold, currentHolds } = useInventoryHold();
 
   // Mock event data - in real app, this would come from API
   const mockEvent = {
@@ -48,12 +52,29 @@ const TicketSelectionPage = () => {
     ] as TicketType[]
   };
 
+  // Get real-time inventory for all ticket types
+  const ticketTypeIds = mockEvent.ticketTypes.map(tt => tt.id);
+  const { statuses: inventoryStatuses, isLoading: inventoryLoading } = useBulkInventory(ticketTypeIds);
+
+  // Helper to get real inventory status for a ticket type
+  const getInventoryStatus = (ticketTypeId: string) => {
+    return inventoryStatuses.find(status => status.ticketTypeId === ticketTypeId);
+  };
+
   useEffect(() => {
     setEvent(mockEvent.id, mockEvent.title);
     setStep(1);
   }, [eventId, setEvent, setStep]);
 
-  const handleQuantityChange = (ticketType: TicketType, quantity: number) => {
+  const handleQuantityChange = async (ticketType: TicketType, quantity: number) => {
+    const inventoryStatus = getInventoryStatus(ticketType.id);
+    
+    // Check if requested quantity is available
+    if (quantity > 0 && inventoryStatus && quantity > inventoryStatus.available) {
+      alert(`Only ${inventoryStatus.available} tickets available for ${ticketType.name}`);
+      return;
+    }
+
     setSelectedQuantities(prev => ({
       ...prev,
       [ticketType.id]: quantity
@@ -62,14 +83,27 @@ const TicketSelectionPage = () => {
     const currentItem = state.items.find(item => item.ticketType.id === ticketType.id);
     
     if (quantity === 0) {
+      // Release any holds for this ticket type
+      await releaseHold(sessionId, ticketType.id);
       if (currentItem) {
         removeItem(ticketType.id);
       }
     } else {
-      if (currentItem) {
-        updateQuantity(ticketType.id, quantity);
+      // Create inventory hold for new quantity
+      const hold = await createHold(ticketType.id, quantity, sessionId);
+      if (hold) {
+        if (currentItem) {
+          updateQuantity(ticketType.id, quantity);
+        } else {
+          addItem(ticketType, quantity);
+        }
       } else {
-        addItem(ticketType, quantity);
+        // Reset quantity if hold creation failed
+        setSelectedQuantities(prev => ({
+          ...prev,
+          [ticketType.id]: 0
+        }));
+        alert('Unable to reserve tickets. Please try again.');
       }
     }
   };
@@ -84,6 +118,51 @@ const TicketSelectionPage = () => {
     if (canProceed) {
       navigate(`/checkout/details`);
     }
+  };
+
+  // Cleanup holds when component unmounts
+  useEffect(() => {
+    return () => {
+      // Release all holds for this session when leaving the page
+      releaseHold(sessionId);
+    };
+  }, [sessionId, releaseHold]);
+
+  // Helper function to render ticket availability status
+  const renderAvailabilityBadge = (ticketType: TicketType) => {
+    const inventoryStatus = getInventoryStatus(ticketType.id);
+    
+    if (inventoryLoading || !inventoryStatus) {
+      return <Badge variant="secondary">Loading...</Badge>;
+    }
+
+    if (!inventoryStatus.isAvailable) {
+      return <Badge variant="destructive">Sold Out</Badge>;
+    }
+
+    if (inventoryStatus.available <= 5) {
+      return (
+        <Badge variant="outline" className="border-orange-500 text-orange-700">
+          <AlertTriangle className="h-3 w-3 mr-1" />
+          Only {inventoryStatus.available} left
+        </Badge>
+      );
+    }
+
+    if (inventoryStatus.available <= 20) {
+      return (
+        <Badge variant="outline" className="border-yellow-500 text-yellow-700">
+          <Zap className="h-3 w-3 mr-1" />
+          {inventoryStatus.available} available
+        </Badge>
+      );
+    }
+
+    return (
+      <Badge variant="outline" className="border-green-500 text-green-700">
+        {inventoryStatus.available} available
+      </Badge>
+    );
   };
 
   return (
@@ -120,6 +199,16 @@ const TicketSelectionPage = () => {
           </Card>
         </div>
 
+        {/* Inventory Alerts */}
+        {inventoryStatuses.some(status => !status.isAvailable) && (
+          <Alert className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Some ticket types are sold out. Available options are shown below.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Ticket Selection */}
           <div className="lg:col-span-2">
@@ -133,10 +222,7 @@ const TicketSelectionPage = () => {
                         <CardTitle className="text-lg">{ticketType.name}</CardTitle>
                         <CardDescription className="mt-1">{ticketType.description}</CardDescription>
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary">
-                            <Users className="h-3 w-3 mr-1" />
-                            {ticketType.availableQuantity} available
-                          </Badge>
+                          {renderAvailabilityBadge(ticketType)}
                         </div>
                       </div>
                       <div className="text-right">
@@ -165,7 +251,10 @@ const TicketSelectionPage = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleQuantityChange(ticketType, getQuantity(ticketType.id) + 1)}
-                          disabled={getQuantity(ticketType.id) >= ticketType.availableQuantity}
+                          disabled={(() => {
+                            const inventoryStatus = getInventoryStatus(ticketType.id);
+                            return !inventoryStatus?.isAvailable || getQuantity(ticketType.id) >= (inventoryStatus?.available || 0);
+                          })()}
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -173,16 +262,24 @@ const TicketSelectionPage = () => {
                       <Select
                         value={getQuantity(ticketType.id).toString()}
                         onValueChange={(value) => handleQuantityChange(ticketType, parseInt(value))}
+                        disabled={(() => {
+                          const inventoryStatus = getInventoryStatus(ticketType.id);
+                          return !inventoryStatus?.isAvailable;
+                        })()}
                       >
                         <SelectTrigger className="w-24">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {Array.from({ length: Math.min(ticketType.availableQuantity + 1, 11) }, (_, i) => (
-                            <SelectItem key={i} value={i.toString()}>
-                              {i}
-                            </SelectItem>
-                          ))}
+                          {(() => {
+                            const inventoryStatus = getInventoryStatus(ticketType.id);
+                            const maxQuantity = Math.min(inventoryStatus?.available || 0, 10);
+                            return Array.from({ length: maxQuantity + 1 }, (_, i) => (
+                              <SelectItem key={i} value={i.toString()}>
+                                {i}
+                              </SelectItem>
+                            ));
+                          })()}
                         </SelectContent>
                       </Select>
                     </div>
