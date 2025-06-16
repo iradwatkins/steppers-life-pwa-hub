@@ -39,25 +39,22 @@ export const usePWA = (): PWAHookResult => {
   // Enhanced update service worker function
   const updateServiceWorker = async (reloadPage?: boolean): Promise<void> => {
     try {
-      console.log('Updating service worker...');
+      console.log('🔄 Updating service worker...');
       
-      // Mark that we've attempted an update
+      // Mark that we've attempted an update to hide the prompt
       setHasUpdated(true);
       
-      if (reloadPage !== false) {
-        console.log('Using force update method...');
-        // Use our simplified force update method
-        await forceUpdate();
-      } else {
-        // Just update without reloading
-        await originalUpdateServiceWorker(false);
-      }
-    } catch (error) {
-      console.error('Failed to update service worker:', error);
+      // Always use the original update method for production reliability
+      await originalUpdateServiceWorker(reloadPage);
       
+      console.log('✅ Service worker updated successfully');
+      
+    } catch (error) {
+      console.error('❌ Failed to update service worker:', error);
+      
+      // If original method fails, force reload as fallback
       if (reloadPage !== false) {
-        console.log('Fallback: immediate page reload...');
-        // Immediate fallback: just reload
+        console.log('🔄 Fallback: forcing page reload...');
         window.location.reload();
       }
     }
