@@ -1,42 +1,33 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Users, BookOpen, MapPin, Clock, Star } from 'lucide-react';
+import { EventService } from '@/services/eventService';
 
 const Index = () => {
-  // SYNC TEST: This page should match Lovable exactly - SteppersLife Custom Page
-  const featuredEvents = [
-    {
-      id: 1,
-      title: "Chicago Stepping Championship",
-      date: "December 15, 2024",
-      time: "7:00 PM",
-      location: "Navy Pier Grand Ballroom",
-      price: "$45",
-      image: "/placeholder.svg",
-      featured: true
-    },
-    {
-      id: 2,
-      title: "Beginner's Stepping Workshop",
-      date: "December 20, 2024",
-      time: "6:30 PM",
-      location: "South Side Cultural Center",
-      price: "$25",
-      image: "/placeholder.svg"
-    },
-    {
-      id: 3,
-      title: "New Year's Eve Stepping Gala",
-      date: "December 31, 2024",
-      time: "8:00 PM",
-      location: "Palmer House Hilton",
-      price: "$85",
-      image: "/placeholder.svg"
-    }
-  ];
+  // Real featured events from Supabase
+  const [featuredEvents, setFeaturedEvents] = useState([]);
+
+  // Load real events on component mount
+  useEffect(() => {
+    const loadFeaturedEvents = async () => {
+      try {
+        const events = await EventService.getEvents();
+        // Get the first 3 published events as featured
+        const featured = events
+          .filter(event => event.status === 'published')
+          .slice(0, 3);
+        setFeaturedEvents(featured);
+      } catch (error) {
+        console.error('Failed to load featured events:', error);
+        // Optionally show empty state or error message
+      }
+    };
+
+    loadFeaturedEvents();
+  }, []);
 
   const communityHighlights = [
     {
@@ -87,36 +78,47 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {featuredEvents.map((event) => (
+            {featuredEvents.length > 0 ? featuredEvents.map((event) => (
               <Card key={event.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="aspect-video bg-muted rounded-md mb-4"></div>
                   <CardTitle className="text-lg">{event.title}</CardTitle>
                   <CardDescription className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    {event.date}
+                    {event.start_date ? new Date(event.start_date).toLocaleDateString() : 'TBD'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="h-4 w-4" />
-                      {event.time}
+                      {event.start_date ? new Date(event.start_date).toLocaleTimeString() : 'TBD'}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4" />
-                      {event.location}
+                      {event.venue?.name || 'Online Event'}
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold text-stepping-purple">{event.price}</span>
+                    <span className="text-lg font-semibold text-stepping-purple">
+                      {event.ticket_types?.[0]?.price ? `$${event.ticket_types[0].price}` : 'Free'}
+                    </span>
                     <Button size="sm" asChild>
                       <Link to={`/events/${event.id}/tickets`}>Buy Tickets</Link>
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )) : (
+              <div className="col-span-full text-center py-12">
+                <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-xl font-semibold mb-2">No Events Yet</h3>
+                <p className="text-muted-foreground mb-4">Check back soon for upcoming stepping events!</p>
+                <Button asChild>
+                  <Link to="/events/create">Create an Event</Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="text-center">

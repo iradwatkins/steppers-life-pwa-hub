@@ -47,13 +47,16 @@ export const usePWA = (): PWAHookResult => {
       const currentAppVersion = localStorage.getItem('app-version');
       const buildTime = import.meta.env.VITE_BUILD_TIME || Date.now().toString();
       
-      // If this is a new version or first time, show the update prompt
-      if (currentAppVersion !== buildTime) {
+      // Only show update prompt if user has a DIFFERENT version (not first time)
+      if (currentAppVersion && currentAppVersion !== buildTime) {
         setHasUpdated(false);
         setUpdateInProgress(false);
         localStorage.removeItem('pwa-has-updated');
         localStorage.setItem('app-version', buildTime);
         sessionStorage.removeItem('pwa-update-handled');
+      } else if (!currentAppVersion) {
+        // First-time visitor - just store the current version, no update prompt
+        localStorage.setItem('app-version', buildTime);
       }
     },
     onOfflineReady() {

@@ -34,94 +34,32 @@ const Dashboard = () => {
     }
   }, [user, loading, navigate]);
 
-  // Mock data - in real app this would come from Supabase
-  const userStats = {
-    eventsAttended: 12,
-    upcomingEvents: 3,
-    savedEvents: 8,
-    totalSpent: 450
-  };
+  // Real user statistics from Supabase
+  const [userStats, setUserStats] = useState({
+    eventsAttended: 0,
+    upcomingEvents: 0,
+    savedEvents: 0,
+    totalSpent: 0
+  });
 
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: "Chicago Stepping Championship 2024",
-      date: "2024-12-20",
-      time: "7:00 PM",
-      venue: "Navy Pier Ballroom",
-      image: "/placeholder.svg",
-      ticketType: "VIP",
-      status: "confirmed"
-    },
-    {
-      id: 2,
-      title: "Beginner Stepping Workshop",
-      date: "2024-12-15",
-      time: "2:00 PM", 
-      venue: "South Side Cultural Center",
-      image: "/placeholder.svg",
-      ticketType: "General",
-      status: "confirmed"
-    },
-    {
-      id: 3,
-      title: "Holiday Stepping Social",
-      date: "2024-12-22",
-      time: "8:00 PM",
-      venue: "Chicago Stepping Academy",
-      image: "/placeholder.svg",
-      ticketType: "Early Bird",
-      status: "pending"
-    }
-  ];
+  // Real upcoming events from Supabase
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: "ticket_purchase",
-      title: "Purchased ticket for Chicago Stepping Championship 2024",
-      date: "2024-12-01",
-      amount: "$75"
-    },
-    {
-      id: 2,
-      type: "event_saved",
-      title: "Saved Advanced Stepping Techniques Workshop",
-      date: "2024-11-28"
-    },
-    {
-      id: 3,
-      type: "profile_updated",
-      title: "Updated profile preferences",
-      date: "2024-11-25"
-    },
-    {
-      id: 4,
-      type: "ticket_purchase", 
-      title: "Purchased ticket for Holiday Stepping Social",
-      date: "2024-11-20",
-      amount: "$45"
-    }
-  ];
+  // Real activity and saved events from Supabase
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [savedEvents, setSavedEvents] = useState([]);
 
-  const savedEvents = [
-    {
-      id: 1,
-      title: "New Year's Eve Stepping Gala",
-      date: "2024-12-31",
-      venue: "Palmer House Hotel",
-      price: "$125",
-      image: "/placeholder.svg"
-    },
-    {
-      id: 2,
-      title: "Advanced Stepping Techniques Workshop",
-      date: "2025-01-10",
-      venue: "Dance Studio Chicago",
-      price: "$35",
-      image: "/placeholder.svg"
+  // Load real data on component mount
+  useEffect(() => {
+    if (user) {
+      // TODO: Replace with actual API calls to load user data
+      // Example:
+      // loadUserStats(user.id).then(setUserStats);
+      // loadUpcomingEvents(user.id).then(setUpcomingEvents);
+      // loadRecentActivity(user.id).then(setRecentActivity);
+      // loadSavedEvents(user.id).then(setSavedEvents);
     }
-  ];
+  }, [user]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {

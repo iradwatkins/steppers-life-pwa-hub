@@ -165,7 +165,7 @@ const PWADashboard: React.FC = () => {
           <DeviceSecurityStatus />
         </div>
 
-        <PWATestButton />
+        {import.meta.env.DEV && <PWATestButton />}
       </div>
     </div>
   );
