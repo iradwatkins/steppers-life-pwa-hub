@@ -1,6 +1,6 @@
 # Story B.012: Event Ratings & Reviews System
 
-## Status: Pending
+## Status: ✅ Complete
 
 ## Story
 

@@ -1,6 +1,6 @@
 # Story B.004: Order Confirmation
 
-## Status: Pending
+## Status: ✅ Complete
 
 ## Story
 

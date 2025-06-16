@@ -1,6 +1,6 @@
 # Story B.008: Buyer Ticketing History & Download
 
-## Status: Pending
+## Status: ✅ Complete
 
 ## Story
 

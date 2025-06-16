@@ -43,6 +43,9 @@ import OrganizerSetupPage from "./pages/OrganizerSetupPage";
 import TestSeatingPage from "./pages/TestSeatingPage";
 import AdvancedSeatingPage from "./pages/AdvancedSeatingPage";
 import EnhancedPurchasePage from "./pages/EnhancedPurchasePage";
+import EmailCampaignsPage from "./pages/organizer/EmailCampaignsPage";
+import CreateEmailCampaignPage from "./pages/organizer/CreateEmailCampaignPage";
+import EmailCampaignAnalyticsPage from "./pages/organizer/EmailCampaignAnalyticsPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -109,6 +112,23 @@ const App = () => (
                   <Route path="/organizer/event/:eventId/seating/advanced" element={
                     <OrganizerRoute>
                       <AdvancedSeatingPage />
+                    </OrganizerRoute>
+                  } />
+                  
+                  {/* Email Campaign routes */}
+                  <Route path="/organizer/email-campaigns" element={
+                    <OrganizerRoute>
+                      <EmailCampaignsPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/organizer/email-campaigns/create" element={
+                    <OrganizerRoute>
+                      <CreateEmailCampaignPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/organizer/email-campaigns/:campaignId" element={
+                    <OrganizerRoute>
+                      <EmailCampaignAnalyticsPage />
                     </OrganizerRoute>
                   } />
                   

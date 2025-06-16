@@ -1,6 +1,6 @@
 # Story B.007: Unified Cash/Direct Payment Workflow (Buyer & Seller UI/Logic)
 
-## Status: Pending
+## Status: ✅ Complete
 
 ## Story
 
