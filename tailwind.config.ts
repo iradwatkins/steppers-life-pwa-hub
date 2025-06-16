@@ -13,10 +13,49 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
+			padding: {
+				DEFAULT: '1rem',
+				sm: '1.5rem',
+				lg: '2rem',
+				xl: '2.5rem',
+				'2xl': '3rem'
+			},
 			screens: {
+				sm: '640px',
+				md: '768px',
+				lg: '1024px',
+				xl: '1280px',
 				'2xl': '1400px'
 			}
+		},
+		screens: {
+			'xs': '375px',
+			'sm': '640px',
+			'md': '768px',
+			'lg': '1024px',
+			'xl': '1280px',
+			'2xl': '1536px',
+			// Flagship phone optimizations
+			'iphone-se': '375px',
+			'iphone-16': '393px',
+			'iphone-16-pro': '402px', 
+			'iphone-16-pro-max': '430px',
+			'galaxy-s25': '384px',
+			'galaxy-s25-plus': '412px',
+			'galaxy-s25-ultra': '448px',
+			'pixel-9': '393px',
+			'pixel-9-pro': '412px',
+			'pixel-9-pro-fold': '673px',
+			'oneplus-13': '412px',
+			'nothing-3a-pro': '412px',
+			'razr-ultra': '413px',
+			'galaxy-fold-6': '748px',
+			'galaxy-flip-6': '373px',
+			'vivo-x200-pro': '412px',
+			'xiaomi-15-ultra': '440px',
+			'honor-magic7': '428px',
+			'oppo-find-n5': '456px',
+			'moto-g15': '393px'
 		},
 		extend: {
 			colors: {

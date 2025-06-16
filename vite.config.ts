@@ -49,18 +49,47 @@ export default defineConfig(({ mode }) => ({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Steppers Life - Event Management',
-        short_name: 'Steppers Life',
-        description: 'Professional event management platform for organizers and attendees',
+        name: 'SteppersLife - Chicago Stepping Events & Community',
+        short_name: 'SteppersLife',
+        description: 'Discover Chicago stepping events, classes, and community. Join the premier platform for stepping enthusiasts.',
         theme_color: '#8B5CF6',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
         scope: '/',
+        orientation: 'portrait-primary',
+        categories: ['entertainment', 'lifestyle', 'social'],
+        lang: 'en-US',
+        dir: 'ltr',
         icons: [
           {
             src: 'favicon.ico',
             sizes: '48x48',
+            type: 'image/x-icon'
+          },
+          {
+            src: 'favicon.ico',
+            sizes: '72x72',
+            type: 'image/x-icon'
+          },
+          {
+            src: 'favicon.ico',
+            sizes: '96x96',
+            type: 'image/x-icon'
+          },
+          {
+            src: 'favicon.ico',
+            sizes: '128x128',
+            type: 'image/x-icon'
+          },
+          {
+            src: 'favicon.ico',
+            sizes: '144x144',
+            type: 'image/x-icon'
+          },
+          {
+            src: 'favicon.ico',
+            sizes: '152x152',
             type: 'image/x-icon'
           },
           {
@@ -70,10 +99,19 @@ export default defineConfig(({ mode }) => ({
           },
           {
             src: 'favicon.ico',
+            sizes: '384x384',
+            type: 'image/x-icon'
+          },
+          {
+            src: 'favicon.ico',
             sizes: '512x512',
             type: 'image/x-icon'
           }
-        ]
+        ],
+        display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
+        edge_side_panel: {
+          preferred_width: 400
+        }
       }
     })
   ].filter(Boolean),
