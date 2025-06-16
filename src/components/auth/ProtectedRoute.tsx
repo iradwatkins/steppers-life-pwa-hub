@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles } from '@/hooks/useRoles';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, isLoading: authLoading } = useAuth();
   const { hasPermission, isLoading: rolesLoading, hasOrganizer, canCreateEvents } = useRoles();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Show loading state
   if (authLoading || rolesLoading) {
@@ -123,7 +124,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
               <Button variant="outline" onClick={() => window.history.back()}>
                 Go Back
               </Button>
-              <Button onClick={() => window.location.href = '/organizer/setup'}>
+              <Button onClick={() => navigate('/organizer/setup')}>
                 Set Up Profile
               </Button>
             </div>
