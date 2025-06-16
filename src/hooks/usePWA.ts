@@ -17,6 +17,7 @@ export const usePWA = (): PWAHookResult => {
   const [isInstalled, setIsInstalled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [hasUpdated, setHasUpdated] = useState(false);
+  const [updateInProgress, setUpdateInProgress] = useState(false);
 
   const {
     needRefresh,
@@ -30,6 +31,9 @@ export const usePWA = (): PWAHookResult => {
     },
     onNeedRefresh() {
       console.log('SW needs refresh - new version available');
+      // Reset update state when a new version is available
+      setHasUpdated(false);
+      setUpdateInProgress(false);
     },
     onOfflineReady() {
       console.log('SW offline ready');
@@ -38,21 +42,32 @@ export const usePWA = (): PWAHookResult => {
 
   // Enhanced update service worker function
   const updateServiceWorker = async (reloadPage?: boolean): Promise<void> => {
+    // Prevent multiple simultaneous updates
+    if (updateInProgress) {
+      console.log('🔄 Update already in progress, skipping...');
+      return;
+    }
+
     try {
-      console.log('🔄 Updating service worker...');
-      
-      // Mark that we've attempted an update to hide the prompt
+      console.log('🔄 Starting service worker update...');
+      setUpdateInProgress(true);
       setHasUpdated(true);
       
-      // Always use the original update method for production reliability
+      // Use the original update method
       await originalUpdateServiceWorker(reloadPage);
       
       console.log('✅ Service worker updated successfully');
       
+      // The page will reload automatically, so we don't need to reset state
+      
     } catch (error) {
       console.error('❌ Failed to update service worker:', error);
       
-      // If original method fails, force reload as fallback
+      // Reset state on error
+      setUpdateInProgress(false);
+      setHasUpdated(false);
+      
+      // Force reload as fallback
       if (reloadPage !== false) {
         console.log('🔄 Fallback: forcing page reload...');
         window.location.reload();
@@ -118,7 +133,7 @@ export const usePWA = (): PWAHookResult => {
     isOnline,
     isInstallable,
     isInstalled,
-    needRefresh: needRefresh && !hasUpdated,
+    needRefresh: needRefresh && !hasUpdated && !updateInProgress,
     updateServiceWorker,
     installPWA,
   };

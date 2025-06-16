@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => ({
         navigateFallbackDenylist: [/^\/api/]
       },
       devOptions: {
-        enabled: true,
+        enabled: mode === 'development',
         type: 'module'
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
