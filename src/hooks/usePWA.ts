@@ -16,8 +16,13 @@ export const usePWA = (): PWAHookResult => {
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [hasUpdated, setHasUpdated] = useState(false);
+  const [hasUpdated, setHasUpdated] = useState(() => {
+    return localStorage.getItem('pwa-has-updated') === 'true';
+  });
   const [updateInProgress, setUpdateInProgress] = useState(false);
+  
+  // Detect if we're in development mode
+  const isDevelopment = import.meta.env.DEV;
 
   const {
     needRefresh,
@@ -31,9 +36,25 @@ export const usePWA = (): PWAHookResult => {
     },
     onNeedRefresh() {
       console.log('SW needs refresh - new version available');
-      // Reset update state when a new version is available
-      setHasUpdated(false);
-      setUpdateInProgress(false);
+      
+      // In development, don't show update prompts as they're triggered constantly
+      if (isDevelopment) {
+        console.log('Development mode: ignoring update prompt');
+        return;
+      }
+      
+      // In production, use a more robust version tracking
+      const currentAppVersion = localStorage.getItem('app-version');
+      const buildTime = import.meta.env.VITE_BUILD_TIME || Date.now().toString();
+      
+      // If this is a new version or first time, show the update prompt
+      if (currentAppVersion !== buildTime) {
+        setHasUpdated(false);
+        setUpdateInProgress(false);
+        localStorage.removeItem('pwa-has-updated');
+        localStorage.setItem('app-version', buildTime);
+        sessionStorage.removeItem('pwa-update-handled');
+      }
     },
     onOfflineReady() {
       console.log('SW offline ready');
@@ -52,6 +73,7 @@ export const usePWA = (): PWAHookResult => {
       console.log('🔄 Starting service worker update...');
       setUpdateInProgress(true);
       setHasUpdated(true);
+      localStorage.setItem('pwa-has-updated', 'true');
       
       // Use the original update method
       await originalUpdateServiceWorker(reloadPage);
@@ -133,7 +155,7 @@ export const usePWA = (): PWAHookResult => {
     isOnline,
     isInstallable,
     isInstalled,
-    needRefresh: needRefresh && !hasUpdated && !updateInProgress,
+    needRefresh: needRefresh && !hasUpdated && !updateInProgress && !isDevelopment,
     updateServiceWorker,
     installPWA,
   };

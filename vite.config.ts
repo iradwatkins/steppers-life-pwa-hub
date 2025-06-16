@@ -6,6 +6,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  define: {
+    'import.meta.env.VITE_BUILD_TIME': JSON.stringify(Date.now().toString()),
+  },
   server: {
     host: "::",
     port: 8080,
@@ -47,6 +50,8 @@ export default defineConfig(({ mode }) => ({
         enabled: mode === 'development',
         type: 'module'
       },
+      injectRegister: 'auto',
+      strategies: 'generateSW',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'SteppersLife - Chicago Stepping Events & Community',
@@ -63,49 +68,21 @@ export default defineConfig(({ mode }) => ({
         dir: 'ltr',
         icons: [
           {
-            src: 'favicon.ico',
-            sizes: '48x48',
+            src: '/favicon.ico',
+            sizes: '16x16 32x32 48x48',
             type: 'image/x-icon'
           },
           {
-            src: 'favicon.ico',
-            sizes: '72x72',
-            type: 'image/x-icon'
-          },
-          {
-            src: 'favicon.ico',
-            sizes: '96x96',
-            type: 'image/x-icon'
-          },
-          {
-            src: 'favicon.ico',
-            sizes: '128x128',
-            type: 'image/x-icon'
-          },
-          {
-            src: 'favicon.ico',
-            sizes: '144x144',
-            type: 'image/x-icon'
-          },
-          {
-            src: 'favicon.ico',
-            sizes: '152x152',
-            type: 'image/x-icon'
-          },
-          {
-            src: 'favicon.ico',
+            src: '/favicon.ico',
             sizes: '192x192',
-            type: 'image/x-icon'
+            type: 'image/x-icon',
+            purpose: 'any maskable'
           },
           {
-            src: 'favicon.ico',
-            sizes: '384x384',
-            type: 'image/x-icon'
-          },
-          {
-            src: 'favicon.ico',
+            src: '/favicon.ico',
             sizes: '512x512',
-            type: 'image/x-icon'
+            type: 'image/x-icon',
+            purpose: 'any maskable'
           }
         ],
         display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
