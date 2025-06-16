@@ -586,18 +586,16 @@ export class EventService {
   // Event categories helper
   static getEventCategories(): string[] {
     return [
-      'Chicago Stepping Classes',
-      'Chicago Stepping Social',
-      'Chicago Stepping Competition',
-      'Workshop - Basic Stepping',
-      'Workshop - Intermediate Stepping',
-      'Workshop - Advanced Stepping',
-      'Private Event - Corporate',
-      'Private Event - Wedding',
-      'Community Event',
-      'Fundraiser Event',
-      'Youth Stepping Program',
-      'Senior Stepping Program'
+      'Workshops',
+      'Sets',
+      'In the park',
+      'Trips',
+      'Cruises',
+      'Holiday',
+      'Competitions',
+      'Community Events',
+      'Youth Programs',
+      'Senior Programs'
     ];
   }
 

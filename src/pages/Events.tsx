@@ -62,13 +62,16 @@ const Events = () => {
 
   const categories = [
     { value: 'all', label: 'All Events' },
-    { value: 'competition', label: 'Competitions' },
-    { value: 'classes', label: 'Classes' },
-    { value: 'social', label: 'Social Events' },
-    { value: 'workshop', label: 'Workshops' },
-    { value: 'community', label: 'Community Events' },
-    { value: 'youth', label: 'Youth Programs' },
-    { value: 'senior', label: 'Senior Programs' }
+    { value: 'Workshops', label: 'Workshops' },
+    { value: 'Sets', label: 'Sets' },
+    { value: 'In the park', label: 'In the park' },
+    { value: 'Trips', label: 'Trips' },
+    { value: 'Cruises', label: 'Cruises' },
+    { value: 'Holiday', label: 'Holiday' },
+    { value: 'Competitions', label: 'Competitions' },
+    { value: 'Community Events', label: 'Community Events' },
+    { value: 'Youth Programs', label: 'Youth Programs' },
+    { value: 'Senior Programs', label: 'Senior Programs' }
   ];
 
   const locations = [

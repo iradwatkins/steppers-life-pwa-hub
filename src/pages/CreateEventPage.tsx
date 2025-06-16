@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles } from '@/hooks/useRoles';
 import { toast } from 'sonner';
@@ -37,7 +38,7 @@ import {
 const eventFormSchema = z.object({
   title: z.string().min(5, 'Event title must be at least 5 characters'),
   description: z.string().min(20, 'Description must be at least 20 characters'),
-  category: z.string().min(1, 'Please select a category'),
+  categories: z.array(z.string()).min(1, 'Please select at least one category'),
   startDate: z.string().min(1, 'Start date is required'),
   startTime: z.string().min(1, 'Start time is required'),
   endDate: z.string().optional(),
@@ -71,7 +72,7 @@ const CreateEventPage = () => {
     defaultValues: {
       title: '',
       description: '',
-      category: '',
+      categories: [],
       startDate: '',
       startTime: '19:00', // Default to 7:00 PM
       endDate: '',
@@ -173,7 +174,7 @@ const CreateEventPage = () => {
         title: data.title,
         description: data.description,
         shortDescription: data.description.substring(0, 150),
-        category: data.category,
+        category: data.categories.join(', '), // Store categories as comma-separated string for now
         startDate: startDateTime,
         endDate: endDateTime,
         timezone: 'America/Chicago', // Default to Chicago timezone
@@ -286,25 +287,35 @@ const CreateEventPage = () => {
 
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="categories"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Event Category *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select event category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {eventCategories.map((category) => (
-                            <SelectItem key={category} value={category}>
+                      <FormLabel>Event Categories * (Select all that apply)</FormLabel>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        {eventCategories.map((category) => (
+                          <div key={category} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={category}
+                              checked={field.value?.includes(category)}
+                              onCheckedChange={(checked) => {
+                                const currentCategories = field.value || [];
+                                if (checked) {
+                                  field.onChange([...currentCategories, category]);
+                                } else {
+                                  field.onChange(currentCategories.filter((c) => c !== category));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={category} className="text-sm cursor-pointer">
                               {category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
                       <FormMessage />
+                      <p className="text-sm text-muted-foreground">
+                        Your event will appear in all selected categories (e.g., "Workshop in the park")
+                      </p>
                     </FormItem>
                   )}
                 />

@@ -47,7 +47,7 @@ import {
 const adminEventFormSchema = z.object({
   title: z.string().min(5, 'Event title must be at least 5 characters'),
   description: z.string().min(20, 'Description must be at least 20 characters'),
-  category: z.string().min(1, 'Please select a category'),
+  categories: z.array(z.string()).min(1, 'Please select at least one category'),
   startDate: z.string().min(1, 'Start date is required'),
   startTime: z.string().min(1, 'Start time is required'),
   endDate: z.string().optional(),
@@ -157,18 +157,16 @@ const AdminCreateEventPage = () => {
 
   // Event categories
   const eventCategories = [
-    'Chicago Stepping Classes',
-    'Chicago Stepping Social',
-    'Chicago Stepping Competition', 
-    'Workshop - Basic Stepping',
-    'Workshop - Intermediate Stepping',
-    'Workshop - Advanced Stepping',
-    'Private Event - Corporate',
-    'Private Event - Wedding',
-    'Community Event',
-    'Fundraiser Event',
-    'Youth Stepping Program',
-    'Senior Stepping Program'
+    'Workshops',
+    'Sets',
+    'In the park',
+    'Trips',
+    'Cruises',
+    'Holiday',
+    'Competitions',
+    'Community Events',
+    'Youth Programs',
+    'Senior Programs'
   ];
 
   const form = useForm<AdminEventFormData>({
