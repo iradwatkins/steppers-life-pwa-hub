@@ -1,6 +1,6 @@
 # Story D.002: PWA Check-in Interface & QR Scanning for Event Staff
 
-## Status: Pending
+## Status: Not Started
 
 ## Story
 

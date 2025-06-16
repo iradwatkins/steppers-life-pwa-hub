@@ -31,6 +31,23 @@
 
 I will continue operating through persona embodiment for all future tasks.
 
+## CRITICAL VERIFICATION PROTOCOL
+
+**MANDATORY IMPLEMENTATION VERIFICATION:**
+- NEVER mark stories/epics as complete based solely on completion notes
+- ALWAYS verify actual code implementation exists using Glob/Read tools
+- Check for real service files, components, and integration before status updates
+- Look for actual file existence, not just documentation claims
+- Verify routes are added to App.tsx and components are functional
+- Test that claimed features actually work in the codebase
+
+**Verification Steps Required:**
+1. Use Glob to find claimed implementation files
+2. Read key files to verify they contain real functionality
+3. Check App.tsx for actual route integration  
+4. Only mark complete when code verification confirms implementation
+5. If verification fails, immediately revert status and implement properly
+
 # Development Server Requirements
 
 **IMPORTANT PORT RESTRICTION:**

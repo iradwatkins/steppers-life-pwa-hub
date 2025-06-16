@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/layout/ThemeProvider";
 import { AuthProvider } from "./hooks/useAuth";
 import { CartProvider } from "./contexts/CartContext";
+import { PWAProvider } from "./contexts/PWAContext";
 import Layout from "./components/layout/Layout";
 import Index from "./pages/Index";
 import Magazine from "./pages/Magazine";
@@ -46,6 +47,7 @@ import EnhancedPurchasePage from "./pages/EnhancedPurchasePage";
 import EmailCampaignsPage from "./pages/organizer/EmailCampaignsPage";
 import CreateEmailCampaignPage from "./pages/organizer/CreateEmailCampaignPage";
 import EmailCampaignAnalyticsPage from "./pages/organizer/EmailCampaignAnalyticsPage";
+import PWADashboard from "./pages/PWADashboard";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -58,10 +60,14 @@ const App = () => (
       <ThemeProvider>
         <TooltipProvider>
           <AuthProvider>
-            <CartProvider>
+            <PWAProvider>
+              <CartProvider>
               <Toaster />
               <Sonner />
-              <BrowserRouter>
+              <BrowserRouter future={{ 
+                v7_startTransition: true,
+                v7_relativeSplatPath: true 
+              }}>
                 <Layout>
                   <Routes>
                   <Route path="/" element={<Index />} />
@@ -130,6 +136,13 @@ const App = () => (
                     <OrganizerRoute>
                       <EmailCampaignAnalyticsPage />
                     </OrganizerRoute>
+                  } />
+                  
+                  {/* PWA routes */}
+                  <Route path="/pwa" element={
+                    <ProtectedRoute>
+                      <PWADashboard />
+                    </ProtectedRoute>
                   } />
                   
                   {/* Event routes */}
@@ -205,7 +218,8 @@ const App = () => (
                   </Routes>
                 </Layout>
               </BrowserRouter>
-            </CartProvider>
+              </CartProvider>
+            </PWAProvider>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
