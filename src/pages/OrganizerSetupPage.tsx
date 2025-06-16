@@ -30,6 +30,7 @@ const organizerSetupSchema = z.object({
   websiteUrl: z.string().url('Please enter a valid website URL').optional().or(z.literal('')),
   contactEmail: z.string().email('Please enter a valid email address'),
   contactPhone: z.string().min(10, 'Please enter a valid phone number'),
+  profilePictureUrl: z.string().optional(),
 });
 
 type OrganizerSetupData = z.infer<typeof organizerSetupSchema>;
@@ -47,6 +48,7 @@ const OrganizerSetupPage = () => {
       websiteUrl: '',
       contactEmail: user?.email || '',
       contactPhone: '',
+      profilePictureUrl: '',
     }
   });
 
@@ -234,6 +236,30 @@ const OrganizerSetupPage = () => {
                         />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="profilePictureUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Profile Picture (Optional)
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="url" 
+                          placeholder="https://example.com/your-photo.jpg"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <p className="text-sm text-muted-foreground">
+                        Enter a URL to your profile picture. This will be displayed on your event listings.
+                      </p>
                     </FormItem>
                   )}
                 />

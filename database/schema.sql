@@ -33,6 +33,7 @@ CREATE TABLE public.organizers (
     website_url TEXT,
     contact_email TEXT,
     contact_phone TEXT,
+    profile_picture_url TEXT,
     verified BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -229,6 +230,11 @@ ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 -- Profiles: Users can only see and edit their own profile
 CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Organizers: Users can manage their own organizer profiles
+CREATE POLICY "Users can view own organizer profile" ON public.organizers FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can create own organizer profile" ON public.organizers FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own organizer profile" ON public.organizers FOR UPDATE USING (auth.uid() = user_id);
 
 -- Events: Public can view published events, organizers can manage their own
 CREATE POLICY "Anyone can view published events" ON public.events FOR SELECT USING (status = 'published');
