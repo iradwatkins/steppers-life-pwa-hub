@@ -22,8 +22,8 @@ const getEnvironmentConfig = (): EnvironmentConfig => {
 
   // Production configuration  
   const prodConfig = {
-    supabaseUrl: import.meta.env.VITE_SUPABASE_PROD_URL || 'https://nvryyufpbcruyqqndyjn.supabase.co',
-    supabaseAnonKey: import.meta.env.VITE_SUPABASE_PROD_ANON_KEY || 'PRODUCTION_KEY_NEEDED',
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'https://nvryyufpbcruyqqndyjn.supabase.co',
+    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52cnl5dWZwYmNydXlxcW5keWpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NzY1MDUsImV4cCI6MjA2NTI1MjUwNX0.W6vriRZnO7n8FPm5Zjd_fe41cY20tWkDOqYF59wulzs',
     appUrl: 'https://stepperslife.com'
   };
 
