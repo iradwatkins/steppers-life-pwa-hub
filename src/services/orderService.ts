@@ -85,7 +85,7 @@ export class OrderService {
       if (orderError) throw orderError;
 
       // Create order items
-      const orderItems: OrderItemInsert[] = data.items.map(item => ({
+      const orderItems: OrderItemInsert[] = (data.items || []).map(item => ({
         order_id: order.id,
         ticket_type_id: item.ticketTypeId,
         price: item.price,
@@ -101,7 +101,7 @@ export class OrderService {
       if (itemsError) throw itemsError;
 
       // Update ticket type quantities
-      for (const item of data.items) {
+      for (const item of (data.items || [])) {
         const { error: updateError } = await supabase
           .from('ticket_types')
           .update({ 
@@ -250,7 +250,7 @@ export class OrderService {
       if (statusError) throw statusError;
 
       // Restore ticket quantities
-      for (const item of orderItems || []) {
+      for (const item of (orderItems || [])) {
         const { error: restoreError } = await supabase
           .from('ticket_types')
           .update({ 

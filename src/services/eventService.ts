@@ -569,8 +569,8 @@ export class EventService {
           const ticketTypes = event.ticket_types as any[];
           if (!ticketTypes?.length) return false;
           
-          const minPrice = Math.min(...ticketTypes.map(tt => tt.price));
-          const maxPrice = Math.max(...ticketTypes.map(tt => tt.price));
+          const minPrice = Math.min(...(ticketTypes || []).map(tt => tt.price));
+          const maxPrice = Math.max(...(ticketTypes || []).map(tt => tt.price));
           
           const meetsMin = !params.priceRange!.min || minPrice >= params.priceRange!.min;
           const meetsMax = !params.priceRange!.max || maxPrice <= params.priceRange!.max;
@@ -582,7 +582,7 @@ export class EventService {
       // Distance-based sorting and filtering
       if (params.userLat && params.userLon && params.sortByDistance) {
         // Add distance to each event
-        events = events.map(event => {
+        events = (events || []).map(event => {
           const venue = event.venues as any;
           let distance = Infinity;
           
@@ -766,7 +766,7 @@ export class EventService {
       if (error) throw error;
 
       const states = [...new Set(
-        data
+        (data || [])
           .map(event => event.venues?.state)
           .filter(Boolean)
       )].sort();
@@ -791,7 +791,7 @@ export class EventService {
       if (error) throw error;
 
       const cities = [...new Set(
-        data
+        (data || [])
           .map(event => event.venues?.city)
           .filter(Boolean)
       )].sort();
@@ -822,7 +822,7 @@ export class EventService {
       // Group by state and count cities
       const stateMap = new Map<string, Set<string>>();
       
-      data.forEach(event => {
+      (data || []).forEach(event => {
         const venue = event.venues;
         if (venue?.state && venue?.city) {
           if (!stateMap.has(venue.state)) {
@@ -836,7 +836,7 @@ export class EventService {
       const hierarchy = Array.from(stateMap.entries()).map(([state, citySet]) => ({
         state,
         cities: Array.from(citySet).sort(),
-        eventCount: data.filter(event => event.venues?.state === state).length
+        eventCount: (data || []).filter(event => event.venues?.state === state).length
       })).sort((a, b) => a.state.localeCompare(b.state));
 
       return hierarchy;
