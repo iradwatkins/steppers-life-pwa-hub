@@ -344,7 +344,7 @@ const ClaimableEventsPage: React.FC = () => {
           </Card>
         ) : (
           <div className="space-y-4">
-            {filteredEvents.map((event) => (
+            {(filteredEvents || []).map((event) => (
               <Card key={event.id} className={`hover:shadow-md transition-shadow ${event.isHighPriority ? 'ring-2 ring-orange-200' : ''}`}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">

@@ -333,7 +333,7 @@ const ManageEventPage: React.FC = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3">
-                  {validateEventForPublishing(event).map((error, index) => (
+                  {(validateEventForPublishing(event) || []).map((error, index) => (
                     <Alert key={index}>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>{error}</AlertDescription>
@@ -402,7 +402,7 @@ const ManageEventPage: React.FC = () => {
 
         {/* Configuration Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {configurationSections.map((section, index) => (
+          {(configurationSections || []).map((section, index) => (
             <Card key={index} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between">

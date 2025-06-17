@@ -217,7 +217,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       {/* Current Images */}
       {currentValue.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {currentValue.map((url, index) => (
+          {(currentValue || []).map((url, index) => (
             <div key={index} className="relative group">
               <div className="aspect-square bg-muted rounded-lg overflow-hidden">
                 <img

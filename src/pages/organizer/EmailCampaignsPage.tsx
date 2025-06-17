@@ -368,7 +368,7 @@ const EmailCampaignsPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.map((template) => (
+            {(templates || []).map((template) => (
               <Card key={template.id}>
                 <CardHeader>
                   <CardTitle className="text-base">{template.name}</CardTitle>
@@ -414,7 +414,7 @@ const EmailCampaignsPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {segments.map((segment) => (
+            {(segments || []).map((segment) => (
               <Card key={segment.id}>
                 <CardHeader>
                   <CardTitle className="text-base">{segment.name}</CardTitle>

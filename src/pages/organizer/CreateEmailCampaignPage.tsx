@@ -238,7 +238,7 @@ const CreateEmailCampaignPage = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {templates.map((template) => (
+            {(templates || []).map((template) => (
               <Card 
                 key={template.id} 
                 className={`cursor-pointer transition-all ${
@@ -289,7 +289,7 @@ const CreateEmailCampaignPage = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Subscribers</SelectItem>
-                {segments.map((segment) => (
+                {(segments || []).map((segment) => (
                   <SelectItem key={segment.id} value={segment.id}>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
@@ -338,7 +338,7 @@ const CreateEmailCampaignPage = () => {
             </p>
             
             <div className="space-y-4">
-              {(selectedTemplate.variables as any[]).map((variable: any) => (
+              {((selectedTemplate.variables as any[]) || []).map((variable: any) => (
                 <div key={variable.name}>
                   <Label htmlFor={variable.name}>
                     {variable.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}

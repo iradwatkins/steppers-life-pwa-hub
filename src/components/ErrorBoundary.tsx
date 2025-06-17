@@ -20,7 +20,16 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error('🚨 Error caught by boundary:', error);
+    console.error('📍 Error location info:', errorInfo);
+    console.error('📝 Component stack:', errorInfo.componentStack);
+    console.error('🔍 Error stack:', error.stack);
+    
+    // Log specific details for map errors
+    if (error.message?.includes('map')) {
+      console.error('🗺️ MAP ERROR DETECTED - This is likely an undefined array being mapped');
+      console.error('🔧 Check for arrays that should have || [] fallbacks');
+    }
   }
 
   render() {
