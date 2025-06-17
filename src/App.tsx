@@ -10,6 +10,7 @@ import { CartProvider } from "./contexts/CartContext";
 import { PWAProvider } from "./contexts/PWAContext";
 import Layout from "./components/layout/Layout";
 import Index from "./pages/Index";
+import DatabaseTest from "./pages/DatabaseTest";
 import Magazine from "./pages/Magazine";
 import Events from "./pages/Events";
 import Classes from "./pages/Classes";
@@ -68,6 +69,11 @@ const App = () => (
                 v7_startTransition: true,
                 v7_relativeSplatPath: true 
               }}>
+                {/* Simple test route that bypasses Layout complexity */}
+                <Routes>
+                  <Route path="/test" element={<DatabaseTest />} />
+                </Routes>
+                
                 <Layout>
                   <Routes>
                   <Route path="/" element={<Index />} />
