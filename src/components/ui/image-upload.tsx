@@ -41,7 +41,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const currentValue = Array.isArray(value) ? value : (value ? [value] : []);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
 
     if (!user?.id) {
@@ -217,7 +217,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       {/* Current Images */}
       {currentValue.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {(currentValue || []).map((url, index) => (
+          {(currentValue ?? []).map((url, index) => (
             <div key={index} className="relative group">
               <div className="aspect-square bg-muted rounded-lg overflow-hidden">
                 <img

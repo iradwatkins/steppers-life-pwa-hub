@@ -118,7 +118,7 @@ const PWADashboard: React.FC = () => {
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {(features || []).map((feature) => {
+          {(features ?? []).map((feature) => {
             const Icon = feature.icon;
             return (
               <Card key={feature.title} className="hover:shadow-md transition-shadow">

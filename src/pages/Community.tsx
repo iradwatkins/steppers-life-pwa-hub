@@ -192,7 +192,7 @@ const Community = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(categories || []).map((category) => (
+                {(categories ?? []).map((category) => (
                   <SelectItem key={category.value} value={category.value}>
                     {category.label}
                   </SelectItem>
@@ -206,7 +206,7 @@ const Community = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(locations || []).map((location) => (
+                {(locations ?? []).map((location) => (
                   <SelectItem key={location.value} value={location.value}>
                     {location.label}
                   </SelectItem>
@@ -220,7 +220,7 @@ const Community = () => {
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6">Featured Businesses</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {(businesses || []).filter(b => b.featured).map((business) => (
+            {(businesses ?? []).filter(b => b.featured).map((business) => (
               <Card key={business.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="aspect-video bg-muted rounded-md mb-4 relative">
@@ -272,7 +272,7 @@ const Community = () => {
         <div>
           <h2 className="text-2xl font-bold mb-6">All Businesses</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(filteredBusinesses || []).filter(b => !b.featured).map((business) => (
+            {(filteredBusinesses ?? []).filter(b => !b.featured).map((business) => (
               <Card key={business.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="aspect-video bg-muted rounded-md mb-4"></div>

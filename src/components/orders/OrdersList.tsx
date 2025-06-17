@@ -180,7 +180,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
       )}
 
       <div className="grid gap-4">
-        {(orders || []).map((order) => {
+        {(orders ?? []).map((order) => {
           const eventDateTime = formatEventDate(order.event.start_date);
           const isDownloading = downloadingOrders.has(order.id);
           

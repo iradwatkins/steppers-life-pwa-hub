@@ -139,7 +139,7 @@ export const EnhancedTicketSelection: React.FC<EnhancedTicketSelectionProps> = (
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            {(event.ticket_types || []).map((ticketType) => {
+            {(event.ticket_types ?? []).map((ticketType) => {
               const availabilityStatus = getAvailabilityStatus(ticketType.available);
               const isSelected = selectedTicketType?.id === ticketType.id;
               const isSoldOut = ticketType.available === 0;

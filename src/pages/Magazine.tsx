@@ -117,7 +117,7 @@ const Magazine = () => {
           </div>
           
           <div className="flex flex-wrap justify-center gap-2">
-            {(categories || []).map((category) => (
+            {(categories ?? []).map((category) => (
               <Button
                 key={category.id}
                 variant={selectedCategory === category.id ? "default" : "outline"}
@@ -166,7 +166,7 @@ const Magazine = () => {
 
         {/* Articles Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(otherArticles || []).map((article) => (
+          {(otherArticles ?? []).map((article) => (
             <Card key={article.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="aspect-video bg-muted rounded-md mb-4"></div>

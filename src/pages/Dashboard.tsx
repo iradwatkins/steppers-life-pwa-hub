@@ -190,7 +190,7 @@ const Dashboard = () => {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                {(upcomingEvents || []).map((event) => (
+                {(upcomingEvents ?? []).map((event) => (
                   <div key={event.id} className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="w-16 h-16 bg-muted rounded-md flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
@@ -245,7 +245,7 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {(recentActivity || []).slice(0, 4).map((activity) => (
+                {(recentActivity ?? []).slice(0, 4).map((activity) => (
                   <div key={activity.id} className="flex items-start gap-3">
                     <div className="mt-1">
                       {getActivityIcon(activity.type)}
@@ -282,7 +282,7 @@ const Dashboard = () => {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-3">
-                {(savedEvents || []).slice(0, 2).map((event) => (
+                {(savedEvents ?? []).slice(0, 2).map((event) => (
                   <div key={event.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">

@@ -311,7 +311,7 @@ const CreateEventPage = () => {
                     <FormItem>
                       <FormLabel>Event Categories * (Select all that apply)</FormLabel>
                       <div className="grid grid-cols-2 gap-3 mt-2">
-                        {(eventCategories || []).map((category) => (
+                        {(eventCategories ?? []).map((category) => (
                           <div key={category} className="flex items-center space-x-2">
                             <Checkbox
                               id={category}
@@ -472,7 +472,7 @@ const CreateEventPage = () => {
                         Add Date
                       </Button>
                     </div>
-                    {(additionalDates || []).map((date, index) => (
+                    {(additionalDates ?? []).map((date, index) => (
                       <div key={index} className="grid grid-cols-5 gap-4 items-end">
                         <div>
                           <Label className="flex items-center gap-2">
