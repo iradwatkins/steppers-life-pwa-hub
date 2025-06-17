@@ -10,11 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { User, Mail, Phone, MapPin, Heart, Shield, Bell, Download, Ticket, Calendar, Clock, QrCode, Share, ExternalLink } from 'lucide-react';
 import ChangePasswordDialog from '@/components/security/ChangePasswordDialog';
 import DeleteAccountDialog from '@/components/security/DeleteAccountDialog';
 import NotificationPreferences from '@/components/notifications/NotificationPreferences';
+import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 
 const Profile = () => {
   const { user, loading, updateProfile } = useAuth();
@@ -32,7 +34,8 @@ const Profile = () => {
     address: '',
     city: '',
     state: '',
-    zipCode: ''
+    zipCode: '',
+    profilePictureUrl: ''
   });
 
   const [preferences, setPreferences] = useState({
@@ -90,10 +93,40 @@ const Profile = () => {
         address: user.user_metadata?.address || '',
         city: user.user_metadata?.city || '',
         state: user.user_metadata?.state || '',
-        zipCode: user.user_metadata?.zip_code || ''
+        zipCode: user.user_metadata?.zip_code || '',
+        profilePictureUrl: user.user_metadata?.profile_picture_url || ''
       });
+
+      // Load profile picture from profiles table if not in metadata
+      loadProfilePicture();
     }
   }, [user, loading, navigate]);
+
+  const loadProfilePicture = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('profile_picture_url')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.log('Profile not found in profiles table, will be created on first update');
+        return;
+      }
+
+      if (profile?.profile_picture_url) {
+        setProfileData(prev => ({ 
+          ...prev, 
+          profilePictureUrl: profile.profile_picture_url 
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading profile picture:', error);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
@@ -137,6 +170,11 @@ const Profile = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleProfileImageUpdate = (imageUrl: string | null) => {
+    setProfileData(prev => ({ ...prev, profilePictureUrl: imageUrl || '' }));
+    console.log('✅ Profile image updated:', imageUrl);
   };
 
   // Mock ticket data
@@ -423,6 +461,14 @@ const Profile = () => {
 
           {/* Settings Sidebar */}
           <div className="space-y-6">
+            {/* Profile Picture Upload */}
+            <ProfileImageUpload
+              currentImageUrl={profileData.profilePictureUrl}
+              userId={user?.id || ''}
+              onImageUpdate={handleProfileImageUpdate}
+              disabled={isEditing}
+            />
+            
             {/* Notification Preferences */}
             <Card>
               <CardHeader>
