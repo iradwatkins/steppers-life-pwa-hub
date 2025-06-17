@@ -46,16 +46,20 @@ const EventDetail = () => {
       setError(null);
       
       try {
+        console.log('🔍 Loading event with ID:', id);
         const eventData = await EventService.getEventById(id);
+        console.log('📊 Event data received:', eventData);
         if (eventData) {
           setEventData(eventData);
           // Set event in cart context for later checkout
           setEvent(eventData.id, eventData.title);
+          console.log('✅ Event data loaded successfully');
         } else {
+          console.error('❌ Event not found for ID:', id);
           setError('Event not found');
         }
       } catch (error) {
-        console.error('Error loading event:', error);
+        console.error('❌ Error loading event:', error);
         setError('Failed to load event details');
       } finally {
         setIsLoading(false);
