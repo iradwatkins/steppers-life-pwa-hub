@@ -311,7 +311,7 @@ export class EventService {
     websiteUrl?: string;
     contactEmail?: string;
     contactPhone?: string;
-    profilePictureUrl?: string;
+    profilePicturePath?: string;
   }): Promise<any> {
     try {
       const { data, error } = await supabase
@@ -323,7 +323,7 @@ export class EventService {
           website_url: organizationData.websiteUrl,
           contact_email: organizationData.contactEmail,
           contact_phone: organizationData.contactPhone,
-          profile_picture_url: organizationData.profilePictureUrl,
+          profile_picture_path: organizationData.profilePicturePath,
         })
         .select()
         .single();

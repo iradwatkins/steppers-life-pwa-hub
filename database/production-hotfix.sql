@@ -1,9 +1,46 @@
 -- PRODUCTION HOTFIX for SteppersLife Database Issues
 -- Run this in Supabase SQL Editor to fix immediate production problems
 
--- 1. Add profile_picture_url column if missing
+-- 1. Add profile_picture_path column for Supabase Storage (not URL)
 ALTER TABLE public.organizers 
-ADD COLUMN IF NOT EXISTS profile_picture_url TEXT;
+ADD COLUMN IF NOT EXISTS profile_picture_path TEXT;
+
+-- Create storage bucket for images if it doesn't exist
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'images', 
+  'images', 
+  true, 
+  5242880, -- 5MB limit
+  ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+) ON CONFLICT (id) DO NOTHING;
+
+-- Create storage policies for image uploads
+DROP POLICY IF EXISTS "Users can upload images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own images" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own images" ON storage.objects;
+
+CREATE POLICY "Users can view images" ON storage.objects
+  FOR SELECT USING (bucket_id = 'images');
+
+CREATE POLICY "Users can upload images" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'images' 
+    AND auth.role() = 'authenticated'
+  );
+
+CREATE POLICY "Users can update their own images" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'images' 
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "Users can delete their own images" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'images' 
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
 
 -- 2. Ensure RLS is properly configured
 ALTER TABLE public.organizers ENABLE ROW LEVEL SECURITY;

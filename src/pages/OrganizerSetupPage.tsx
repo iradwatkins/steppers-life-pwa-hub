@@ -31,7 +31,7 @@ const organizerSetupSchema = z.object({
   websiteUrl: z.string().url('Please enter a valid website URL').optional().or(z.literal('')),
   contactEmail: z.string().email('Please enter a valid email address'),
   contactPhone: z.string().min(10, 'Please enter a valid phone number'),
-  profilePictureUrl: z.string().optional(),
+  profilePicturePath: z.string().optional(),
 });
 
 type OrganizerSetupData = z.infer<typeof organizerSetupSchema>;
@@ -53,7 +53,7 @@ const OrganizerSetupPage = () => {
       websiteUrl: '',
       contactEmail: user?.email || '',
       contactPhone: '',
-      profilePictureUrl: '',
+      profilePicturePath: '',
     }
   });
 
@@ -248,7 +248,7 @@ const OrganizerSetupPage = () => {
 
                 <FormField
                   control={form.control}
-                  name="profilePictureUrl"
+                  name="profilePicturePath"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">

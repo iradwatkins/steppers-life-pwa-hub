@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Upload, X, Camera, Image as ImageIcon, User, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ImageUploadService } from '@/services/imageUploadService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ImageUploadProps {
   value?: string | string[];
@@ -31,6 +33,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   maxSize = 5,
   placeholder
 }) => {
+  const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,17 +44,20 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
+    if (!user?.id) {
+      setUploadError('You must be logged in to upload images');
+      return;
+    }
+
     setIsUploading(true);
     setUploadError(null);
 
     try {
       // Validate files
       for (const file of files) {
-        if (!file.type.startsWith('image/')) {
-          throw new Error(`${file.name} is not an image file`);
-        }
-        if (file.size > maxSize * 1024 * 1024) {
-          throw new Error(`${file.name} is larger than ${maxSize}MB`);
+        const validation = ImageUploadService.validateImageFile(file);
+        if (!validation.valid) {
+          throw new Error(validation.error);
         }
       }
 
@@ -60,20 +66,26 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         throw new Error(`Cannot upload more than ${maxFiles} images`);
       }
 
-      // Create object URLs for immediate preview
-      const newImageUrls = files.map(file => URL.createObjectURL(file));
+      // Upload files to Supabase Storage
+      const uploadPromises = files.map(async (file) => {
+        if (variant === 'avatar') {
+          return await ImageUploadService.uploadProfilePicture(file, user.id);
+        } else {
+          return await ImageUploadService.uploadImage(file, 'images', `events/${user.id}`);
+        }
+      });
+
+      const uploadResults = await Promise.all(uploadPromises);
+      const newImageUrls = uploadResults.map(result => result.url);
 
       if (multiple) {
         onChange([...currentValue, ...newImageUrls]);
       } else {
         onChange(newImageUrls[0]);
       }
-
-      // TODO: Replace with actual upload service
-      // For now, we're using object URLs for preview
-      // In production, you would upload to your storage service here
       
     } catch (error) {
+      console.error('Upload error:', error);
       setUploadError(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setIsUploading(false);
