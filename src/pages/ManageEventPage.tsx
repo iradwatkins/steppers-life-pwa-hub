@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
+import { EventService } from '@/services/eventService';
 import { toast } from 'sonner';
 import { 
   ArrowLeft,
@@ -33,75 +34,54 @@ import {
   Palette
 } from 'lucide-react';
 
+import type { Database } from '@/integrations/supabase/types';
+
 // Event Status Types
 export type EventStatus = 'draft' | 'published' | 'unpublished' | 'archived';
 
-export interface EventData {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  startDate: string;
-  startTime: string;
-  endDate?: string;
-  endTime: string;
-  venue: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  capacity: string;
-  ticketPrice: string;
-  status: EventStatus;
-  isOnlineEvent: boolean;
-  onlineEventLink?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+type Event = Database['public']['Tables']['events']['Row'] & {
+  organizers?: any;
+  venues?: any;
+  ticket_types?: any[];
+};
 
 const ManageEventPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [event, setEvent] = useState<EventData | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock event data - In real implementation, fetch from API
+  // Load real event data from EventService
   useEffect(() => {
-    const fetchEvent = () => {
+    const fetchEvent = async () => {
+      if (!eventId) return;
+      
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        const mockEvent: EventData = {
-          id: eventId || '1',
-          title: 'Summer Dance Workshop Series',
-          description: 'Join us for an intensive summer dance workshop covering multiple dance styles including ballroom, Latin, and contemporary dance techniques.',
-          category: 'Workshop',
-          startDate: '2024-07-15',
-          startTime: '18:00',
-          endDate: '2024-07-15',
-          endTime: '21:00',
-          venue: 'Dance Studio Pro',
-          address: '123 Dance Street',
-          city: 'Miami',
-          state: 'FL',
-          zipCode: '33101',
-          capacity: '50',
-          ticketPrice: '45.00',
-          status: 'draft',
-          isOnlineEvent: false,
-          createdAt: '2024-06-01T10:00:00Z',
-          updatedAt: '2024-06-15T15:30:00Z'
-        };
-        setEvent(mockEvent);
+      setError(null);
+      
+      try {
+        console.log('🔍 Loading event for management:', eventId);
+        const eventData = await EventService.getEventById(eventId);
+        
+        if (!eventData) {
+          setError('Event not found');
+          return;
+        }
+        
+        console.log('✅ Event loaded for management:', eventData);
+        setEvent(eventData);
+      } catch (error) {
+        console.error('❌ Error loading event:', error);
+        setError('Failed to load event details');
+      } finally {
         setIsLoading(false);
-      }, 1000);
+      }
     };
 
-    if (eventId) {
-      fetchEvent();
-    }
+    fetchEvent();
   }, [eventId]);
 
   const getStatusColor = (status: EventStatus) => {
@@ -149,7 +129,7 @@ const ManageEventPage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = (newStatus: EventStatus) => {
+  const handleStatusChange = async (newStatus: EventStatus) => {
     if (!event) return;
 
     // Validate requirements before publishing
@@ -161,12 +141,36 @@ const ManageEventPage: React.FC = () => {
       }
     }
 
-    setEvent({ ...event, status: newStatus, updatedAt: new Date().toISOString() });
-    toast.success(`Event ${getStatusLabel(newStatus).toLowerCase()} successfully`);
-    setIsPublishDialogOpen(false);
+    try {
+      console.log(`🔄 Updating event status to: ${newStatus}`);
+      
+      if (newStatus === 'published') {
+        const success = await EventService.publishEvent(event.id);
+        if (!success) {
+          toast.error('Failed to publish event');
+          return;
+        }
+      } else {
+        const updatedEvent = await EventService.updateEvent(event.id, { status: newStatus });
+        if (!updatedEvent) {
+          toast.error('Failed to update event status');
+          return;
+        }
+      }
+
+      // Update local state
+      setEvent({ ...event, status: newStatus });
+      toast.success(`Event ${getStatusLabel(newStatus).toLowerCase()} successfully`);
+      setIsPublishDialogOpen(false);
+      
+      console.log(`✅ Event status updated to: ${newStatus}`);
+    } catch (error) {
+      console.error('❌ Error updating event status:', error);
+      toast.error('Failed to update event status');
+    }
   };
 
-  const validateEventForPublishing = (eventData: EventData): string[] => {
+  const validateEventForPublishing = (eventData: Event): string[] => {
     const errors: string[] = [];
     
     if (!eventData.title || eventData.title.length < 5) {
@@ -175,11 +179,14 @@ const ManageEventPage: React.FC = () => {
     if (!eventData.description || eventData.description.length < 20) {
       errors.push('Event description is required (min 20 characters)');
     }
-    if (!eventData.venue) {
-      errors.push('Venue is required');
+    if (!eventData.is_online && !eventData.venues) {
+      errors.push('Venue is required for physical events');
     }
-    if (!eventData.startDate || !eventData.startTime) {
-      errors.push('Start date and time are required');
+    if (!eventData.start_date) {
+      errors.push('Start date is required');
+    }
+    if (!eventData.ticket_types || eventData.ticket_types.length === 0) {
+      errors.push('At least one ticket type is required');
     }
     
     return errors;
@@ -258,6 +265,21 @@ const ManageEventPage: React.FC = () => {
             <div className="h-64 bg-gray-200 rounded"></div>
             <div className="h-32 bg-gray-200 rounded"></div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
         </div>
       </div>
     );
@@ -371,7 +393,10 @@ const ManageEventPage: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-600">Date & Time</p>
                   <p className="font-medium">
-                    {new Date(event.startDate).toLocaleDateString()} at {event.startTime}
+                    {new Date(event.start_date).toLocaleDateString()} 
+                    {event.end_date && event.end_date !== event.start_date && 
+                      ` - ${new Date(event.end_date).toLocaleDateString()}`
+                    }
                   </p>
                 </div>
               </div>
@@ -379,21 +404,30 @@ const ManageEventPage: React.FC = () => {
                 <MapPin className="h-5 w-5 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-600">Venue</p>
-                  <p className="font-medium">{event.venue}</p>
+                  <p className="font-medium">
+                    {event.is_online ? 'Online Event' : event.venues?.name || 'TBD'}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <Users className="h-5 w-5 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-600">Capacity</p>
-                  <p className="font-medium">{event.capacity} attendees</p>
+                  <p className="font-medium">
+                    {event.max_attendees ? `${event.max_attendees} attendees` : 'Unlimited'}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <DollarSign className="h-5 w-5 text-gray-500" />
                 <div>
                   <p className="text-sm text-gray-600">Starting Price</p>
-                  <p className="font-medium">${event.ticketPrice}</p>
+                  <p className="font-medium">
+                    {event.ticket_types && event.ticket_types.length > 0 
+                      ? `$${Math.min(...event.ticket_types.map(tt => tt.price))}`
+                      : 'Free'
+                    }
+                  </p>
                 </div>
               </div>
             </div>
@@ -468,7 +502,7 @@ const ManageEventPage: React.FC = () => {
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Last updated: {new Date(event.updatedAt).toLocaleDateString()} at {new Date(event.updatedAt).toLocaleTimeString()}
+                  Last updated: {new Date(event.updated_at || event.created_at).toLocaleDateString()} at {new Date(event.updated_at || event.created_at).toLocaleTimeString()}
                 </p>
               </div>
               <div className="flex items-center space-x-2">
