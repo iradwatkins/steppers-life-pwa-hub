@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -173,7 +174,7 @@ const AdminCreateEventPage = () => {
     defaultValues: {
       title: '',
       description: '',
-      category: '',
+      categories: [],
       startDate: '',
       startTime: '19:00',
       endDate: '',
@@ -201,7 +202,7 @@ const AdminCreateEventPage = () => {
     try {
       // Mock API call - in real app would save to backend
       console.log('Admin Event Data:', data);
-      console.log('Images:', uploadedImages);
+      console.log('Images:', { featuredImage, eventImages });
       console.log('Additional Dates:', additionalDates);
       console.log('Selected Promoter:', selectedPromoter);
       
@@ -386,7 +387,7 @@ const AdminCreateEventPage = () => {
                               />
                             </div>
                             <div className="max-h-96 overflow-y-auto space-y-2">
-                              {filteredPromoters.map((promoter) => (
+                              {(filteredPromoters || []).map((promoter) => (
                                 <Card 
                                   key={promoter.id} 
                                   className="cursor-pointer hover:bg-gray-50 transition-colors"
@@ -419,7 +420,7 @@ const AdminCreateEventPage = () => {
                                           <Badge variant="outline">{promoter.location}</Badge>
                                         </div>
                                         <div className="flex flex-wrap gap-1 mt-2">
-                                          {promoter.specialties.map((specialty, index) => (
+                                          {(promoter.specialties || []).map((specialty, index) => (
                                             <Badge key={index} variant="outline" className="text-xs">
                                               {specialty}
                                             </Badge>
@@ -509,24 +510,31 @@ const AdminCreateEventPage = () => {
 
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="categories"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Event Category *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select event category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {eventCategories.map((category) => (
-                            <SelectItem key={category} value={category}>
+                      <FormLabel>Event Categories * (Select all that apply)</FormLabel>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        {(eventCategories || []).map((category) => (
+                          <div key={category} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={category}
+                              checked={field.value?.includes(category)}
+                              onCheckedChange={(checked) => {
+                                const currentCategories = field.value || [];
+                                if (checked) {
+                                  field.onChange([...currentCategories, category]);
+                                } else {
+                                  field.onChange(currentCategories.filter((c) => c !== category));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={category} className="text-sm cursor-pointer">
                               {category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

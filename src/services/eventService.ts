@@ -44,22 +44,53 @@ export interface CreateEventData {
 
 export class EventService {
   static async createEvent(eventData: CreateEventData, organizerId: string): Promise<Event> {
+    console.log('🔧 EventService.createEvent called with:', { eventData, organizerId });
+    
+    // Validate organizer ID
+    if (!organizerId) {
+      throw new Error('Organizer ID is required to create an event');
+    }
+
     try {
+      // Verify organizer exists
+      console.log('👤 Verifying organizer exists...');
+      const { data: organizer, error: organizerError } = await supabase
+        .from('organizers')
+        .select('id, organization_name')
+        .eq('id', organizerId)
+        .single();
+
+      if (organizerError || !organizer) {
+        console.error('❌ Organizer verification failed:', organizerError);
+        throw new Error('Invalid organizer profile. Please set up your organizer profile first.');
+      }
+      
+      console.log('✅ Organizer verified:', organizer);
       let venueId: string | null = null;
 
       // Create venue if it's a physical event
       if (!eventData.isOnline && eventData.venue) {
-        // Automatically geocode the venue address to get coordinates
-        const coordinates = await geocodeAddress({
-          street: eventData.venue.address,
-          city: eventData.venue.city,
-          state: eventData.venue.state,
-          zipCode: eventData.venue.zipCode
-        });
+        console.log('🏢 Creating venue for physical event...');
+        console.log('🏢 Venue data:', eventData.venue);
+        
+        try {
+          // Automatically geocode the venue address to get coordinates
+          console.log('🗺️ Attempting to geocode venue address...');
+          let coordinates = null;
+          try {
+            coordinates = await geocodeAddress({
+              street: eventData.venue.address,
+              city: eventData.venue.city,
+              state: eventData.venue.state,
+              zipCode: eventData.venue.zipCode
+            });
+            console.log('🗺️ Geocoding result:', coordinates);
+          } catch (geocodingError) {
+            console.warn('⚠️ Geocoding failed, continuing without coordinates:', geocodingError);
+            // Don't fail the entire event creation if geocoding fails
+          }
 
-        const { data: venue, error: venueError } = await supabase
-          .from('venues')
-          .insert({
+          const venueInsertData = {
             name: eventData.venue.name,
             address: eventData.venue.address,
             city: eventData.venue.city,
@@ -68,50 +99,76 @@ export class EventService {
             capacity: eventData.venue.capacity,
             latitude: coordinates?.latitude || null,
             longitude: coordinates?.longitude || null,
-          })
-          .select()
-          .single();
+          };
+          console.log('🏢 Inserting venue with data:', venueInsertData);
 
-        if (venueError) throw venueError;
-        venueId = venue.id;
+          const { data: venue, error: venueError } = await supabase
+            .from('venues')
+            .insert(venueInsertData)
+            .select()
+            .single();
 
-        // Log geocoding result for debugging
-        if (coordinates) {
-          console.log(`Venue "${eventData.venue.name}" geocoded to:`, coordinates);
-        } else {
-          console.warn(`Could not geocode venue "${eventData.venue.name}" - distance sorting will not work for this event`);
+          if (venueError) {
+            console.error('❌ Venue creation error:', venueError);
+            throw venueError;
+          }
+          
+          venueId = venue.id;
+          console.log('✅ Venue created successfully:', venue);
+
+          // Log geocoding result for debugging
+          if (coordinates) {
+            console.log(`🗺️ Venue "${eventData.venue.name}" geocoded to:`, coordinates);
+          } else {
+            console.warn(`⚠️ Could not geocode venue "${eventData.venue.name}" - distance sorting will not work for this event`);
+          }
+        } catch (venueError) {
+          console.error('❌ Error in venue creation process:', venueError);
+          throw new Error(`Venue creation failed: ${venueError.message || venueError}`);
         }
+      } else {
+        console.log('💻 Online event - no venue needed');
       }
 
       // Create the event
+      console.log('📅 Creating event record...');
+      const eventInsertData = {
+        organizer_id: organizerId,
+        venue_id: venueId,
+        title: eventData.title,
+        description: eventData.description,
+        short_description: eventData.shortDescription,
+        category: eventData.category,
+        tags: eventData.tags,
+        start_date: eventData.startDate,
+        end_date: eventData.endDate,
+        timezone: eventData.timezone,
+        is_online: eventData.isOnline,
+        online_link: eventData.onlineLink,
+        status: 'draft' as const,
+        featured_image_url: eventData.featuredImageUrl,
+        gallery_images: eventData.galleryImages,
+        max_attendees: eventData.maxAttendees,
+        additional_info: eventData.additionalInfo,
+      };
+      console.log('📅 Event insert data:', eventInsertData);
+
       const { data: event, error: eventError } = await supabase
         .from('events')
-        .insert({
-          organizer_id: organizerId,
-          venue_id: venueId,
-          title: eventData.title,
-          description: eventData.description,
-          short_description: eventData.shortDescription,
-          category: eventData.category,
-          tags: eventData.tags,
-          start_date: eventData.startDate,
-          end_date: eventData.endDate,
-          timezone: eventData.timezone,
-          is_online: eventData.isOnline,
-          online_link: eventData.onlineLink,
-          status: 'draft',
-          featured_image_url: eventData.featuredImageUrl,
-          gallery_images: eventData.galleryImages,
-          max_attendees: eventData.maxAttendees,
-          additional_info: eventData.additionalInfo,
-        })
+        .insert(eventInsertData)
         .select()
         .single();
 
-      if (eventError) throw eventError;
+      if (eventError) {
+        console.error('❌ Event creation error:', eventError);
+        throw eventError;
+      }
+      
+      console.log('✅ Event created successfully:', event);
 
       // Create ticket types
-      if (eventData.ticketTypes.length > 0) {
+      if (eventData.ticketTypes && eventData.ticketTypes.length > 0) {
+        console.log('🎫 Creating ticket types...');
         const ticketTypesData = eventData.ticketTypes.map(ticket => ({
           event_id: event.id,
           name: ticket.name,
@@ -120,17 +177,27 @@ export class EventService {
           quantity_available: ticket.quantityAvailable,
           max_per_order: ticket.maxPerOrder || 10,
         }));
+        console.log('🎫 Ticket types data:', ticketTypesData);
 
         const { error: ticketError } = await supabase
           .from('ticket_types')
           .insert(ticketTypesData);
 
-        if (ticketError) throw ticketError;
+        if (ticketError) {
+          console.error('❌ Ticket types creation error:', ticketError);
+          throw ticketError;
+        }
+        
+        console.log('✅ Ticket types created successfully');
+      } else {
+        console.log('ℹ️ No ticket types to create');
       }
 
+      console.log('🎉 Event creation completed successfully:', event);
       return event;
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error('❌ EventService.createEvent failed:', error);
+      console.error('❌ Error stack:', error.stack);
       throw error;
     }
   }
@@ -581,7 +648,6 @@ export class EventService {
           )
         `)
         .eq('status', 'published')
-        .eq('is_featured', true)
         .gte('start_date', new Date().toISOString())
         .order('start_date', { ascending: true })
         .limit(limit);

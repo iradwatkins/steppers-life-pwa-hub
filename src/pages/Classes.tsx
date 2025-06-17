@@ -183,7 +183,7 @@ const Classes = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {levels.map((level) => (
+                {(levels || []).map((level) => (
                   <SelectItem key={level.value} value={level.value}>
                     {level.label}
                   </SelectItem>
@@ -197,7 +197,7 @@ const Classes = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {types.map((type) => (
+                {(types || []).map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
                   </SelectItem>
@@ -209,7 +209,7 @@ const Classes = () => {
 
         {/* Classes Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClasses.map((classItem) => (
+          {(filteredClasses || []).map((classItem) => (
             <Card key={classItem.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="aspect-video bg-muted rounded-md mb-4 relative">

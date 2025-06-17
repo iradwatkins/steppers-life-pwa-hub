@@ -15,10 +15,10 @@ const Index = () => {
     const loadFeaturedEvents = async () => {
       try {
         const featured = await EventService.getFeaturedEvents(3);
-        setFeaturedEvents(featured);
+        setFeaturedEvents(featured || []); // Ensure it's always an array
       } catch (error) {
         console.error('Failed to load featured events:', error);
-        // Optionally show empty state or error message
+        setFeaturedEvents([]); // Set empty array on error
       }
     };
 
@@ -74,7 +74,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {featuredEvents.length > 0 ? featuredEvents.map((event) => (
+            {featuredEvents.length > 0 ? (featuredEvents || []).map((event) => (
               <Card key={event.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="aspect-video bg-muted rounded-md mb-4"></div>
@@ -134,7 +134,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            {communityHighlights.map((highlight, index) => (
+            {(communityHighlights || []).map((highlight, index) => (
               <Card key={index} className="text-center">
                 <CardHeader>
                   <div className="w-16 h-16 bg-stepping-gradient rounded-full flex items-center justify-center mx-auto mb-4">

@@ -288,18 +288,18 @@
   
   /* Dark mode optimizations for OLED displays */
   @media (prefers-color-scheme: dark) {
-    /* Samsung Galaxy, iPhone Pro, Pixel Pro with OLED */
-    .dark {
+    /* Only apply OLED optimizations when in dark mode */
+    body.dark {
       --background: 0 0% 0%;
       --card: 0 0% 2%;
     }
     
-    /* True black for OLED power savings */
-    .bg-background {
+    /* True black for OLED power savings - only in dark mode */
+    body.dark .bg-background {
       background-color: #000000;
     }
     
-    .bg-card {
+    body.dark .bg-card {
       background-color: #0a0a0a;
     }
   }

@@ -201,7 +201,7 @@ const EventTicketingPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-8">
-                  {fields.map((field, index) => (
+                  {(fields || []).map((field, index) => (
                     <Card key={field.id} className="relative">
                       <CardHeader>
                         <div className="flex justify-between items-center">
@@ -279,7 +279,7 @@ const EventTicketingPage = () => {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {currencies.map((currency) => (
+                                    {(currencies || []).map((currency) => (
                                       <SelectItem key={currency} value={currency}>
                                         {currency}
                                       </SelectItem>

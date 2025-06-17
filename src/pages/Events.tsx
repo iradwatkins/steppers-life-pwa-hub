@@ -125,12 +125,15 @@ const Events = () => {
         // Also load featured events if no search is active
         if (!searchQuery && selectedCategory === 'all' && selectedState === 'all' && selectedDateRange === 'all') {
           const featured = await EventService.getFeaturedEvents(3);
-          setFeaturedEvents(featured);
+          setFeaturedEvents(featured || []); // Ensure it's always an array
         } else {
           setFeaturedEvents([]);
         }
       } catch (error) {
         console.error('Error loading events:', error);
+        setEvents([]);
+        setFeaturedEvents([]);
+        setTotalEvents(0);
       } finally {
         setIsLoading(false);
       }
@@ -319,7 +322,7 @@ const Events = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((category) => (
+                {(categories || []).map((category) => (
                   <SelectItem key={category.value} value={category.value}>
                     {category.label}
                   </SelectItem>
@@ -335,7 +338,7 @@ const Events = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All States</SelectItem>
-                {locationHierarchy.map((location) => (
+                {(locationHierarchy || []).map((location) => (
                   <SelectItem key={location.state} value={location.state}>
                     {location.state} ({location.eventCount} events)
                   </SelectItem>
@@ -352,7 +355,7 @@ const Events = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Cities in {selectedState}</SelectItem>
-                  {availableCities.map((city) => (
+                  {(availableCities || []).map((city) => (
                     <SelectItem key={city} value={city}>
                       {city}
                     </SelectItem>
@@ -367,7 +370,7 @@ const Events = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {dateRanges.map((range) => (
+                {(dateRanges || []).map((range) => (
                   <SelectItem key={range.value} value={range.value}>
                     {range.label}
                   </SelectItem>
@@ -385,7 +388,7 @@ const Events = () => {
               Featured Events
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {featuredEvents.map((event) => {
+              {(featuredEvents || []).map((event) => {
                 const attendanceInfo = getAttendanceInfo(event.ticket_types || []);
                 return (
                   <Card key={event.id} className="hover:shadow-lg transition-shadow border-yellow-200">
@@ -516,15 +519,13 @@ const Events = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event) => {
+              {(events || []).map((event) => {
                 const attendanceInfo = getAttendanceInfo(event.ticket_types || []);
                 return (
                   <Card key={event.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="aspect-video bg-muted rounded-md mb-4 relative">
-                        {event.is_featured && (
-                          <Badge className="absolute top-2 left-2 bg-stepping-gradient">Featured</Badge>
-                        )}
+                        {/* Featured badge temporarily removed due to missing is_featured column */}
                         {event.featured_image_url && (
                           <img 
                             src={event.featured_image_url} 

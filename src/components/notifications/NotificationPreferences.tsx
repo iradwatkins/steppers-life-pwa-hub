@@ -186,7 +186,7 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {emailNotifications.map((notification, index) => (
+          {(emailNotifications || []).map((notification, index) => (
             <div key={notification.key}>
               <div className="flex items-center justify-between">
                 <div className="flex items-start gap-3">
@@ -225,7 +225,7 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {pushNotifications.map((notification, index) => (
+          {(pushNotifications || []).map((notification, index) => (
             <div key={notification.key}>
               <div className="flex items-center justify-between">
                 <div className="flex items-start gap-3">
@@ -263,7 +263,7 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {smsNotifications.map((notification, index) => (
+          {(smsNotifications || []).map((notification, index) => (
             <div key={notification.key}>
               <div className="flex items-center justify-between">
                 <div className="flex items-start gap-3">

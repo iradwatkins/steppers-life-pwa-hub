@@ -257,12 +257,7 @@ const EventDetail = () => {
             
             {/* Top badges */}
             <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-              {event.is_featured && (
-                <Badge className="bg-yellow-500 text-yellow-900">
-                  <Star className="h-3 w-3 mr-1" />
-                  Featured
-                </Badge>
-              )}
+              {/* Featured badge temporarily removed due to missing is_featured column */}
               <Badge className={`text-white ${getCategoryBadgeColor(event.category)}`}>
                 {event.category}
               </Badge>

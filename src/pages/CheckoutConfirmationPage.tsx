@@ -78,7 +78,7 @@ const CheckoutConfirmationPage = () => {
           dietaryRestrictions: state.attendeeInfo.dietaryRestrictions,
           specialRequests: state.attendeeInfo.specialRequests
         },
-        items: state.items.map(item => ({
+        items: (state.items || []).map(item => ({
           ticketTypeId: item.ticketType.id,
           quantity: item.quantity,
           price: item.ticketType.price,
@@ -335,7 +335,7 @@ const CheckoutConfirmationPage = () => {
               <div>
                 <h3 className="font-semibold mb-3">Tickets</h3>
                 <div className="space-y-3">
-                  {order.order_items.map((item, index) => (
+                  {(order.order_items || []).map((item, index) => (
                     <div key={item.id} className="flex justify-between items-center">
                       <div>
                         <div className="font-medium">Ticket #{item.id.slice(-8).toUpperCase()}</div>

@@ -128,6 +128,13 @@ const CreateEventPage = () => {
   };
 
   const onSubmit = async (data: EventFormData) => {
+    console.log('🚀 Starting event creation process...');
+    console.log('📝 Form data:', data);
+    console.log('👤 User:', user?.id);
+    console.log('🏢 Organizer ID:', organizerId);
+    console.log('🖼️ Featured image:', featuredImage);
+    console.log('📸 Event images:', eventImages);
+
     if (!user?.id) {
       toast.error('You must be logged in to create events.');
       return;
@@ -146,6 +153,8 @@ const CreateEventPage = () => {
       const endDateTime = data.endDate 
         ? `${data.endDate}T${data.endTime}:00` 
         : `${data.startDate}T${data.endTime}:00`;
+
+      console.log('📅 Date/time processing:', { startDateTime, endDateTime });
 
       const eventData: CreateEventData = {
         title: data.title,
@@ -171,6 +180,7 @@ const CreateEventPage = () => {
 
       // Add venue data if it's not an online event
       if (!data.isOnlineEvent) {
+        console.log('🏢 Adding venue data...');
         eventData.venue = {
           name: data.venue,
           address: data.address,
@@ -179,30 +189,59 @@ const CreateEventPage = () => {
           zipCode: data.zipCode,
           capacity: parseInt(data.capacity),
         };
+        console.log('🏢 Venue data:', eventData.venue);
       }
 
       // Handle image uploads
       if (featuredImage) {
+        console.log('🖼️ Adding featured image:', featuredImage);
         eventData.featuredImageUrl = featuredImage;
       }
       
       if (eventImages.length > 0) {
+        console.log('📸 Adding gallery images:', eventImages);
         eventData.galleryImages = eventImages;
       }
 
       // TODO: Handle additional dates for multi-day events
       if (additionalDates.length > 0) {
-        console.log('Additional dates:', additionalDates);
+        console.log('📅 Additional dates:', additionalDates);
       }
 
+      console.log('📋 Final event data being sent to service:', eventData);
+
       // Create the event
+      console.log('🔄 Calling EventService.createEvent...');
       const createdEvent = await EventService.createEvent(eventData, organizerId);
+      console.log('✅ Event created successfully:', createdEvent);
       
       toast.success('Event created successfully! You can now manage all event settings.');
       navigate(`/events/${createdEvent.id}`);
     } catch (error: any) {
-      console.error('Error creating event:', error);
-      toast.error(error.message || 'Failed to create event. Please try again.');
+      console.error('❌ Error creating event:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        stack: error.stack
+      });
+      
+      // More specific error messages
+      let errorMessage = 'Failed to create event. Please try again.';
+      if (error.message?.includes('organizer_id')) {
+        errorMessage = 'Invalid organizer profile. Please set up your organizer profile first.';
+      } else if (error.message?.includes('venue')) {
+        errorMessage = 'Error with venue information. Please check your venue details.';
+      } else if (error.message?.includes('ticket_types')) {
+        errorMessage = 'Error with ticket information. Please check your ticket settings.';
+      } else if (error.message?.includes('image') || error.message?.includes('upload')) {
+        errorMessage = 'Error uploading images. Please try uploading smaller images.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -272,7 +311,7 @@ const CreateEventPage = () => {
                     <FormItem>
                       <FormLabel>Event Categories * (Select all that apply)</FormLabel>
                       <div className="grid grid-cols-2 gap-3 mt-2">
-                        {eventCategories.map((category) => (
+                        {(eventCategories || []).map((category) => (
                           <div key={category} className="flex items-center space-x-2">
                             <Checkbox
                               id={category}
@@ -433,7 +472,7 @@ const CreateEventPage = () => {
                         Add Date
                       </Button>
                     </div>
-                    {additionalDates.map((date, index) => (
+                    {(additionalDates || []).map((date, index) => (
                       <div key={index} className="grid grid-cols-5 gap-4 items-end">
                         <div>
                           <Label className="flex items-center gap-2">
