@@ -51,8 +51,6 @@ const EventDetail = () => {
         console.log('📊 Event data received:', eventData);
         if (eventData) {
           setEventData(eventData);
-          // Set event in cart context for later checkout
-          setEvent(eventData.id, eventData.title);
           console.log('✅ Event data loaded successfully');
         } else {
           console.error('❌ Event not found for ID:', id);
@@ -67,7 +65,14 @@ const EventDetail = () => {
     };
 
     loadEvent();
-  }, [id, setEvent]);
+  }, [id]);
+
+  // Set event in cart context when event data is loaded (separate effect)
+  useEffect(() => {
+    if (event) {
+      setEvent(event.id, event.title);
+    }
+  }, [event?.id, event?.title, setEvent]);
 
   // Helper functions
   const formatEventDate = (startDate: string, endDate: string) => {
