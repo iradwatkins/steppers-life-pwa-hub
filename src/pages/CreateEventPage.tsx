@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { EventService, type CreateEventData } from '@/services/eventService';
 import { useEffect } from 'react';
 import { OrganizerRoute } from '@/components/auth/ProtectedRoute';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { 
   Calendar, 
   MapPin, 
@@ -62,7 +63,8 @@ const CreateEventPage = () => {
   const { organizerId, hasOrganizer } = useRoles();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [eventImages, setEventImages] = useState<string[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<string>('');
   const [additionalDates, setAdditionalDates] = useState<Array<{startDate: string; startTime: string; endDate?: string; endTime?: string}>>([]);
 
   const eventCategories = EventService.getEventCategories();
@@ -105,31 +107,6 @@ const CreateEventPage = () => {
     });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const validFiles = files.filter(file => {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error(`${file.name} is too large. Maximum size is 5MB.`);
-        return false;
-      }
-      if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} is not a valid image file.`);
-        return false;
-      }
-      return true;
-    });
-
-    if (uploadedImages.length + validFiles.length > 3) {
-      toast.error('You can upload a maximum of 3 images');
-      return;
-    }
-
-    setUploadedImages(prev => [...prev, ...validFiles]);
-  };
-
-  const removeImage = (index: number) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== index));
-  };
 
   const addAdditionalDate = () => {
     setAdditionalDates(prev => [...prev, { 
@@ -204,10 +181,13 @@ const CreateEventPage = () => {
         };
       }
 
-      // TODO: Handle image uploads to storage service
-      if (uploadedImages.length > 0) {
-        // In real implementation, upload images and get URLs
-        console.log('Images to upload:', uploadedImages);
+      // Handle image uploads
+      if (featuredImage) {
+        eventData.featuredImageUrl = featuredImage;
+      }
+      
+      if (eventImages.length > 0) {
+        eventData.galleryImages = eventImages;
       }
 
       // TODO: Handle additional dates for multi-day events
@@ -668,66 +648,47 @@ const CreateEventPage = () => {
               </CardContent>
             </Card>
 
-            {/* Event Images Section */}
+            {/* Featured Image Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ImageIcon className="h-5 w-5" />
-                  Event Images
+                  Featured Image
                 </CardTitle>
                 <CardDescription>
-                  Upload up to 3 images for your event (Max 5MB each)
+                  Upload a main image for your event (recommended: 1200x630px)
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <div className="text-lg font-medium mb-2">Upload Event Images</div>
-                  <div className="text-sm text-muted-foreground mb-4">
-                    Recommended: 1200x630px for social media optimization
-                  </div>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="image-upload"
-                  />
-                  <Button type="button" variant="outline" asChild>
-                    <label htmlFor="image-upload" className="cursor-pointer">
-                      Choose Images
-                    </label>
-                  </Button>
-                </div>
+              <CardContent>
+                <ImageUpload
+                  value={featuredImage}
+                  onChange={setFeaturedImage}
+                  variant="featured"
+                  placeholder="Upload a high-quality image that represents your event"
+                />
+              </CardContent>
+            </Card>
 
-                {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-3 gap-4">
-                    {uploadedImages.map((file, index) => (
-                      <div key={index} className="relative">
-                        <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Upload ${index + 1}`}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-2 right-2"
-                          onClick={() => removeImage(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                        <div className="mt-2 text-sm text-center truncate">
-                          {file.name}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* Gallery Images Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Event Gallery (Optional)
+                </CardTitle>
+                <CardDescription>
+                  Upload additional images to showcase your event (up to 3 images)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUpload
+                  value={eventImages}
+                  onChange={setEventImages}
+                  variant="gallery"
+                  multiple
+                  maxFiles={3}
+                  placeholder="Add more images to give attendees a better sense of your event"
+                />
               </CardContent>
             </Card>
 

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { EventService } from '@/services/eventService';
@@ -255,15 +256,16 @@ const OrganizerSetupPage = () => {
                         Profile Picture (Optional)
                       </FormLabel>
                       <FormControl>
-                        <Input 
-                          type="url" 
-                          placeholder="https://example.com/your-photo.jpg"
-                          {...field} 
+                        <ImageUpload
+                          value={field.value}
+                          onChange={field.onChange}
+                          variant="avatar"
+                          placeholder="Upload your profile picture to build trust with attendees"
                         />
                       </FormControl>
                       <FormMessage />
                       <p className="text-sm text-muted-foreground">
-                        Enter a URL to your profile picture. This will be displayed on your event listings.
+                        This will be displayed on your event listings and helps build trust with potential attendees.
                       </p>
                     </FormItem>
                   )}

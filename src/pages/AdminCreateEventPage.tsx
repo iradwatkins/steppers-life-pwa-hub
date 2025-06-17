@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles } from '@/hooks/useRoles';
 import { toast } from 'sonner';
@@ -89,7 +90,8 @@ const AdminCreateEventPage = () => {
   const { canAccessAdmin } = useRoles();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [eventImages, setEventImages] = useState<string[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<string>('');
   const [additionalDates, setAdditionalDates] = useState<Array<{startDate: string; startTime: string; endDate?: string; endTime?: string}>>([]);
   const [selectedPromoter, setSelectedPromoter] = useState<Promoter | null>(null);
   const [isPromoterDialogOpen, setIsPromoterDialogOpen] = useState(false);
@@ -721,6 +723,50 @@ const AdminCreateEventPage = () => {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Featured Image Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Featured Image
+                </CardTitle>
+                <CardDescription>
+                  Upload a main image for the event (recommended: 1200x630px)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUpload
+                  value={featuredImage}
+                  onChange={setFeaturedImage}
+                  variant="featured"
+                  placeholder="Upload a high-quality image that represents the event"
+                />
+              </CardContent>
+            </Card>
+
+            {/* Gallery Images Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Event Gallery (Optional)
+                </CardTitle>
+                <CardDescription>
+                  Upload additional images to showcase the event (up to 3 images)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUpload
+                  value={eventImages}
+                  onChange={setEventImages}
+                  variant="gallery"
+                  multiple
+                  maxFiles={3}
+                  placeholder="Add more images to give attendees a better sense of the event"
+                />
               </CardContent>
             </Card>
 
