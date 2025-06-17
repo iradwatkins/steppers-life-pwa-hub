@@ -245,6 +245,10 @@ const EventDetail = () => {
                 src={event.featured_image_url} 
                 alt={event.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.warn('Failed to load featured image:', event.featured_image_url);
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
               />
             ) : (
               <div className="flex items-center justify-center h-full">
@@ -320,6 +324,10 @@ const EventDetail = () => {
                     src={image} 
                     alt={`${event.title} gallery ${index + 1}`}
                     className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
+                    onError={(e) => {
+                      console.warn('Failed to load gallery image:', image);
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
                   />
                 </div>
               ))}
