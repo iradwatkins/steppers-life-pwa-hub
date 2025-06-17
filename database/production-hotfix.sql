@@ -83,7 +83,9 @@ ALTER TABLE public.ticket_types ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can view published events" ON public.events;
 DROP POLICY IF EXISTS "Organizers can manage own events" ON public.events;
 DROP POLICY IF EXISTS "Anyone can view venues" ON public.venues;
+DROP POLICY IF EXISTS "Authenticated users can create venues" ON public.venues;
 DROP POLICY IF EXISTS "Anyone can view ticket types" ON public.ticket_types;
+DROP POLICY IF EXISTS "Authenticated users can create ticket types" ON public.ticket_types;
 
 -- Events: Public can view published events, organizers can manage their own
 CREATE POLICY "Anyone can view published events" ON public.events
@@ -98,13 +100,19 @@ CREATE POLICY "Organizers can manage own events" ON public.events
     )
   );
 
--- Venues: Anyone can view venues
+-- Venues: Anyone can view venues, authenticated users can create venues
 CREATE POLICY "Anyone can view venues" ON public.venues
   FOR SELECT USING (true);
 
--- Ticket types: Anyone can view ticket types
+CREATE POLICY "Authenticated users can create venues" ON public.venues
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+-- Ticket types: Anyone can view ticket types, authenticated users can create ticket types
 CREATE POLICY "Anyone can view ticket types" ON public.ticket_types
   FOR SELECT USING (true);
+
+CREATE POLICY "Authenticated users can create ticket types" ON public.ticket_types
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 -- 6. Grant proper permissions
 GRANT SELECT ON public.organizers TO anon, authenticated;
