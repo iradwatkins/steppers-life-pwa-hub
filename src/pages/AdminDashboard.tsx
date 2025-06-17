@@ -217,7 +217,7 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {stats.recentEvents.length > 0 ? (
+                {Array.isArray(stats.recentEvents) && stats.recentEvents.length > 0 ? (
                   <div className="space-y-4">
                     {stats.recentEvents.map((event) => (
                       <div key={event.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
@@ -263,7 +263,7 @@ const AdminDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {stats.recentUsers.length > 0 ? (
+                {Array.isArray(stats.recentUsers) && stats.recentUsers.length > 0 ? (
                   <div className="space-y-4">
                     {stats.recentUsers.map((user) => (
                       <div key={user.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
