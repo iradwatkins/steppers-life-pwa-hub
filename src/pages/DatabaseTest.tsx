@@ -17,6 +17,7 @@ const DatabaseTest = () => {
   const [data, setData] = useState<TestData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authStatus, setAuthStatus] = useState<string>('Checking...');
 
   // Load data from database
   const loadData = async () => {
@@ -64,9 +65,18 @@ const DatabaseTest = () => {
       setLoading(true);
       setError(null);
 
+      // First check if user is authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        setError('Please sign in first to save data to profiles table');
+        return;
+      }
+
       const { data: newData, error: saveError } = await supabase
         .from('profiles')
         .insert([{
+          id: user.id, // Required for RLS policy
           full_name: name,
           email: email,
           role: 'user'
@@ -93,9 +103,26 @@ const DatabaseTest = () => {
     }
   };
 
+  // Check authentication status
+  const checkAuth = async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      
+      if (user) {
+        setAuthStatus(`✅ Signed in as: ${user.email}`);
+      } else {
+        setAuthStatus('❌ Not signed in - Please log in to save data');
+      }
+    } catch (err) {
+      setAuthStatus(`❌ Auth error: ${err.message}`);
+    }
+  };
+
   // Load data on component mount
   useEffect(() => {
     loadData();
+    checkAuth();
   }, []);
 
   return (
@@ -143,6 +170,7 @@ const DatabaseTest = () => {
             <p><strong>Status:</strong> {loading ? 'Processing...' : 'Ready'}</p>
             <p><strong>Records Found:</strong> {Array.isArray(data) ? data.length : 0}</p>
             <p><strong>Database:</strong> Supabase Connected</p>
+            <p><strong>Authentication:</strong> {authStatus}</p>
           </div>
         </CardContent>
       </Card>
