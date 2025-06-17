@@ -74,7 +74,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {featuredEvents.length > 0 ? (featuredEvents || []).map((event) => (
+            {(featuredEvents || []).length > 0 ? (featuredEvents || []).map((event) => (
               <Card key={event.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="aspect-video bg-muted rounded-md mb-4"></div>
