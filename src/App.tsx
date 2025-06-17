@@ -71,9 +71,9 @@ const App = () => (
               }}>
                 <Layout>
                   <Routes>
-                  {/* Simple test route for database operations */}
-                  <Route path="/test" element={<DatabaseTest />} />
-                  <Route path="/" element={<Index />} />
+                  {/* Simple test route for database operations - TEMPORARILY DEFAULT */}
+                  <Route path="/" element={<DatabaseTest />} />
+                  <Route path="/home" element={<Index />} />
                   <Route path="/magazine" element={<Magazine />} />
                   <Route path="/events" element={<Events />} />
                   <Route path="/events/create" element={
