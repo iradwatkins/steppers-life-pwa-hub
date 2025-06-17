@@ -322,11 +322,11 @@ const Events = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(categories ?? []).map((category) => (
+                {Array.isArray(categories) ? categories.map((category) => (
                   <SelectItem key={category.value} value={category.value}>
                     {category.label}
                   </SelectItem>
-                ))}
+                )) : null}
               </SelectContent>
             </Select>
 
@@ -338,11 +338,11 @@ const Events = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All States</SelectItem>
-                {(locationHierarchy ?? []).map((location) => (
+                {Array.isArray(locationHierarchy) ? locationHierarchy.map((location) => (
                   <SelectItem key={location.state} value={location.state}>
                     {location.state} ({location.eventCount} events)
                   </SelectItem>
-                ))}
+                )) : null}
               </SelectContent>
             </Select>
 
@@ -355,11 +355,11 @@ const Events = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Cities in {selectedState}</SelectItem>
-                  {(availableCities ?? []).map((city) => (
+                  {Array.isArray(availableCities) ? availableCities.map((city) => (
                     <SelectItem key={city} value={city}>
                       {city}
                     </SelectItem>
-                  ))}
+                  )) : null}
                 </SelectContent>
               </Select>
             )}
@@ -370,11 +370,11 @@ const Events = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(dateRanges ?? []).map((range) => (
+                {Array.isArray(dateRanges) ? dateRanges.map((range) => (
                   <SelectItem key={range.value} value={range.value}>
                     {range.label}
                   </SelectItem>
-                ))}
+                )) : null}
               </SelectContent>
             </Select>
           </div>
@@ -388,7 +388,7 @@ const Events = () => {
               Featured Events
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {(featuredEvents ?? []).map((event) => {
+              {Array.isArray(featuredEvents) ? featuredEvents.map((event) => {
                 const attendanceInfo = getAttendanceInfo(event.ticket_types || []);
                 return (
                   <Card key={event.id} className="hover:shadow-lg transition-shadow border-yellow-200">
@@ -456,7 +456,7 @@ const Events = () => {
                     </CardContent>
                   </Card>
                 );
-              })}
+              }) : null}
             </div>
           </div>
         )}
@@ -519,7 +519,7 @@ const Events = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(events ?? []).map((event) => {
+              {Array.isArray(events) ? events.map((event) => {
                 const attendanceInfo = getAttendanceInfo(event.ticket_types || []);
                 return (
                   <Card key={event.id} className="hover:shadow-lg transition-shadow">
@@ -577,7 +577,7 @@ const Events = () => {
                     </CardContent>
                   </Card>
                 );
-              })}
+              }) : null}
             </div>
           )}
         </div>

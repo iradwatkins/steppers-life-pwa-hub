@@ -73,19 +73,51 @@ const DatabaseTest = () => {
         return;
       }
 
-      const { data: newData, error: saveError } = await supabase
+      // Check if profile already exists
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .insert([{
-          id: user.id, // Required for RLS policy
-          full_name: name,
-          email: email,
-          role: 'user'
-        }])
-        .select()
+        .select('id')
+        .eq('id', user.id)
         .single();
 
-      if (saveError) {
-        throw saveError;
+      let newData;
+      
+      if (existingProfile) {
+        // Profile exists, update it
+        const { data: updatedData, error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            full_name: name,
+            email: email,
+          })
+          .eq('id', user.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          throw updateError;
+        }
+        newData = updatedData;
+        console.log('✅ Profile updated successfully:', newData);
+        
+      } else {
+        // Profile doesn't exist, create it
+        const { data: insertedData, error: insertError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: user.id,
+            full_name: name,
+            email: email,
+            role: 'user'
+          }])
+          .select()
+          .single();
+
+        if (insertError) {
+          throw insertError;
+        }
+        newData = insertedData;
+        console.log('✅ Profile created successfully:', newData);
       }
 
       console.log('✅ Data saved successfully:', newData);

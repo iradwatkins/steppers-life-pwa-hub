@@ -311,7 +311,7 @@ const CreateEventPage = () => {
                     <FormItem>
                       <FormLabel>Event Categories * (Select all that apply)</FormLabel>
                       <div className="grid grid-cols-2 gap-3 mt-2">
-                        {(eventCategories ?? []).map((category) => (
+                        {Array.isArray(eventCategories) ? eventCategories.map((category) => (
                           <div key={category} className="flex items-center space-x-2">
                             <Checkbox
                               id={category}
@@ -329,7 +329,7 @@ const CreateEventPage = () => {
                               {category}
                             </Label>
                           </div>
-                        ))}
+                        )) : null}
                       </div>
                       <FormMessage />
                       <p className="text-sm text-muted-foreground">
@@ -472,7 +472,7 @@ const CreateEventPage = () => {
                         Add Date
                       </Button>
                     </div>
-                    {(additionalDates ?? []).map((date, index) => (
+                    {Array.isArray(additionalDates) ? additionalDates.map((date, index) => (
                       <div key={index} className="grid grid-cols-5 gap-4 items-end">
                         <div>
                           <Label className="flex items-center gap-2">
@@ -540,7 +540,7 @@ const CreateEventPage = () => {
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                    ))}
+                    )) : null}
                   </div>
                 )}
               </CardContent>

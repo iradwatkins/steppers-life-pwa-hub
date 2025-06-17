@@ -74,17 +74,55 @@ CREATE POLICY "Users can create their own profile" ON public.profiles
 CREATE POLICY "Users can update their own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
--- 5. Grant proper permissions
+-- 5. Fix events table RLS policies
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.venues ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ticket_types ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can view published events" ON public.events;
+DROP POLICY IF EXISTS "Organizers can manage own events" ON public.events;
+DROP POLICY IF EXISTS "Anyone can view venues" ON public.venues;
+DROP POLICY IF EXISTS "Anyone can view ticket types" ON public.ticket_types;
+
+-- Events: Public can view published events, organizers can manage their own
+CREATE POLICY "Anyone can view published events" ON public.events
+  FOR SELECT USING (status = 'published' OR status = 'draft');
+
+CREATE POLICY "Organizers can manage own events" ON public.events
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.organizers 
+      WHERE organizers.id = events.organizer_id 
+      AND organizers.user_id = auth.uid()
+    )
+  );
+
+-- Venues: Anyone can view venues
+CREATE POLICY "Anyone can view venues" ON public.venues
+  FOR SELECT USING (true);
+
+-- Ticket types: Anyone can view ticket types
+CREATE POLICY "Anyone can view ticket types" ON public.ticket_types
+  FOR SELECT USING (true);
+
+-- 6. Grant proper permissions
 GRANT SELECT ON public.organizers TO anon, authenticated;
 GRANT INSERT, UPDATE ON public.organizers TO authenticated;
 GRANT SELECT ON public.profiles TO anon, authenticated;
 GRANT INSERT, UPDATE ON public.profiles TO authenticated;
+GRANT SELECT ON public.events TO anon, authenticated;
+GRANT INSERT, UPDATE ON public.events TO authenticated;
+GRANT SELECT ON public.venues TO anon, authenticated;
+GRANT INSERT, UPDATE ON public.venues TO authenticated;
+GRANT SELECT ON public.ticket_types TO anon, authenticated;
+GRANT INSERT, UPDATE ON public.ticket_types TO authenticated;
 
--- 6. Create performance indexes
+-- 7. Create performance indexes
 CREATE INDEX IF NOT EXISTS idx_organizers_user_id ON public.organizers(user_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 
--- 7. Verify the changes
+-- 8. Verify the changes
 SELECT 
   column_name, 
   data_type, 
