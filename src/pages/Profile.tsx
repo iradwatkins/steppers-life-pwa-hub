@@ -17,6 +17,9 @@ import ChangePasswordDialog from '@/components/security/ChangePasswordDialog';
 import DeleteAccountDialog from '@/components/security/DeleteAccountDialog';
 import NotificationPreferences from '@/components/notifications/NotificationPreferences';
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
+import SavedPaymentMethods from '@/components/profile/SavedPaymentMethods';
+import SecurityActivityLog from '@/components/profile/SecurityActivityLog';
+import SavedEventsWishlist from '@/components/profile/SavedEventsWishlist';
 
 const Profile = () => {
   const { user, loading, updateProfile } = useAuth();
@@ -279,14 +282,22 @@ const Profile = () => {
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-4 mb-8">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              Profile Settings
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Security
+            </TabsTrigger>
+            <TabsTrigger value="wishlist" className="flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              Wishlist
             </TabsTrigger>
             <TabsTrigger value="tickets" className="flex items-center gap-2">
               <Ticket className="h-4 w-4" />
-              My Tickets
+              Tickets
             </TabsTrigger>
           </TabsList>
 
@@ -466,6 +477,12 @@ const Profile = () => {
               currentImageUrl={profileData.profilePictureUrl}
               userId={user?.id || ''}
               onImageUpdate={handleProfileImageUpdate}
+              disabled={isEditing}
+            />
+            
+            {/* Saved Payment Methods */}
+            <SavedPaymentMethods
+              userId={user?.id || ''}
               disabled={isEditing}
             />
             
@@ -721,6 +738,29 @@ const Profile = () => {
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="security" className="mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Security Activity Log */}
+              <SecurityActivityLog
+                userId={user?.id || ''}
+                disabled={isEditing}
+              />
+              
+              {/* Saved Payment Methods */}
+              <SavedPaymentMethods
+                userId={user?.id || ''}
+                disabled={isEditing}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="wishlist" className="mt-0">
+            <SavedEventsWishlist
+              userId={user?.id || ''}
+              disabled={isEditing}
+            />
           </TabsContent>
         </Tabs>
 

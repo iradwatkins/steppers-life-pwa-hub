@@ -35,18 +35,18 @@
 - [x] Create profile editing page with form validation
 - [x] Build event preferences and interests selection interface
 - [x] Implement privacy settings with granular control options
-- [ ] Add profile picture upload and management
+- [x] Add profile picture upload and management
 
 ### Task 3: Build Account Security Features (AC: 4, 6, 10)
 - [x] Create password change interface with strength validation
-- [ ] Implement saved payment methods with PCI compliant storage
+- [x] Implement saved payment methods with PCI compliant storage
 - [x] Build account deletion workflow with data export options
-- [ ] Add security activity log and suspicious activity alerts
+- [x] Add security activity log and suspicious activity alerts
 
 ### Task 4: Create Account Dashboard (AC: 8, 11)
 - [x] Build main account dashboard with activity overview
 - [x] Implement upcoming events and past purchases sections
-- [ ] Add saved/wishlist events functionality
+- [x] Add saved/wishlist events functionality
 - [x] Create mobile-responsive dashboard layout
 
 ### Task 5: Implement Notification Preferences (AC: 5, 12)
