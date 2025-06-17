@@ -124,7 +124,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
               <Button variant="outline" onClick={() => window.history.back()}>
                 Go Back
               </Button>
-              <Button onClick={() => navigate('/organizer/setup')}>
+              <Button onClick={() => navigate('/organizer/setup', { state: { from: location } })}>
                 Set Up Profile
               </Button>
             </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -38,7 +38,11 @@ type OrganizerSetupData = z.infer<typeof organizerSetupSchema>;
 const OrganizerSetupPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Get the original destination from navigation state
+  const from = location.state?.from?.pathname || '/events/create';
 
   const form = useForm<OrganizerSetupData>({
     resolver: zodResolver(organizerSetupSchema),
@@ -63,7 +67,8 @@ const OrganizerSetupPage = () => {
       await EventService.createOrganizer(user.id, data);
       
       toast.success('Organizer profile created successfully! You can now create events.');
-      navigate('/events/create');
+      // Redirect to the original destination they were trying to access
+      navigate(from);
     } catch (error: any) {
       console.error('Error creating organizer profile:', error);
       toast.error(error.message || 'Failed to create organizer profile. Please try again.');
