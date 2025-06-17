@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { calculateDistance, geocodeAddress } from '@/utils/geolocation';
 
 type Event = Database['public']['Tables']['events']['Row'];
 type EventInsert = Database['public']['Tables']['events']['Insert'];
@@ -48,6 +49,14 @@ export class EventService {
 
       // Create venue if it's a physical event
       if (!eventData.isOnline && eventData.venue) {
+        // Automatically geocode the venue address to get coordinates
+        const coordinates = await geocodeAddress({
+          street: eventData.venue.address,
+          city: eventData.venue.city,
+          state: eventData.venue.state,
+          zipCode: eventData.venue.zipCode
+        });
+
         const { data: venue, error: venueError } = await supabase
           .from('venues')
           .insert({
@@ -57,12 +66,21 @@ export class EventService {
             state: eventData.venue.state,
             zip_code: eventData.venue.zipCode,
             capacity: eventData.venue.capacity,
+            latitude: coordinates?.latitude || null,
+            longitude: coordinates?.longitude || null,
           })
           .select()
           .single();
 
         if (venueError) throw venueError;
         venueId = venue.id;
+
+        // Log geocoding result for debugging
+        if (coordinates) {
+          console.log(`Venue "${eventData.venue.name}" geocoded to:`, coordinates);
+        } else {
+          console.warn(`Could not geocode venue "${eventData.venue.name}" - distance sorting will not work for this event`);
+        }
       }
 
       // Create the event
@@ -340,7 +358,7 @@ export class EventService {
     }
   }
 
-  // Search and filter events
+  // Search and filter events with optional distance sorting
   static async searchEvents(params: {
     query?: string;
     category?: string;
@@ -349,6 +367,10 @@ export class EventService {
     city?: string;
     dateRange?: 'this-week' | 'next-week' | 'this-month' | 'next-month' | 'all';
     priceRange?: { min?: number; max?: number };
+    userLat?: number;
+    userLon?: number;
+    sortByDistance?: boolean;
+    maxDistance?: number; // in miles
     limit?: number;
     offset?: number;
   }): Promise<{ events: Event[]; total: number }> {
@@ -487,6 +509,41 @@ export class EventService {
           const meetsMax = !params.priceRange!.max || maxPrice <= params.priceRange!.max;
           
           return meetsMin && meetsMax;
+        });
+      }
+
+      // Distance-based sorting and filtering
+      if (params.userLat && params.userLon && params.sortByDistance) {
+        // Add distance to each event
+        events = events.map(event => {
+          const venue = event.venues as any;
+          let distance = Infinity;
+          
+          if (venue?.latitude && venue?.longitude) {
+            distance = calculateDistance(
+              params.userLat!,
+              params.userLon!,
+              venue.latitude,
+              venue.longitude
+            );
+          }
+          
+          return {
+            ...event,
+            distance
+          };
+        });
+
+        // Filter by max distance if specified
+        if (params.maxDistance) {
+          events = events.filter(event => (event as any).distance <= params.maxDistance!);
+        }
+
+        // Sort by distance (closest first)
+        events.sort((a, b) => {
+          const distanceA = (a as any).distance || Infinity;
+          const distanceB = (b as any).distance || Infinity;
+          return distanceA - distanceB;
         });
       }
 

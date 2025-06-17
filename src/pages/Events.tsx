@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EventService } from '@/services/eventService';
-import { Calendar, MapPin, Clock, Search, Filter, Users, DollarSign, Star } from 'lucide-react';
+import { getCurrentLocation, getStoredLocation, storeLocation, formatLocation, type LocationData } from '@/utils/geolocation';
+import { Calendar, MapPin, Clock, Search, Filter, Users, DollarSign, Star, Navigation, RefreshCw } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Event = Database['public']['Tables']['events']['Row'] & {
@@ -33,6 +34,40 @@ const Events = () => {
     eventCount: number;
   }[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [userLocation, setUserLocation] = useState<LocationData | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const [sortByDistance, setSortByDistance] = useState(true);
+
+  // Detect user location on component mount
+  useEffect(() => {
+    const detectUserLocation = async () => {
+      setIsLoadingLocation(true);
+      try {
+        // First check for stored location
+        const stored = getStoredLocation();
+        if (stored) {
+          setUserLocation(stored);
+          setIsLoadingLocation(false);
+          return;
+        }
+
+        // Get current location
+        const location = await getCurrentLocation();
+        setUserLocation(location);
+        storeLocation(location);
+      } catch (error) {
+        console.error('Error detecting location:', error);
+        // Fallback to Chicago
+        const fallback = { city: 'Chicago', state: 'Illinois' };
+        setUserLocation(fallback);
+        storeLocation(fallback);
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    };
+
+    detectUserLocation();
+  }, []);
 
   // Load location hierarchy on component mount
   useEffect(() => {
@@ -65,14 +100,24 @@ const Events = () => {
     const loadEvents = async () => {
       setIsLoading(true);
       try {
-        const { events: searchResults, total } = await EventService.searchEvents({
+        const searchParams: any = {
           query: searchQuery || undefined,
           category: selectedCategory !== 'all' ? selectedCategory : undefined,
           state: selectedState !== 'all' ? selectedState : undefined,
           city: selectedCity !== 'all' ? selectedCity : undefined,
           dateRange: selectedDateRange !== 'all' ? selectedDateRange as any : undefined,
           limit: 20
-        });
+        };
+
+        // Add geolocation for distance sorting if available
+        if (userLocation?.latitude && userLocation?.longitude && sortByDistance) {
+          searchParams.userLat = userLocation.latitude;
+          searchParams.userLon = userLocation.longitude;
+          searchParams.sortByDistance = true;
+          searchParams.maxDistance = 150; // 150 mile radius
+        }
+
+        const { events: searchResults, total } = await EventService.searchEvents(searchParams);
 
         setEvents(searchResults);
         setTotalEvents(total);
@@ -91,8 +136,11 @@ const Events = () => {
       }
     };
 
-    loadEvents();
-  }, [searchQuery, selectedCategory, selectedState, selectedCity, selectedDateRange]);
+    // Only load events if we have location data (or failed to get it)
+    if (!isLoadingLocation) {
+      loadEvents();
+    }
+  }, [searchQuery, selectedCategory, selectedState, selectedCity, selectedDateRange, userLocation, sortByDistance, isLoadingLocation]);
 
   const categories = [
     { value: 'all', label: 'All Events' },
@@ -183,14 +231,72 @@ const Events = () => {
     return { sold, capacity: sold + capacity };
   };
 
+  const handleChangeLocation = async () => {
+    setIsLoadingLocation(true);
+    try {
+      const location = await getCurrentLocation({ 
+        fallback: { city: 'Chicago', state: 'Illinois' } 
+      });
+      setUserLocation(location);
+      storeLocation(location);
+    } catch (error) {
+      console.error('Error updating location:', error);
+      const fallback = { city: 'Chicago', state: 'Illinois' };
+      setUserLocation(fallback);
+      storeLocation(fallback);
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const formatDistance = (distance: number) => {
+    if (distance < 1) {
+      return `${(distance * 5280).toFixed(0)} ft`;
+    }
+    return `${distance.toFixed(1)} mi`;
+  };
+
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="container mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Stepping Events</h1>
+          
+          {/* Location Header */}
+          <div className="mb-4">
+            {isLoadingLocation ? (
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span>Detecting your location...</span>
+              </div>
+            ) : userLocation ? (
+              <div className="flex items-center justify-center gap-4 text-lg">
+                <div className="flex items-center gap-2">
+                  <Navigation className="h-5 w-5 text-stepping-purple" />
+                  <span className="font-medium">Near {formatLocation(userLocation)}</span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleChangeLocation}
+                  disabled={isLoadingLocation}
+                  className="flex items-center gap-2"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Change Location
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>Location unavailable</span>
+              </div>
+            )}
+          </div>
+          
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover and join stepping events across Chicago. From workshops to competitions, find your perfect stepping experience.
+            Discover and join stepping events near you. From workshops to competitions, find your perfect stepping experience.
           </p>
         </div>
 
@@ -323,7 +429,14 @@ const Events = () => {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="h-4 w-4" />
-                          {event.is_online ? 'Online Event' : (event.venues as any)?.name || 'TBD'}
+                          <div className="flex-1">
+                            {event.is_online ? 'Online Event' : (event.venues as any)?.name || 'TBD'}
+                            {!event.is_online && (event as any).distance && (
+                              <span className="ml-2 text-xs bg-stepping-purple/10 text-stepping-purple px-2 py-1 rounded-full">
+                                {formatDistance((event as any).distance)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
@@ -392,7 +505,8 @@ const Events = () => {
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedCategory('all');
-                  setSelectedLocation('all');
+                  setSelectedState('all');
+                  setSelectedCity('all');
                   setSelectedDateRange('all');
                 }}
                 variant="outline"

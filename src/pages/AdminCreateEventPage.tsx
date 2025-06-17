@@ -708,6 +708,19 @@ const AdminCreateEventPage = () => {
                     )}
                   />
                 </div>
+                
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-medium text-blue-900">Automatic Location Detection</p>
+                      <p className="text-blue-700">
+                        We'll automatically find the exact coordinates for the venue address. 
+                        This enables distance-based sorting and helps users find nearby events.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
