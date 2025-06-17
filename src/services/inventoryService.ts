@@ -16,7 +16,9 @@ import type {
   HoldStatus,
   InventoryStatus,
   InventoryConfig,
-  InventoryUpdateType,
+  InventoryUpdateType
+} from '@/types/inventory';
+import {
   DEFAULT_INVENTORY_CONFIG,
   DEFAULT_HOLD_TIMEOUTS
 } from '@/types/inventory';
