@@ -53,7 +53,7 @@ const TicketSelectionPage = () => {
   };
 
   // Get real-time inventory for all ticket types
-  const ticketTypeIds = mockEvent.ticketTypes.map(tt => tt.id);
+  const ticketTypeIds = Array.isArray(mockEvent.ticketTypes) ? mockEvent.ticketTypes.map(tt => tt.id) : [];
   const { statuses: inventoryStatuses, isLoading: inventoryLoading } = useBulkInventory(ticketTypeIds);
 
   // Helper to get real inventory status for a ticket type
