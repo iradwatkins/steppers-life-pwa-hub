@@ -14,11 +14,7 @@ const Index = () => {
   useEffect(() => {
     const loadFeaturedEvents = async () => {
       try {
-        const events = await EventService.getEvents();
-        // Get the first 3 published events as featured
-        const featured = events
-          .filter(event => event.status === 'published')
-          .slice(0, 3);
+        const featured = await EventService.getFeaturedEvents(3);
         setFeaturedEvents(featured);
       } catch (error) {
         console.error('Failed to load featured events:', error);
