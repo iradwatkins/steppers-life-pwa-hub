@@ -378,11 +378,12 @@ export class InventoryService {
   }
 
   // Additional methods for compatibility with hooks
-  public subscribeToInventoryChanges(
+  public static subscribeToInventoryChanges(
     ticketTypeId: string,
     callback: (status: any) => void
   ): () => void {
-    return this.onInventoryUpdate((event) => {
+    const service = InventoryService.getInstance();
+    return service.onInventoryUpdate((event) => {
       if (event.ticketTypeId === ticketTypeId) {
         const status = {
           isAvailable: event.inventory.availableQuantity > 0,
@@ -548,3 +549,6 @@ export class InventoryService {
 }
 
 export const inventoryService = InventoryService.getInstance();
+
+// Export types for hooks
+export type { InventoryStatus } from '@/types/inventory';
