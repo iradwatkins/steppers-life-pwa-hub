@@ -13,11 +13,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
+import { useRoles } from '@/hooks/useRoles';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user, signOut } = useAuth();
+  const { isOrganizer } = useRoles();
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -102,6 +104,17 @@ const Header = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/notifications">Notifications</Link>
                   </DropdownMenuItem>
+                  {isOrganizer && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/organizer/events">My Events</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/events/create">Create Event</Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   {user?.email === 'iradwatkins@gmail.com' && (
                     <>
                       <DropdownMenuSeparator />

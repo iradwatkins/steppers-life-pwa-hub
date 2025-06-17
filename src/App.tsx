@@ -48,6 +48,7 @@ import EnhancedPurchasePage from "./pages/EnhancedPurchasePage";
 import EmailCampaignsPage from "./pages/organizer/EmailCampaignsPage";
 import CreateEmailCampaignPage from "./pages/organizer/CreateEmailCampaignPage";
 import EmailCampaignAnalyticsPage from "./pages/organizer/EmailCampaignAnalyticsPage";
+import OrganizerEventsPage from "./pages/organizer/OrganizerEventsPage";
 import PWADashboard from "./pages/PWADashboard";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -88,6 +89,11 @@ const App = () => (
                   } />
                   
                   {/* Organizer routes - must come before general event routes */}
+                  <Route path="/organizer/events" element={
+                    <OrganizerRoute>
+                      <OrganizerEventsPage />
+                    </OrganizerRoute>
+                  } />
                   <Route path="/organizer/events/:eventId" element={
                     <OrganizerRoute>
                       <ManageEventPage />
