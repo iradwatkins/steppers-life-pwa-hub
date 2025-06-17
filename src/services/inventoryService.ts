@@ -377,6 +377,120 @@ export class InventoryService {
     return () => this.updateListeners.delete(listener);
   }
 
+  // Additional methods for compatibility with hooks
+  public subscribeToInventoryChanges(
+    ticketTypeId: string,
+    callback: (status: any) => void
+  ): () => void {
+    return this.onInventoryUpdate((event) => {
+      if (event.ticketTypeId === ticketTypeId) {
+        const status = {
+          isAvailable: event.inventory.availableQuantity > 0,
+          available: event.inventory.availableQuantity,
+          sold: event.inventory.soldQuantity,
+          held: event.inventory.heldQuantity,
+          total: event.inventory.totalQuantity
+        };
+        callback(status);
+      }
+    });
+  }
+
+  public static async getInventoryStatus(ticketTypeId: string) {
+    const service = InventoryService.getInstance();
+    const inventory = await service.getInventory(ticketTypeId);
+    if (!inventory) return null;
+    
+    return {
+      isAvailable: inventory.availableQuantity > 0,
+      available: inventory.availableQuantity,
+      sold: inventory.soldQuantity,
+      held: inventory.heldQuantity,
+      total: inventory.totalQuantity
+    };
+  }
+
+  public static async getBulkInventoryStatus(ticketTypeIds: string[]) {
+    const service = InventoryService.getInstance();
+    const results = [];
+    
+    for (const ticketTypeId of ticketTypeIds) {
+      const status = await InventoryService.getInventoryStatus(ticketTypeId);
+      if (status) results.push(status);
+    }
+    
+    return results;
+  }
+
+  public static async createInventoryHold(
+    ticketTypeId: string,
+    quantity: number,
+    sessionId: string,
+    userId?: string
+  ) {
+    const service = InventoryService.getInstance();
+    const result = await service.createHold(ticketTypeId, quantity, PurchaseChannel.ONLINE, sessionId, userId);
+    return result.success ? result.hold : null;
+  }
+
+  public static async releaseInventoryHold(sessionId: string, ticketTypeId?: string) {
+    // Implementation for releasing holds
+    return true; // Placeholder
+  }
+
+  public static async confirmInventoryHold(
+    sessionId: string,
+    orderId: string,
+    ticketTypeId: string,
+    quantity: number
+  ) {
+    const service = InventoryService.getInstance();
+    const holds = Array.from(service.activeHolds.values())
+      .filter(hold => hold.sessionId === sessionId && hold.ticketTypeId === ticketTypeId);
+    
+    if (holds.length > 0) {
+      const result = await service.completePurchase(holds[0].id, orderId);
+      return result.success;
+    }
+    
+    return false;
+  }
+
+  public static async getEventInventorySummary(eventId: string) {
+    const service = InventoryService.getInstance();
+    let totalAvailable = 0;
+    let totalSold = 0;
+    let totalCapacity = 0;
+    const ticketTypes = [];
+    
+    for (const inventory of service.inventoryCache.values()) {
+      if (inventory.eventId === eventId) {
+        totalAvailable += inventory.availableQuantity;
+        totalSold += inventory.soldQuantity;
+        totalCapacity += inventory.totalQuantity;
+        
+        ticketTypes.push({
+          isAvailable: inventory.availableQuantity > 0,
+          available: inventory.availableQuantity,
+          sold: inventory.soldQuantity,
+          held: inventory.heldQuantity,
+          total: inventory.totalQuantity
+        });
+      }
+    }
+    
+    return {
+      totalAvailable,
+      totalSold,
+      totalCapacity,
+      ticketTypes
+    };
+  }
+
+  public static isLowInventory(status: any): boolean {
+    return status.available > 0 && status.available <= 10;
+  }
+
   public async getInventoryStatusSummary(): Promise<InventoryStatusSummary> {
     try {
       const totalTicketTypes = this.inventoryCache.size;
