@@ -47,7 +47,7 @@ export class InventoryService {
     if (this.isInitialized) return;
 
     try {
-      console.log('🔄 Initializing Inventory Service...');
+      console.log('🔄 Initializing Inventory Service (Production)...');
       await this.loadInventoryCache();
       this.startCleanupService();
       this.isInitialized = true;
