@@ -69,13 +69,10 @@ const App = () => (
                 v7_startTransition: true,
                 v7_relativeSplatPath: true 
               }}>
-                {/* Simple test route that bypasses Layout complexity */}
-                <Routes>
-                  <Route path="/test" element={<DatabaseTest />} />
-                </Routes>
-                
                 <Layout>
                   <Routes>
+                  {/* Simple test route for database operations */}
+                  <Route path="/test" element={<DatabaseTest />} />
                   <Route path="/" element={<Index />} />
                   <Route path="/magazine" element={<Magazine />} />
                   <Route path="/events" element={<Events />} />
