@@ -86,12 +86,6 @@ Array.prototype.forEach = function<T>(this: T[], callbackfn: (value: T, index: n
     return;
   }
   
-  // Check if 'this' is not array-like
-  if (typeof this !== 'object' || !('length' in this)) {
-    console.error('🚨 NUCLEAR PROTECTION: forEach() called on non-array-like object:', this);
-    return;
-  }
-  
   // If it's an array, use original forEach
   if (Array.isArray(this)) {
     try {
@@ -102,13 +96,22 @@ Array.prototype.forEach = function<T>(this: T[], callbackfn: (value: T, index: n
     return;
   }
   
-  // Handle array-like objects (HTMLCollection, NodeList, etc.)
-  try {
-    const arrayLike = Array.from(this);
-    originalForEach.call(arrayLike, callbackfn, thisArg);
-  } catch (error) {
-    console.error('🚨 NUCLEAR PROTECTION: Failed to convert array-like to array for forEach:', error);
+  // Check for array-like objects and convert them
+  if (typeof this === 'object' && 'length' in this) {
+    try {
+      // Convert HTMLCollection, NodeList, or other array-like objects to array
+      const arrayLike = Array.from(this);
+      console.log('🔄 NUCLEAR PROTECTION: Converting array-like object to array for forEach:', this.constructor.name);
+      originalForEach.call(arrayLike, callbackfn, thisArg);
+      return;
+    } catch (error) {
+      console.error('🚨 NUCLEAR PROTECTION: Failed to convert array-like to array for forEach:', error);
+      return;
+    }
   }
+  
+  // If it's not array-like at all, log and return
+  console.error('🚨 NUCLEAR PROTECTION: forEach() called on non-array-like object:', this);
 };
 
 console.log('🛡️ NUCLEAR ARRAY PROTECTION ACTIVE - All array methods protected');
