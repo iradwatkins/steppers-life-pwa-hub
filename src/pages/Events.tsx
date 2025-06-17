@@ -51,8 +51,11 @@ const Events = () => {
           return;
         }
 
-        // Get current location
-        const location = await getCurrentLocation();
+        // Get current location with reduced timeout for desktop compatibility
+        const location = await getCurrentLocation({ 
+          timeout: 5000, // Reduce timeout to 5 seconds
+          fallback: { city: 'Chicago', state: 'Illinois' }
+        });
         setUserLocation(location);
         storeLocation(location);
       } catch (error) {
@@ -109,8 +112,8 @@ const Events = () => {
           limit: 20
         };
 
-        // Add geolocation for distance sorting if available
-        if (userLocation?.latitude && userLocation?.longitude && sortByDistance) {
+        // Add geolocation for distance sorting if available and not loading
+        if (userLocation?.latitude && userLocation?.longitude && sortByDistance && !isLoadingLocation) {
           searchParams.userLat = userLocation.latitude;
           searchParams.userLon = userLocation.longitude;
           searchParams.sortByDistance = true;
@@ -139,11 +142,10 @@ const Events = () => {
       }
     };
 
-    // Only load events if we have location data (or failed to get it)
-    if (!isLoadingLocation) {
-      loadEvents();
-    }
-  }, [searchQuery, selectedCategory, selectedState, selectedCity, selectedDateRange, userLocation, sortByDistance, isLoadingLocation]);
+    // Load events immediately, don't wait for location detection
+    // Location will be used for distance sorting if/when available
+    loadEvents();
+  }, [searchQuery, selectedCategory, selectedState, selectedCity, selectedDateRange, userLocation, sortByDistance]);
 
   const categories = [
     { value: 'all', label: 'All Events' },
