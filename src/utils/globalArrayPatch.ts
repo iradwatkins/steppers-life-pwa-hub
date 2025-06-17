@@ -34,5 +34,14 @@ Array.prototype.map = function(this: any, ...args: any[]) {
 };
 
 console.log('🛡️ EMERGENCY ARRAY MAP PATCH ACTIVATED');
+console.log('🔍 Testing patch immediately:', [1,2,3].map(x => x * 2));
+console.log('🚨 Testing patch on undefined:', (() => {
+  const undefinedArray: any = undefined;
+  try {
+    return undefinedArray.map((x: any) => x);
+  } catch (e) {
+    return 'PATCH FAILED: ' + e.message;
+  }
+})());
 
 export {};
