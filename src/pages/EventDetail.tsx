@@ -312,9 +312,9 @@ const EventDetail = () => {
           </div>
 
           {/* Gallery thumbnails */}
-          {event.gallery_images && event.gallery_images.length > 0 && (
+          {Array.isArray(event.gallery_images) && event.gallery_images.length > 0 && (
             <div className="flex gap-2 mt-4 overflow-x-auto">
-              {event.gallery_images.slice(0, 5).map((image, index) => (
+              {(event.gallery_images || []).slice(0, 5).map((image, index) => (
                 <div key={index} className="flex-shrink-0 w-20 h-20 bg-muted rounded-lg overflow-hidden">
                   <img 
                     src={image} 
@@ -323,9 +323,9 @@ const EventDetail = () => {
                   />
                 </div>
               ))}
-              {event.gallery_images.length > 5 && (
+              {(event.gallery_images || []).length > 5 && (
                 <div className="flex-shrink-0 w-20 h-20 bg-muted rounded-lg flex items-center justify-center text-xs font-medium">
-                  +{event.gallery_images.length - 5}
+                  +{(event.gallery_images || []).length - 5}
                 </div>
               )}
             </div>
@@ -372,17 +372,19 @@ const EventDetail = () => {
             <Separator />
 
             {/* Schedule */}
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Event Schedule</h2>
-              <div className="space-y-3">
-                {event.schedule.map((item, index) => (
+            {Array.isArray(event.schedule) && event.schedule.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Event Schedule</h2>
+                <div className="space-y-3">
+                  {(event.schedule || []).map((item, index) => (
                   <div key={index} className="flex gap-4 p-3 bg-muted/30 rounded-lg">
                     <div className="font-medium text-stepping-purple min-w-20">{item.time}</div>
                     <div>{item.activity}</div>
                   </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <Separator />
 
@@ -419,8 +421,8 @@ const EventDetail = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {event.ticket_types && event.ticket_types.length > 0 ? (
-                  event.ticket_types
+                {Array.isArray(event.ticket_types) && event.ticket_types.length > 0 ? (
+                  (event.ticket_types || [])
                     .filter((ticket: any) => ticket.is_active)
                     .map((ticket: any) => {
                       const availableQuantity = ticket.quantity_available - (ticket.quantity_sold || 0);
