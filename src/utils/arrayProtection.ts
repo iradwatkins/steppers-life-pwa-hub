@@ -53,14 +53,29 @@ Array.prototype.filter = function<T>(this: T[], callbackfn: (value: T, index: nu
     console.error('🚨 NUCLEAR PROTECTION: filter() called on null/undefined');
     return [];
   }
-  if (!Array.isArray(this)) {
-    console.error('🚨 NUCLEAR PROTECTION: filter() called on non-array:', this);
+  
+  // Check if 'this' is not array-like
+  if (typeof this !== 'object' || !('length' in this)) {
+    console.error('🚨 NUCLEAR PROTECTION: filter() called on non-array-like object:', this);
     return [];
   }
+  
+  // If it's an array, use original filter
+  if (Array.isArray(this)) {
+    try {
+      return originalFilter.call(this, callbackfn, thisArg);
+    } catch (error) {
+      console.error('🚨 NUCLEAR PROTECTION: Error in filter execution:', error);
+      return [];
+    }
+  }
+  
+  // Handle array-like objects (HTMLCollection, NodeList, etc.)
   try {
-    return originalFilter.call(this, callbackfn, thisArg);
+    const arrayLike = Array.from(this);
+    return originalFilter.call(arrayLike, callbackfn, thisArg);
   } catch (error) {
-    console.error('🚨 NUCLEAR PROTECTION: Error in filter execution:', error);
+    console.error('🚨 NUCLEAR PROTECTION: Failed to convert array-like to array for filter:', error);
     return [];
   }
 };
@@ -70,14 +85,29 @@ Array.prototype.forEach = function<T>(this: T[], callbackfn: (value: T, index: n
     console.error('🚨 NUCLEAR PROTECTION: forEach() called on null/undefined');
     return;
   }
-  if (!Array.isArray(this)) {
-    console.error('🚨 NUCLEAR PROTECTION: forEach() called on non-array:', this);
+  
+  // Check if 'this' is not array-like
+  if (typeof this !== 'object' || !('length' in this)) {
+    console.error('🚨 NUCLEAR PROTECTION: forEach() called on non-array-like object:', this);
     return;
   }
+  
+  // If it's an array, use original forEach
+  if (Array.isArray(this)) {
+    try {
+      originalForEach.call(this, callbackfn, thisArg);
+    } catch (error) {
+      console.error('🚨 NUCLEAR PROTECTION: Error in forEach execution:', error);
+    }
+    return;
+  }
+  
+  // Handle array-like objects (HTMLCollection, NodeList, etc.)
   try {
-    originalForEach.call(this, callbackfn, thisArg);
+    const arrayLike = Array.from(this);
+    originalForEach.call(arrayLike, callbackfn, thisArg);
   } catch (error) {
-    console.error('🚨 NUCLEAR PROTECTION: Error in forEach execution:', error);
+    console.error('🚨 NUCLEAR PROTECTION: Failed to convert array-like to array for forEach:', error);
   }
 };
 
