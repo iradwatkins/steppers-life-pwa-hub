@@ -345,6 +345,8 @@ export class EventService {
     query?: string;
     category?: string;
     location?: string;
+    state?: string;
+    city?: string;
     dateRange?: 'this-week' | 'next-week' | 'this-month' | 'next-month' | 'all';
     priceRange?: { min?: number; max?: number };
     limit?: number;
@@ -375,9 +377,15 @@ export class EventService {
         .eq('status', 'published')
         .gte('start_date', new Date().toISOString());
 
-      // Text search
+      // Enhanced text search (event name, promoter name, venue name)
       if (params.query) {
-        query = query.or(`title.ilike.%${params.query}%,description.ilike.%${params.query}%,category.ilike.%${params.query}%`);
+        query = query.or(`
+          title.ilike.%${params.query}%,
+          description.ilike.%${params.query}%,
+          category.ilike.%${params.query}%,
+          organizers.organization_name.ilike.%${params.query}%,
+          venues.name.ilike.%${params.query}%
+        `);
       }
 
       // Category filter
@@ -385,10 +393,19 @@ export class EventService {
         query = query.ilike('category', `%${params.category}%`);
       }
 
-      // Location filter (city/state from venue)
-      if (params.location && params.location !== 'all') {
-        // This will need to be handled with a join or separate query
-        // For now, we'll filter after fetching
+      // State filter
+      if (params.state && params.state !== 'all') {
+        query = query.eq('venues.state', params.state);
+      }
+
+      // City filter
+      if (params.city && params.city !== 'all') {
+        query = query.eq('venues.city', params.city);
+      }
+
+      // Legacy location filter (for backwards compatibility)
+      if (params.location && params.location !== 'all' && !params.state && !params.city) {
+        query = query.or(`venues.city.ilike.%${params.location}%,venues.state.ilike.%${params.location}%`);
       }
 
       // Date range filter
@@ -592,10 +609,7 @@ export class EventService {
       'Trips',
       'Cruises',
       'Holiday',
-      'Competitions',
-      'Community Events',
-      'Youth Programs',
-      'Senior Programs'
+      'Competitions'
     ];
   }
 
@@ -615,5 +629,97 @@ export class EventService {
       'singles',
       'free'
     ];
+  }
+
+  // Get states that have events
+  static async getStatesWithEvents(): Promise<string[]> {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('venues(state)')
+        .eq('status', 'published')
+        .not('venues.state', 'is', null);
+
+      if (error) throw error;
+
+      const states = [...new Set(
+        data
+          .map(event => event.venues?.state)
+          .filter(Boolean)
+      )].sort();
+
+      return states;
+    } catch (error) {
+      console.error('Error fetching states with events:', error);
+      return [];
+    }
+  }
+
+  // Get cities in a specific state that have events
+  static async getCitiesInStateWithEvents(state: string): Promise<string[]> {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('venues(city)')
+        .eq('status', 'published')
+        .eq('venues.state', state)
+        .not('venues.city', 'is', null);
+
+      if (error) throw error;
+
+      const cities = [...new Set(
+        data
+          .map(event => event.venues?.city)
+          .filter(Boolean)
+      )].sort();
+
+      return cities;
+    } catch (error) {
+      console.error('Error fetching cities with events:', error);
+      return [];
+    }
+  }
+
+  // Get all locations with event counts for smart dropdown
+  static async getLocationHierarchy(): Promise<{
+    state: string;
+    cities: string[];
+    eventCount: number;
+  }[]> {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('venues(city, state)')
+        .eq('status', 'published')
+        .not('venues.state', 'is', null)
+        .not('venues.city', 'is', null);
+
+      if (error) throw error;
+
+      // Group by state and count cities
+      const stateMap = new Map<string, Set<string>>();
+      
+      data.forEach(event => {
+        const venue = event.venues;
+        if (venue?.state && venue?.city) {
+          if (!stateMap.has(venue.state)) {
+            stateMap.set(venue.state, new Set());
+          }
+          stateMap.get(venue.state)!.add(venue.city);
+        }
+      });
+
+      // Convert to array format
+      const hierarchy = Array.from(stateMap.entries()).map(([state, citySet]) => ({
+        state,
+        cities: Array.from(citySet).sort(),
+        eventCount: data.filter(event => event.venues?.state === state).length
+      })).sort((a, b) => a.state.localeCompare(b.state));
+
+      return hierarchy;
+    } catch (error) {
+      console.error('Error fetching location hierarchy:', error);
+      return [];
+    }
   }
 }

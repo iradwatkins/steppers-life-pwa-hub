@@ -20,12 +20,45 @@ type Event = Database['public']['Tables']['events']['Row'] & {
 const Events = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [selectedState, setSelectedState] = useState('all');
+  const [selectedCity, setSelectedCity] = useState('all');
   const [selectedDateRange, setSelectedDateRange] = useState('all');
   const [events, setEvents] = useState<Event[]>([]);
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalEvents, setTotalEvents] = useState(0);
+  const [locationHierarchy, setLocationHierarchy] = useState<{
+    state: string;
+    cities: string[];
+    eventCount: number;
+  }[]>([]);
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+
+  // Load location hierarchy on component mount
+  useEffect(() => {
+    const loadLocationHierarchy = async () => {
+      try {
+        const hierarchy = await EventService.getLocationHierarchy();
+        setLocationHierarchy(hierarchy);
+      } catch (error) {
+        console.error('Error loading location hierarchy:', error);
+      }
+    };
+
+    loadLocationHierarchy();
+  }, []);
+
+  // Load cities when state changes
+  useEffect(() => {
+    if (selectedState !== 'all') {
+      const stateData = locationHierarchy.find(loc => loc.state === selectedState);
+      setAvailableCities(stateData?.cities || []);
+      setSelectedCity('all'); // Reset city when state changes
+    } else {
+      setAvailableCities([]);
+      setSelectedCity('all');
+    }
+  }, [selectedState, locationHierarchy]);
 
   // Load events on component mount and when filters change
   useEffect(() => {
@@ -35,7 +68,8 @@ const Events = () => {
         const { events: searchResults, total } = await EventService.searchEvents({
           query: searchQuery || undefined,
           category: selectedCategory !== 'all' ? selectedCategory : undefined,
-          location: selectedLocation !== 'all' ? selectedLocation : undefined,
+          state: selectedState !== 'all' ? selectedState : undefined,
+          city: selectedCity !== 'all' ? selectedCity : undefined,
           dateRange: selectedDateRange !== 'all' ? selectedDateRange as any : undefined,
           limit: 20
         });
@@ -44,7 +78,7 @@ const Events = () => {
         setTotalEvents(total);
 
         // Also load featured events if no search is active
-        if (!searchQuery && selectedCategory === 'all' && selectedLocation === 'all' && selectedDateRange === 'all') {
+        if (!searchQuery && selectedCategory === 'all' && selectedState === 'all' && selectedDateRange === 'all') {
           const featured = await EventService.getFeaturedEvents(3);
           setFeaturedEvents(featured);
         } else {
@@ -58,7 +92,7 @@ const Events = () => {
     };
 
     loadEvents();
-  }, [searchQuery, selectedCategory, selectedLocation, selectedDateRange]);
+  }, [searchQuery, selectedCategory, selectedState, selectedCity, selectedDateRange]);
 
   const categories = [
     { value: 'all', label: 'All Events' },
@@ -68,21 +102,10 @@ const Events = () => {
     { value: 'Trips', label: 'Trips' },
     { value: 'Cruises', label: 'Cruises' },
     { value: 'Holiday', label: 'Holiday' },
-    { value: 'Competitions', label: 'Competitions' },
-    { value: 'Community Events', label: 'Community Events' },
-    { value: 'Youth Programs', label: 'Youth Programs' },
-    { value: 'Senior Programs', label: 'Senior Programs' }
+    { value: 'Competitions', label: 'Competitions' }
   ];
 
-  const locations = [
-    { value: 'all', label: 'All Locations' },
-    { value: 'chicago', label: 'Chicago' },
-    { value: 'downtown', label: 'Downtown Chicago' },
-    { value: 'south-side', label: 'South Side' },
-    { value: 'north-side', label: 'North Side' },
-    { value: 'west-side', label: 'West Side' },
-    { value: 'suburbs', label: 'Chicago Suburbs' }
-  ];
+  // Dynamic state/city options (no hardcoded list needed)
 
   const dateRanges = [
     { value: 'all', label: 'All Dates' },
@@ -176,7 +199,7 @@ const Events = () => {
           <div className="relative max-w-lg mx-auto">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search events, locations..."
+              placeholder="Search events, promoters, venues..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -198,19 +221,39 @@ const Events = () => {
               </SelectContent>
             </Select>
 
-            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+            {/* State Selector */}
+            <Select value={selectedState} onValueChange={setSelectedState}>
               <SelectTrigger className="w-48">
                 <MapPin className="h-4 w-4 mr-2" />
-                <SelectValue />
+                <SelectValue placeholder="Select State" />
               </SelectTrigger>
               <SelectContent>
-                {locations.map((location) => (
-                  <SelectItem key={location.value} value={location.value}>
-                    {location.label}
+                <SelectItem value="all">All States</SelectItem>
+                {locationHierarchy.map((location) => (
+                  <SelectItem key={location.state} value={location.state}>
+                    {location.state} ({location.eventCount} events)
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {/* City Selector - Only show if state is selected and has multiple cities */}
+            {selectedState !== 'all' && availableCities.length > 1 && (
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger className="w-48">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Select City" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cities in {selectedState}</SelectItem>
+                  {availableCities.map((city) => (
+                    <SelectItem key={city} value={city}>
+                      {city}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
               <SelectTrigger className="w-48">
@@ -305,7 +348,7 @@ const Events = () => {
         {/* All Events Section */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-6">
-            {searchQuery || selectedCategory !== 'all' || selectedLocation !== 'all' || selectedDateRange !== 'all' 
+            {searchQuery || selectedCategory !== 'all' || selectedState !== 'all' || selectedDateRange !== 'all' 
               ? 'Search Results' 
               : 'All Events'
             }

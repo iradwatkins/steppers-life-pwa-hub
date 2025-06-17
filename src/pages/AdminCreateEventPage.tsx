@@ -163,10 +163,7 @@ const AdminCreateEventPage = () => {
     'Trips',
     'Cruises',
     'Holiday',
-    'Competitions',
-    'Community Events',
-    'Youth Programs',
-    'Senior Programs'
+    'Competitions'
   ];
 
   const form = useForm<AdminEventFormData>({
