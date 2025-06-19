@@ -52,6 +52,7 @@ import OrganizerEventsPage from "./pages/organizer/OrganizerEventsPage";
 import PWADashboard from "./pages/PWADashboard";
 import FollowingPage from "./pages/FollowingPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
+import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -238,7 +239,16 @@ const App = () => (
                   } />
                   <Route path="/admin/events" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Events</h1><p>Event management page coming soon...</p></div>} />
                   <Route path="/admin/organizers" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Organizers</h1><p>Organizer management page coming soon...</p></div>} />
-                  <Route path="/admin/reports" element={<div className="p-8"><h1 className="text-2xl font-bold">View Reports</h1><p>Reports page coming soon...</p></div>} />
+                  <Route path="/admin/analytics" element={
+                    <AdminRoute>
+                      <AnalyticsDashboard />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/reports" element={
+                    <AdminRoute>
+                      <AnalyticsDashboard />
+                    </AdminRoute>
+                  } />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />

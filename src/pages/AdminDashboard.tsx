@@ -331,10 +331,10 @@ const AdminDashboard = () => {
                 <Button 
                   variant="outline" 
                   className="h-20 flex-col gap-2"
-                  onClick={() => navigate('/admin/reports')}
+                  onClick={() => navigate('/admin/analytics')}
                 >
                   <TrendingUp className="h-6 w-6" />
-                  View Reports
+                  Analytics
                 </Button>
               </div>
             </CardContent>
