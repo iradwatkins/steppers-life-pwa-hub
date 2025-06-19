@@ -23,31 +23,31 @@
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Redesign Events.tsx with advanced search (AC: 1, 8)
-  - [ ] Implement text search across multiple data fields
-  - [ ] Add search result management and no-results handling
-- [ ] Task 2: Create advanced filtering panel (AC: 2)
-  - [ ] Add category, location, skill level filters
-  - [ ] Implement price range and date range filtering
-  - [ ] Add distance-based filtering options
-- [ ] Task 3: Implement multiple sort options (AC: 3)
-  - [ ] Add sort by date, price, popularity, rating
-  - [ ] Create sort direction controls
-- [ ] Task 4: Create multiple view modes (AC: 4)
-  - [ ] Implement grid view for events
-  - [ ] Create list view option
-  - [ ] Add map view placeholder
-- [ ] Task 5: Add featured events and quick filters (AC: 5, 6)
-  - [ ] Create featured events showcase
-  - [ ] Implement quick category filter buttons
-- [ ] Task 6: Enhance EventCard component (AC: 7)
-  - [ ] Add ratings and tags display
-  - [ ] Show capacity and sold-out status
-  - [ ] Improve overall event card design
-- [ ] Task 7: Add saved search and mock data (AC: 9, 10)
-  - [ ] Implement saved search functionality
-  - [ ] Create 8 detailed mock events with realistic data
-  - [ ] Add coordinates, ratings, skill levels, metadata
+- [x] Task 1: Redesign Events.tsx with advanced search (AC: 1, 8)
+  - [x] Implement text search across multiple data fields
+  - [x] Add search result management and no-results handling
+- [x] Task 2: Create advanced filtering panel (AC: 2)
+  - [x] Add category, location, skill level filters
+  - [x] Implement price range and date range filtering
+  - [x] Add distance-based filtering options
+- [x] Task 3: Implement multiple sort options (AC: 3)
+  - [x] Add sort by date, price, popularity, rating
+  - [x] Create sort direction controls
+- [x] Task 4: Create multiple view modes (AC: 4)
+  - [x] Implement grid view for events
+  - [x] Create list view option
+  - [x] Add map view placeholder
+- [x] Task 5: Add featured events and quick filters (AC: 5, 6)
+  - [x] Create featured events showcase
+  - [x] Implement quick category filter buttons
+- [x] Task 6: Enhance EventCard component (AC: 7)
+  - [x] Add ratings and tags display
+  - [x] Show capacity and sold-out status
+  - [x] Improve overall event card design
+- [x] Task 7: Add saved search and mock data (AC: 9, 10)
+  - [x] Implement saved search functionality
+  - [x] Create 8 detailed mock events with realistic data
+  - [x] Add coordinates, ratings, skill levels, metadata
 
 ## Dev Technical Guidance
 
