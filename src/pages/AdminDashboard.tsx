@@ -23,7 +23,9 @@ import {
   Building,
   DollarSign,
   Activity,
-  FileText
+  FileText,
+  RefreshCw,
+  Cog
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -344,6 +346,22 @@ const AdminDashboard = () => {
                 >
                   <TrendingUp className="h-6 w-6" />
                   Analytics
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col gap-2"
+                  onClick={() => navigate('/admin/refunds')}
+                >
+                  <RefreshCw className="h-6 w-6" />
+                  Refunds
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col gap-2"
+                  onClick={() => navigate('/admin/platform-config')}
+                >
+                  <Cog className="h-6 w-6" />
+                  Platform Config
                 </Button>
               </div>
             </CardContent>

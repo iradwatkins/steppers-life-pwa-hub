@@ -56,6 +56,10 @@ import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
 import EventManagementPage from "./pages/admin/EventManagementPage";
 import ContentManagementPage from "./pages/admin/ContentManagementPage";
 import PlatformConfigPage from "./pages/admin/PlatformConfigPage";
+import EventRefundsPage from "./pages/admin/EventRefundsPage";
+import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
+import CashPaymentPage from "./pages/CashPaymentPage";
+import TicketHistoryPage from "./pages/TicketHistoryPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -153,6 +157,18 @@ const App = () => (
                     </OrganizerRoute>
                   } />
                   
+                  {/* Cash Payment routes */}
+                  <Route path="/organizer/event/:eventId/cash-payments" element={
+                    <OrganizerRoute>
+                      <EventCashPaymentPage />
+                    </OrganizerRoute>
+                  } />
+                  <Route path="/cash-payment" element={
+                    <AuthRoute>
+                      <CashPaymentPage />
+                    </AuthRoute>
+                  } />
+                  
                   {/* PWA routes */}
                   <Route path="/pwa" element={
                     <ProtectedRoute>
@@ -202,6 +218,11 @@ const App = () => (
                   <Route path="/dashboard" element={
                     <AuthRoute>
                       <Dashboard />
+                    </AuthRoute>
+                  } />
+                  <Route path="/tickets" element={
+                    <AuthRoute>
+                      <TicketHistoryPage />
                     </AuthRoute>
                   } />
                   <Route path="/notifications" element={
@@ -259,6 +280,11 @@ const App = () => (
                   <Route path="/admin/platform-config" element={
                     <AdminRoute>
                       <PlatformConfigPage />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/refunds" element={
+                    <AdminRoute>
+                      <EventRefundsPage />
                     </AdminRoute>
                   } />
                   <Route path="/admin/reports" element={

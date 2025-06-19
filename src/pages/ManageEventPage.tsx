@@ -31,7 +31,8 @@ import {
   BarChart3,
   Copy,
   Image,
-  Palette
+  Palette,
+  CreditCard
 } from 'lucide-react';
 
 import type { Database } from '@/integrations/supabase/types';
@@ -216,6 +217,14 @@ const ManageEventPage: React.FC = () => {
       path: `/organizer/event/${eventId}/seating`,
       completed: true,
       items: ['Seating Sections', 'Table Layout', 'Chart Upload']
+    },
+    {
+      title: 'Cash Payments',
+      description: 'Manage cash payment codes and verification',
+      icon: <CreditCard className="h-5 w-5" />,
+      path: `/organizer/event/${eventId}/cash-payments`,
+      completed: true,
+      items: ['Payment Codes', 'Code Verification', 'Cash Transactions']
     },
     {
       title: 'Custom Questions',

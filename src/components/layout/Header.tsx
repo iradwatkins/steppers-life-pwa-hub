@@ -104,6 +104,9 @@ const Header = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/notifications">Notifications</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/tickets">My Tickets</Link>
+                  </DropdownMenuItem>
                   {isOrganizer && (
                     <>
                       <DropdownMenuSeparator />

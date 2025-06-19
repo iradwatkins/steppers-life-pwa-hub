@@ -579,9 +579,23 @@ const Profile = () => {
 
           <TabsContent value="tickets" className="mt-0">
             <div className="space-y-6">
+              {/* Quick Actions */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold">My Tickets</h2>
+                  <p className="text-muted-foreground">Quick view of your recent tickets</p>
+                </div>
+                <Button asChild variant="outline">
+                  <Link to="/tickets" className="flex items-center gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    View All Tickets
+                  </Link>
+                </Button>
+              </div>
+              
               {/* Upcoming Tickets */}
               <div>
-                <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
+                <h3 className="text-xl font-semibold mb-4">Upcoming Events</h3>
                 {upcomingTickets.length === 0 ? (
                   <Card>
                     <CardContent className="text-center py-12">
@@ -696,7 +710,7 @@ const Profile = () => {
               {/* Past Tickets */}
               {pastTickets.length > 0 && (
                 <div>
-                  <h2 className="text-2xl font-bold mb-4">Past Events</h2>
+                  <h3 className="text-xl font-semibold mb-4">Recent Past Events</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {pastTickets.map((ticket) => (
                       <Card key={ticket.id} className="opacity-75">

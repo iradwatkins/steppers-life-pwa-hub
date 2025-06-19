@@ -334,6 +334,12 @@ const Dashboard = () => {
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link to="/tickets">
+                    <TicketCheck className="mr-2 h-4 w-4" />
+                    My Tickets
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
                   <Link to="/profile">
                     <Star className="mr-2 h-4 w-4" />
                     Update Preferences
