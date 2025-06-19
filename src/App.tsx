@@ -54,6 +54,7 @@ import FollowingPage from "./pages/FollowingPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
 import EventManagementPage from "./pages/admin/EventManagementPage";
+import ContentManagementPage from "./pages/admin/ContentManagementPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -247,6 +248,11 @@ const App = () => (
                   <Route path="/admin/analytics" element={
                     <AdminRoute>
                       <AnalyticsDashboard />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/content" element={
+                    <AdminRoute>
+                      <ContentManagementPage />
                     </AdminRoute>
                   } />
                   <Route path="/admin/reports" element={

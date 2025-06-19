@@ -438,6 +438,132 @@ export type Database = {
         }
         Relationships: []
       }
+      content_pages: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          content: string
+          meta_description: string | null
+          meta_keywords: string[] | null
+          type: 'page' | 'post' | 'faq_item'
+          status: 'draft' | 'published' | 'archived'
+          featured_image_url: string | null
+          sort_order: number
+          is_system_page: boolean
+          created_by: string | null
+          updated_by: string | null
+          published_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          content: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          type?: 'page' | 'post' | 'faq_item'
+          status?: 'draft' | 'published' | 'archived'
+          featured_image_url?: string | null
+          sort_order?: number
+          is_system_page?: boolean
+          created_by?: string | null
+          updated_by?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          content?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          type?: 'page' | 'post' | 'faq_item'
+          status?: 'draft' | 'published' | 'archived'
+          featured_image_url?: string | null
+          sort_order?: number
+          is_system_page?: boolean
+          created_by?: string | null
+          updated_by?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_pages_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_pages_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      content_page_versions: {
+        Row: {
+          id: string
+          page_id: string
+          version_number: number
+          title: string
+          content: string
+          meta_description: string | null
+          meta_keywords: string[] | null
+          status: 'draft' | 'published' | 'archived'
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          page_id: string
+          version_number?: number
+          title: string
+          content: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          status: 'draft' | 'published' | 'archived'
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          page_id?: string
+          version_number?: number
+          title?: string
+          content?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          status?: 'draft' | 'published' | 'archived'
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_page_versions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "content_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_page_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -449,6 +575,8 @@ export type Database = {
       user_role: 'user' | 'admin' | 'organizer' | 'super_admin'
       event_status: 'draft' | 'published' | 'cancelled' | 'completed'
       order_status: 'pending' | 'confirmed' | 'cancelled' | 'refunded'
+      content_status: 'draft' | 'published' | 'archived'
+      content_type: 'page' | 'post' | 'faq_item'
     }
     CompositeTypes: {
       [_ in never]: never

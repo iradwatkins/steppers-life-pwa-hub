@@ -22,7 +22,8 @@ import {
   UserCheck,
   Building,
   DollarSign,
-  Activity
+  Activity,
+  FileText
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -303,7 +304,7 @@ const AdminDashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 <Button 
                   variant="outline" 
                   className="h-20 flex-col gap-2"
@@ -319,6 +320,14 @@ const AdminDashboard = () => {
                 >
                   <Calendar className="h-6 w-6" />
                   Manage Events
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col gap-2"
+                  onClick={() => navigate('/admin/content')}
+                >
+                  <FileText className="h-6 w-6" />
+                  Content Management
                 </Button>
                 <Button 
                   variant="outline" 
