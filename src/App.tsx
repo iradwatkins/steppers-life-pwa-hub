@@ -50,6 +50,7 @@ import CreateEmailCampaignPage from "./pages/organizer/CreateEmailCampaignPage";
 import EmailCampaignAnalyticsPage from "./pages/organizer/EmailCampaignAnalyticsPage";
 import OrganizerEventsPage from "./pages/organizer/OrganizerEventsPage";
 import PWADashboard from "./pages/PWADashboard";
+import FollowingPage from "./pages/FollowingPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -201,6 +202,11 @@ const App = () => (
                   <Route path="/notifications" element={
                     <AuthRoute>
                       <Notifications />
+                    </AuthRoute>
+                  } />
+                  <Route path="/following" element={
+                    <AuthRoute>
+                      <FollowingPage />
                     </AuthRoute>
                   } />
                   <Route path="/claimable-events" element={

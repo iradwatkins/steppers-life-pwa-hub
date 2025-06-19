@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, MapPin, Clock, Search, Filter, Users, Star, BookOpen } from 'lucide-react';
+import FollowButton from '@/components/following/FollowButton';
 
 const Classes = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -227,9 +228,18 @@ const Classes = () => {
                   </div>
                 </div>
                 <CardTitle className="text-lg line-clamp-1">{classItem.title}</CardTitle>
-                <CardDescription className="text-sm text-stepping-purple font-medium">
-                  with {classItem.instructor}
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <CardDescription className="text-sm text-stepping-purple font-medium">
+                    with {classItem.instructor}
+                  </CardDescription>
+                  <FollowButton
+                    entityId={`instructor_${classItem.id}`}
+                    entityType="instructor"
+                    entityName={classItem.instructor}
+                    variant="icon"
+                    size="sm"
+                  />
+                </div>
                 <CardDescription className="line-clamp-2">{classItem.description}</CardDescription>
               </CardHeader>
               <CardContent>

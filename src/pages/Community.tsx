@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, MapPin, Phone, Globe, Star, Clock } from 'lucide-react';
+import FollowButton from '@/components/following/FollowButton';
 
 const Community = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -236,7 +237,16 @@ const Community = () => {
                       <span className="text-sm text-muted-foreground">({business.reviews})</span>
                     </div>
                   </div>
-                  <CardTitle className="text-xl">{business.name}</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl">{business.name}</CardTitle>
+                    <FollowButton
+                      entityId={`business_${business.id}`}
+                      entityType="business"
+                      entityName={business.name}
+                      variant="icon"
+                      size="sm"
+                    />
+                  </div>
                   <CardDescription>{business.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -285,7 +295,16 @@ const Community = () => {
                       <span className="text-sm font-medium">{business.rating}</span>
                     </div>
                   </div>
-                  <CardTitle className="text-lg line-clamp-1">{business.name}</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg line-clamp-1">{business.name}</CardTitle>
+                    <FollowButton
+                      entityId={`business_${business.id}`}
+                      entityType="business"
+                      entityName={business.name}
+                      variant="icon"
+                      size="sm"
+                    />
+                  </div>
                   <CardDescription className="line-clamp-2">{business.description}</CardDescription>
                 </CardHeader>
                 <CardContent>

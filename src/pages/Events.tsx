@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EventService } from '@/services/eventService';
 import { getCurrentLocation, getStoredLocation, storeLocation, formatLocation, type LocationData } from '@/utils/geolocation';
 import { Calendar, MapPin, Clock, Search, Filter, Users, DollarSign, Star, Navigation, RefreshCw } from 'lucide-react';
+import FollowButton from '@/components/following/FollowButton';
 import type { Database } from '@/integrations/supabase/types';
 
 type Event = Database['public']['Tables']['events']['Row'] & {
@@ -412,9 +413,20 @@ const Events = () => {
                         <Badge className={`text-white ${getCategoryBadgeColor(event.category)}`}>
                           {event.category}
                         </Badge>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Users className="h-3 w-3" />
-                          {attendanceInfo.sold}/{attendanceInfo.capacity}
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Users className="h-3 w-3" />
+                            {attendanceInfo.sold}/{attendanceInfo.capacity}
+                          </div>
+                          {event.organizer_id && (
+                            <FollowButton
+                              entityId={event.organizer_id}
+                              entityType="organizer"
+                              entityName={event.organizers?.organization_name}
+                              variant="icon"
+                              size="sm"
+                            />
+                          )}
                         </div>
                       </div>
                       <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
@@ -540,9 +552,20 @@ const Events = () => {
                         <Badge className={`text-white ${getCategoryBadgeColor(event.category)}`}>
                           {event.category}
                         </Badge>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Users className="h-3 w-3" />
-                          {attendanceInfo.sold}/{attendanceInfo.capacity}
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Users className="h-3 w-3" />
+                            {attendanceInfo.sold}/{attendanceInfo.capacity}
+                          </div>
+                          {event.organizer_id && (
+                            <FollowButton
+                              entityId={event.organizer_id}
+                              entityType="organizer"
+                              entityName={event.organizers?.organization_name}
+                              variant="icon"
+                              size="sm"
+                            />
+                          )}
                         </div>
                       </div>
                       <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
