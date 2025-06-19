@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import OrdersList from '@/components/orders/OrdersList';
+import TicketDisplay from '@/components/tickets/TicketDisplay';
 import { 
   Calendar, 
   Clock, 
@@ -19,7 +20,10 @@ import {
   ArrowRight,
   Activity,
   Receipt,
-  Home
+  Home,
+  QrCode,
+  CreditCard,
+  User
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -108,14 +112,22 @@ const Dashboard = () => {
 
         {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => setSearchParams({ tab: value })} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:grid-cols-2">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Home className="h-4 w-4" />
               Overview
             </TabsTrigger>
+            <TabsTrigger value="tickets" className="flex items-center gap-2">
+              <QrCode className="h-4 w-4" />
+              My Tickets
+            </TabsTrigger>
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <Receipt className="h-4 w-4" />
-              My Orders
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Profile
             </TabsTrigger>
           </TabsList>
 
@@ -333,8 +345,52 @@ const Dashboard = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="tickets" className="space-y-6">
+            <TicketDisplay />
+          </TabsContent>
+
           <TabsContent value="orders">
             <OrdersList showHeader={false} />
+          </TabsContent>
+
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Management</CardTitle>
+                <CardDescription>
+                  Manage your account information and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Personal Information</h4>
+                    <div className="space-y-2 text-sm">
+                      <div><strong>Name:</strong> {user?.user_metadata?.first_name} {user?.user_metadata?.last_name}</div>
+                      <div><strong>Email:</strong> {user?.email}</div>
+                      <div><strong>Phone:</strong> {user?.user_metadata?.phone || 'Not provided'}</div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Account Settings</h4>
+                    <div className="space-y-2">
+                      <Button variant="outline" size="sm" asChild className="w-full justify-start">
+                        <Link to="/profile">
+                          <User className="mr-2 h-4 w-4" />
+                          Edit Profile
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild className="w-full justify-start">
+                        <Link to="/forgot-password">
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          Change Password
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
