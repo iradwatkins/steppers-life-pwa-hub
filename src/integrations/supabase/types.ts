@@ -564,6 +564,301 @@ export type Database = {
           }
         ]
       }
+      platform_categories: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          type: 'event' | 'class' | 'content'
+          color_hex: string
+          icon_name: string | null
+          is_active: boolean
+          sort_order: number
+          parent_id: string | null
+          metadata: Json
+          created_by: string | null
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          type: 'event' | 'class' | 'content'
+          color_hex?: string
+          icon_name?: string | null
+          is_active?: boolean
+          sort_order?: number
+          parent_id?: string | null
+          metadata?: Json
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          type?: 'event' | 'class' | 'content'
+          color_hex?: string
+          icon_name?: string | null
+          is_active?: boolean
+          sort_order?: number
+          parent_id?: string | null
+          metadata?: Json
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "platform_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_categories_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      platform_settings: {
+        Row: {
+          id: string
+          key: string
+          value: string
+          type: 'string' | 'number' | 'boolean' | 'json' | 'array'
+          description: string | null
+          category: string
+          is_public: boolean
+          validation_rules: Json
+          updated_by: string | null
+          updated_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          value: string
+          type?: 'string' | 'number' | 'boolean' | 'json' | 'array'
+          description?: string | null
+          category?: string
+          is_public?: boolean
+          validation_rules?: Json
+          updated_by?: string | null
+          updated_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          value?: string
+          type?: 'string' | 'number' | 'boolean' | 'json' | 'array'
+          description?: string | null
+          category?: string
+          is_public?: boolean
+          validation_rules?: Json
+          updated_by?: string | null
+          updated_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      vod_configuration: {
+        Row: {
+          id: string
+          hosting_fee_amount: number
+          hosting_fee_currency: string
+          introductory_offer_enabled: boolean
+          introductory_offer_amount: number
+          introductory_offer_description: string | null
+          introductory_offer_expires_at: string | null
+          is_active: boolean
+          updated_by: string | null
+          updated_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          hosting_fee_amount?: number
+          hosting_fee_currency?: string
+          introductory_offer_enabled?: boolean
+          introductory_offer_amount?: number
+          introductory_offer_description?: string | null
+          introductory_offer_expires_at?: string | null
+          is_active?: boolean
+          updated_by?: string | null
+          updated_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          hosting_fee_amount?: number
+          hosting_fee_currency?: string
+          introductory_offer_enabled?: boolean
+          introductory_offer_amount?: number
+          introductory_offer_description?: string | null
+          introductory_offer_expires_at?: string | null
+          is_active?: boolean
+          updated_by?: string | null
+          updated_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vod_configuration_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      pickup_locations: {
+        Row: {
+          id: string
+          name: string
+          address: string
+          city: string
+          state: string
+          zip_code: string | null
+          country: string
+          phone: string | null
+          email: string | null
+          hours_of_operation: Json | null
+          special_instructions: string | null
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          created_by: string | null
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          address: string
+          city: string
+          state: string
+          zip_code?: string | null
+          country?: string
+          phone?: string | null
+          email?: string | null
+          hours_of_operation?: Json | null
+          special_instructions?: string | null
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          address?: string
+          city?: string
+          state?: string
+          zip_code?: string | null
+          country?: string
+          phone?: string | null
+          email?: string | null
+          hours_of_operation?: Json | null
+          special_instructions?: string | null
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_locations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_locations_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      configuration_audit_log: {
+        Row: {
+          id: string
+          table_name: string
+          record_id: string
+          action: string
+          old_values: Json | null
+          new_values: Json | null
+          changed_by: string | null
+          changed_at: string
+        }
+        Insert: {
+          id?: string
+          table_name: string
+          record_id: string
+          action: string
+          old_values?: Json | null
+          new_values?: Json | null
+          changed_by?: string | null
+          changed_at?: string
+        }
+        Update: {
+          id?: string
+          table_name?: string
+          record_id?: string
+          action?: string
+          old_values?: Json | null
+          new_values?: Json | null
+          changed_by?: string | null
+          changed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuration_audit_log_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -577,6 +872,8 @@ export type Database = {
       order_status: 'pending' | 'confirmed' | 'cancelled' | 'refunded'
       content_status: 'draft' | 'published' | 'archived'
       content_type: 'page' | 'post' | 'faq_item'
+      category_type: 'event' | 'class' | 'content'
+      setting_type: 'string' | 'number' | 'boolean' | 'json' | 'array'
     }
     CompositeTypes: {
       [_ in never]: never

@@ -55,6 +55,7 @@ import UserManagementPage from "./pages/admin/UserManagementPage";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
 import EventManagementPage from "./pages/admin/EventManagementPage";
 import ContentManagementPage from "./pages/admin/ContentManagementPage";
+import PlatformConfigPage from "./pages/admin/PlatformConfigPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -253,6 +254,11 @@ const App = () => (
                   <Route path="/admin/content" element={
                     <AdminRoute>
                       <ContentManagementPage />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/platform-config" element={
+                    <AdminRoute>
+                      <PlatformConfigPage />
                     </AdminRoute>
                   } />
                   <Route path="/admin/reports" element={
