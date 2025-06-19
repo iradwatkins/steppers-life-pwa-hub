@@ -53,6 +53,7 @@ import PWADashboard from "./pages/PWADashboard";
 import FollowingPage from "./pages/FollowingPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
+import EventManagementPage from "./pages/admin/EventManagementPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -237,7 +238,11 @@ const App = () => (
                       <UserManagementPage />
                     </AdminRoute>
                   } />
-                  <Route path="/admin/events" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Events</h1><p>Event management page coming soon...</p></div>} />
+                  <Route path="/admin/events" element={
+                    <AdminRoute>
+                      <EventManagementPage />
+                    </AdminRoute>
+                  } />
                   <Route path="/admin/organizers" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Organizers</h1><p>Organizer management page coming soon...</p></div>} />
                   <Route path="/admin/analytics" element={
                     <AdminRoute>
