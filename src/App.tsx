@@ -51,6 +51,7 @@ import EmailCampaignAnalyticsPage from "./pages/organizer/EmailCampaignAnalytics
 import OrganizerEventsPage from "./pages/organizer/OrganizerEventsPage";
 import PWADashboard from "./pages/PWADashboard";
 import FollowingPage from "./pages/FollowingPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -218,10 +219,23 @@ const App = () => (
                   {/* Admin routes */}
                   <Route path="/admin/test" element={<div>Admin Test Route Works!</div>} />
                   <Route path="/admin/event-claims" element={<EventClaimsPage />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin" element={
+                    <AdminRoute>
+                      <AdminDashboard />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/dashboard" element={
+                    <AdminRoute>
+                      <AdminDashboard />
+                    </AdminRoute>
+                  } />
                   <Route path="/admin/create-event" element={<AdminCreateEventPage />} />
                   <Route path="/admin/settings" element={<div className="p-8"><h1 className="text-2xl font-bold">Admin Settings</h1><p>Settings page coming soon...</p></div>} />
-                  <Route path="/admin/users" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Users</h1><p>User management page coming soon...</p></div>} />
+                  <Route path="/admin/users" element={
+                    <AdminRoute>
+                      <UserManagementPage />
+                    </AdminRoute>
+                  } />
                   <Route path="/admin/events" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Events</h1><p>Event management page coming soon...</p></div>} />
                   <Route path="/admin/organizers" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Organizers</h1><p>Organizer management page coming soon...</p></div>} />
                   <Route path="/admin/reports" element={<div className="p-8"><h1 className="text-2xl font-bold">View Reports</h1><p>Reports page coming soon...</p></div>} />
