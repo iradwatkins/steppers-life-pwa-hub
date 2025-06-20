@@ -27,7 +27,7 @@ import {
   Users,
   TrendingUp
 } from 'lucide-react';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface CashPaymentCode {
   id: string;

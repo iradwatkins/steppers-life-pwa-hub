@@ -28,7 +28,7 @@ import {
   RefreshCw,
   QrCode
 } from 'lucide-react';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface TicketPurchase {
   id: string;
