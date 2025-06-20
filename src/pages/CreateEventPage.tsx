@@ -35,6 +35,7 @@ import {
   Tag,
   Image as ImageIcon
 } from 'lucide-react';
+import { US_STATES } from '@/data/usStates';
 
 const eventFormSchema = z.object({
   title: z.string().min(5, 'Event title must be at least 5 characters'),
@@ -648,9 +649,20 @@ const CreateEventPage = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>State *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="IL" {...field} />
-                            </FormControl>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select state" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {US_STATES.map((state) => (
+                                  <SelectItem key={state.abbreviation} value={state.value}>
+                                    {state.name} ({state.abbreviation})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}

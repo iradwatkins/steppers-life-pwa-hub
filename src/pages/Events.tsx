@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Slider } from '@/components/ui/slider';
 import { EventService } from '@/services/eventService';
 import { getCurrentLocation, getStoredLocation, storeLocation, formatLocation, type LocationData } from '@/utils/geolocation';
+import { US_STATES, normalizeStateName } from '@/data/usStates';
 import { Calendar, MapPin, Clock, Search, Filter, Users, DollarSign, Star, Navigation, RefreshCw, Grid3X3, List, Map, ChevronDown, ChevronUp, Sliders, Bookmark, BookmarkPlus, Trash2 } from 'lucide-react';
 import FollowButton from '@/components/following/FollowButton';
 import EventCard from '@/components/events/EventCard';
@@ -512,11 +513,18 @@ const Events = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All States</SelectItem>
-                {Array.isArray(locationHierarchy) ? locationHierarchy.map((location) => (
-                  <SelectItem key={location.state} value={location.state}>
-                    {location.state} ({location.eventCount} events)
-                  </SelectItem>
-                )) : null}
+                {Array.isArray(locationHierarchy) ? locationHierarchy.map((location) => {
+                  // Normalize the state name to match our standardized format
+                  const normalizedState = normalizeStateName(location.state);
+                  const stateInfo = US_STATES.find(state => state.value === normalizedState);
+                  const displayName = stateInfo ? `${stateInfo.name} (${stateInfo.abbreviation})` : location.state;
+                  
+                  return (
+                    <SelectItem key={location.state} value={normalizedState}>
+                      {displayName}
+                    </SelectItem>
+                  );
+                }) : null}
               </SelectContent>
             </Select>
 

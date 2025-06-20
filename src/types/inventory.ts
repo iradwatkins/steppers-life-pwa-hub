@@ -179,6 +179,23 @@ export interface InventoryStatusSummary {
   expiredHolds: number;
   lowStockAlerts: number;
   soldOutEvents: number;
+  lowStockEvents: number;
+}
+
+export interface InventoryAuditEntry {
+  id: string;
+  ticketTypeId: string;
+  eventId: string;
+  action: AuditAction;
+  quantity: number;
+  previousQuantity: number;
+  newQuantity: number;
+  userId?: string;
+  sessionId?: string;
+  channel: PurchaseChannel;
+  reason?: string;
+  metadata?: Record<string, any>;
+  timestamp: Date;
 }
 
 // Real-time Update Interfaces

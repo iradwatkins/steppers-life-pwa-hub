@@ -57,9 +57,12 @@ import EventManagementPage from "./pages/admin/EventManagementPage";
 import ContentManagementPage from "./pages/admin/ContentManagementPage";
 import PlatformConfigPage from "./pages/admin/PlatformConfigPage";
 import EventRefundsPage from "./pages/admin/EventRefundsPage";
+import InventoryDashboardPage from "./pages/admin/InventoryDashboardPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
 import CashPaymentPage from "./pages/CashPaymentPage";
 import TicketHistoryPage from "./pages/TicketHistoryPage";
+import WebAnalyticsPage from "./pages/WebAnalyticsPage";
+import InstructorAnalyticsPage from "./pages/admin/InstructorAnalyticsPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -271,6 +274,21 @@ const RouterWrapper = () => {
         <Route path="/admin/refunds" element={
           <AdminRoute>
             <EventRefundsPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/inventory" element={
+          <AdminRoute>
+            <InventoryDashboardPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/web-analytics" element={
+          <AdminRoute>
+            <WebAnalyticsPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/instructor-analytics" element={
+          <AdminRoute>
+            <InstructorAnalyticsPage />
           </AdminRoute>
         } />
         <Route path="/admin/reports" element={

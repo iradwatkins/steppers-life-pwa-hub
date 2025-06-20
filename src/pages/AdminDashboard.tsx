@@ -25,7 +25,8 @@ import {
   Activity,
   FileText,
   RefreshCw,
-  Cog
+  Cog,
+  BarChart3
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -350,6 +351,14 @@ const AdminDashboard = () => {
                 <Button 
                   variant="outline" 
                   className="h-20 flex-col gap-2"
+                  onClick={() => navigate('/admin/web-analytics')}
+                >
+                  <BarChart3 className="h-6 w-6" />
+                  Web Analytics
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col gap-2"
                   onClick={() => navigate('/admin/refunds')}
                 >
                   <RefreshCw className="h-6 w-6" />
@@ -362,6 +371,14 @@ const AdminDashboard = () => {
                 >
                   <Cog className="h-6 w-6" />
                   Platform Config
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex-col gap-2"
+                  onClick={() => navigate('/admin/instructor-analytics')}
+                >
+                  <Activity className="h-6 w-6" />
+                  Instructor Analytics
                 </Button>
               </div>
             </CardContent>

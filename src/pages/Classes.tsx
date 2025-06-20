@@ -21,7 +21,7 @@ const Classes = () => {
       instructor: "Marcus Johnson",
       description: "Learn the fundamentals of Chicago stepping in a welcoming environment. Perfect for complete beginners.",
       level: "beginner",
-      type: "group",
+      type: "steppin",
       duration: "8 weeks",
       schedule: "Mondays 7:00 PM - 8:30 PM",
       location: "South Side Cultural Center",
@@ -52,11 +52,11 @@ const Classes = () => {
     },
     {
       id: 3,
-      title: "Private Stepping Lessons",
+      title: "Chicago Walkin Classes",
       instructor: "James Mitchell",
-      description: "One-on-one instruction tailored to your specific needs and learning pace.",
+      description: "Learn the smooth walking style that's essential for Chicago stepping. Perfect for building foundation.",
       level: "all",
-      type: "private",
+      type: "walkin",
       duration: "Flexible",
       schedule: "By Appointment",
       location: "Millennium Ballroom",
@@ -87,11 +87,11 @@ const Classes = () => {
     },
     {
       id: 5,
-      title: "Couples Stepping Workshop",
+      title: "Line Dancing Fundamentals",
       instructor: "Robert & Lisa Brown",
-      description: "Learn to step together as a couple with focus on connection and communication.",
+      description: "Master popular line dances including Electric Slide, Cha Cha Slide, and Cupid Shuffle.",
       level: "beginner",
-      type: "couples",
+      type: "linedancing",
       duration: "4 weeks",
       schedule: "Sundays 3:00 PM - 5:00 PM",
       location: "Community Center",
@@ -130,9 +130,9 @@ const Classes = () => {
 
   const types = [
     { value: 'all', label: 'All Types' },
-    { value: 'group', label: 'Group Classes' },
-    { value: 'private', label: 'Private Lessons' },
-    { value: 'couples', label: 'Couples Classes' }
+    { value: 'steppin', label: 'Steppin Classes' },
+    { value: 'walkin', label: 'Walkin Classes' },
+    { value: 'linedancing', label: 'Line Dancing Classes' }
   ];
 
   const filteredClasses = classes.filter(classItem => {

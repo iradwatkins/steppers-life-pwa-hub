@@ -492,6 +492,50 @@ export class InventoryService {
     return status.available > 0 && status.available <= 10;
   }
 
+  public async getAllInventory(): Promise<TicketInventory[]> {
+    return Array.from(this.inventoryCache.values());
+  }
+
+  public async getActiveHolds(): Promise<InventoryHold[]> {
+    return Array.from(this.activeHolds.values())
+      .filter(hold => hold.status === HoldStatus.ACTIVE);
+  }
+
+  public async getAuditLog(): Promise<InventoryAuditEntry[]> {
+    // Mock implementation - in production this would query the database
+    return [];
+  }
+
+  public async releaseEventHolds(eventId: string): Promise<void> {
+    const eventHolds = Array.from(this.activeHolds.values())
+      .filter(hold => hold.eventId === eventId);
+    
+    for (const hold of eventHolds) {
+      await this.releaseHold(hold.id);
+    }
+  }
+
+  public async adjustInventory(ticketTypeId: string, adjustment: number, reason: string): Promise<void> {
+    const inventory = this.inventoryCache.get(ticketTypeId);
+    if (!inventory) {
+      throw new Error(`Inventory not found for ticket type: ${ticketTypeId}`);
+    }
+
+    inventory.totalQuantity += adjustment;
+    inventory.availableQuantity += adjustment;
+    inventory.lastUpdated = new Date();
+    inventory.version++;
+
+    this.inventoryCache.set(ticketTypeId, inventory);
+    this.notifyUpdate({
+      type: InventoryUpdateType.INVENTORY_CHANGED,
+      ticketTypeId,
+      eventId: inventory.eventId,
+      inventory,
+      timestamp: new Date()
+    });
+  }
+
   public async getInventoryStatusSummary(): Promise<InventoryStatusSummary> {
     try {
       const totalTicketTypes = this.inventoryCache.size;
@@ -528,7 +572,8 @@ export class InventoryService {
         activeHolds,
         expiredHolds: 0,
         lowStockAlerts,
-        soldOutEvents
+        soldOutEvents,
+        lowStockEvents: lowStockAlerts
       };
     } catch (error) {
       console.error('❌ Error getting inventory summary:', error);
@@ -542,7 +587,8 @@ export class InventoryService {
         activeHolds: 0,
         expiredHolds: 0,
         lowStockAlerts: 0,
-        soldOutEvents: 0
+        soldOutEvents: 0,
+        lowStockEvents: 0
       };
     }
   }
