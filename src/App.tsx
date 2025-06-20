@@ -53,7 +53,7 @@ import PWADashboard from "./pages/PWADashboard";
 import FollowingPage from "./pages/FollowingPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
-import EventManagementPage from "./pages/admin/EventManagementPage";
+import AdminEventManagementPage from "./pages/admin/AdminEventManagementPage";
 import ContentManagementPage from "./pages/admin/ContentManagementPage";
 import PlatformConfigPage from "./pages/admin/PlatformConfigPage";
 import EventRefundsPage from "./pages/admin/EventRefundsPage";
@@ -179,6 +179,16 @@ const RouterWrapper = () => {
         {/* Event routes */}
         <Route path="/events/:id/purchase" element={<EnhancedPurchasePage />} />
         <Route path="/events/:id/tickets" element={<TicketSelectionPage />} />
+        <Route path="/events/:id/edit" element={
+          <OrganizerRoute>
+            <CreateEventPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/admin/events/:id/edit" element={
+          <AdminRoute>
+            <CreateEventPage />
+          </AdminRoute>
+        } />
         <Route path="/events/:id" element={<EventDetail />} />
         
         {/* Checkout routes - require authentication */}
@@ -249,8 +259,16 @@ const RouterWrapper = () => {
             <AdminDashboard />
           </AdminRoute>
         } />
-        <Route path="/admin/create-event" element={<AdminCreateEventPage />} />
-        <Route path="/admin/settings" element={<div className="p-8"><h1 className="text-2xl font-bold">Admin Settings</h1><p>Settings page coming soon...</p></div>} />
+        <Route path="/admin/create-event" element={
+          <AdminRoute>
+            <AdminCreateEventPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/settings" element={
+          <AdminRoute>
+            <div className="p-8"><h1 className="text-2xl font-bold">Admin Settings</h1><p>Settings page coming soon...</p></div>
+          </AdminRoute>
+        } />
         <Route path="/admin/users" element={
           <AdminRoute>
             <UserManagementPage />
@@ -258,10 +276,14 @@ const RouterWrapper = () => {
         } />
         <Route path="/admin/events" element={
           <AdminRoute>
-            <EventManagementPage />
+            <AdminEventManagementPage />
           </AdminRoute>
         } />
-        <Route path="/admin/organizers" element={<div className="p-8"><h1 className="text-2xl font-bold">Manage Organizers</h1><p>Organizer management page coming soon...</p></div>} />
+        <Route path="/admin/organizers" element={
+          <AdminRoute>
+            <div className="p-8"><h1 className="text-2xl font-bold">Manage Organizers</h1><p>Organizer management page coming soon...</p></div>
+          </AdminRoute>
+        } />
         <Route path="/admin/analytics" element={
           <AdminRoute>
             <AnalyticsDashboard />

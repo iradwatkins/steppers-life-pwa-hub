@@ -82,10 +82,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
               </AlertDescription>
             </Alert>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => window.history.back()}>
+              <Button variant="outline" onClick={() => navigate(-1)}>
                 Go Back
               </Button>
-              <Button onClick={() => window.location.href = '/dashboard'}>
+              <Button onClick={() => navigate('/dashboard')}>
                 Go to Dashboard
               </Button>
             </div>
@@ -121,7 +121,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
               </AlertDescription>
             </Alert>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => window.history.back()}>
+              <Button variant="outline" onClick={() => navigate(-1)}>
                 Go Back
               </Button>
               <Button onClick={() => navigate('/organizer/setup', { state: { from: location } })}>

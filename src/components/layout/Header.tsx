@@ -114,6 +114,9 @@ const Header = () => {
                         <Link to="/organizer/events">My Events</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/organizer/manage-events">Manage Events</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/events/create">Create Event</Link>
                       </DropdownMenuItem>
                     </>
