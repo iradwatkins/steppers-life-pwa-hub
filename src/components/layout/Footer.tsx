@@ -43,13 +43,13 @@ const Footer = () => {
               <Link to="/about" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
                 About Us
               </Link>
-              <Link to="/contact" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/about" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Contact
               </Link>
-              <Link to="/help" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/about" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Help Center
               </Link>
-              <Link to="/privacy" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/about" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Privacy Policy
               </Link>
             </div>

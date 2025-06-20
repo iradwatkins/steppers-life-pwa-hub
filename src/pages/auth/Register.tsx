@@ -176,11 +176,11 @@ const Register = () => {
 
           <div className="text-xs text-center text-muted-foreground">
             By clicking Continue or using a social sign-in, you agree to SteppersLife's{' '}
-            <Link to="/terms" className="text-stepping-purple hover:underline">
+            <Link to="/about" className="text-stepping-purple hover:underline">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link to="/privacy" className="text-stepping-purple hover:underline">
+            <Link to="/about" className="text-stepping-purple hover:underline">
               Privacy Policy
             </Link>
             .

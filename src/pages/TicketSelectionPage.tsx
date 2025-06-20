@@ -11,7 +11,7 @@ import { useInventory, useBulkInventory, useInventoryHold } from '@/hooks/useInv
 import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus, AlertTriangle, Zap } from 'lucide-react';
 
 const TicketSelectionPage = () => {
-  const { eventId } = useParams<{ eventId: string }>();
+  const { id: eventId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { state, addItem, updateQuantity, removeItem, setEvent, setStep } = useCart();
   const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});

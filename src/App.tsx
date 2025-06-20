@@ -104,7 +104,7 @@ const App = () => (
                       <OrganizerEventsPage />
                     </OrganizerRoute>
                   } />
-                  <Route path="/organizer/events/:eventId" element={
+                  <Route path="/organizer/event/:eventId" element={
                     <OrganizerRoute>
                       <ManageEventPage />
                     </OrganizerRoute>
@@ -177,8 +177,8 @@ const App = () => (
                   } />
                   
                   {/* Event routes */}
-                  <Route path="/events/:eventId/purchase" element={<EnhancedPurchasePage />} />
-                  <Route path="/events/:eventId/tickets" element={<TicketSelectionPage />} />
+                  <Route path="/events/:id/purchase" element={<EnhancedPurchasePage />} />
+                  <Route path="/events/:id/tickets" element={<TicketSelectionPage />} />
                   <Route path="/events/:id" element={<EventDetail />} />
                   
                   {/* Checkout routes - require authentication */}
@@ -195,11 +195,6 @@ const App = () => (
                   <Route path="/checkout/confirmation" element={
                     <AuthRoute>
                       <CheckoutConfirmationPage />
-                    </AuthRoute>
-                  } />
-                  <Route path="/cash-payment" element={
-                    <AuthRoute>
-                      <CashPaymentPage />
                     </AuthRoute>
                   } />
                   

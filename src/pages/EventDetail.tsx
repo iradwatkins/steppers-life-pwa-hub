@@ -210,11 +210,19 @@ const EventDetail = () => {
     return (
       <div className="min-h-screen py-8 px-4">
         <div className="container mx-auto max-w-4xl">
-          <Button variant="ghost" asChild className="mb-6">
-            <Link to="/events">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Events
-            </Link>
+          <Button 
+            variant="ghost" 
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/events');
+              }
+            }}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Events
           </Button>
           
           <div className="text-center py-12">
@@ -238,11 +246,19 @@ const EventDetail = () => {
     <div className="min-h-screen py-8 px-4">
       <div className="container mx-auto max-w-4xl">
         {/* Back Button */}
-        <Button variant="ghost" asChild className="mb-6">
-          <Link to="/events">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Events
-          </Link>
+        <Button 
+          variant="ghost" 
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate('/events');
+            }
+          }}
+          className="mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Events
         </Button>
 
         {/* Hero Section with Enhanced Media */}

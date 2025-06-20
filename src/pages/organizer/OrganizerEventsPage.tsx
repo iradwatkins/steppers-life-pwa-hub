@@ -286,7 +286,7 @@ const OrganizerEventsPage = () => {
                       className="flex-1"
                       asChild
                     >
-                      <Link to={`/organizer/events/${event.id}`}>
+                      <Link to={`/organizer/event/${event.id}`}>
                         <Settings className="h-4 w-4 mr-2" />
                         Manage
                       </Link>
