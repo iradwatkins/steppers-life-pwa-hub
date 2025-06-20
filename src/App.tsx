@@ -10,7 +10,6 @@ import { CartProvider } from "./contexts/CartContext";
 import { PWAProvider } from "./contexts/PWAContext";
 import Layout from "./components/layout/Layout";
 import Index from "./pages/Index";
-import DatabaseTest from "./pages/DatabaseTest";
 import Magazine from "./pages/Magazine";
 import Events from "./pages/Events";
 import Classes from "./pages/Classes";
@@ -42,7 +41,6 @@ import EventClaimsPage from "./pages/EventClaimsPage";
 import AdminCreateEventPage from "./pages/AdminCreateEventPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import OrganizerSetupPage from "./pages/OrganizerSetupPage";
-import TestSeatingPage from "./pages/TestSeatingPage";
 import AdvancedSeatingPage from "./pages/AdvancedSeatingPage";
 import EnhancedPurchasePage from "./pages/EnhancedPurchasePage";
 import EmailCampaignsPage from "./pages/organizer/EmailCampaignsPage";
@@ -59,7 +57,6 @@ import PlatformConfigPage from "./pages/admin/PlatformConfigPage";
 import EventRefundsPage from "./pages/admin/EventRefundsPage";
 import InventoryDashboardPage from "./pages/admin/InventoryDashboardPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
-import CashPaymentPage from "./pages/CashPaymentPage";
 import TicketHistoryPage from "./pages/TicketHistoryPage";
 import WebAnalyticsPage from "./pages/WebAnalyticsPage";
 import InstructorAnalyticsPage from "./pages/admin/InstructorAnalyticsPage";
@@ -77,8 +74,7 @@ const RouterWrapper = () => {
   return (
     <Layout>
       <Routes key={location.pathname}>
-        {/* Simple test route for database operations - TEMPORARILY DEFAULT */}
-        <Route path="/" element={<DatabaseTest />} />
+        <Route path="/" element={<Index />} />
         <Route path="/home" element={<Index />} />
         <Route path="/magazine" element={<Magazine />} />
         <Route path="/events" element={<Events />} />

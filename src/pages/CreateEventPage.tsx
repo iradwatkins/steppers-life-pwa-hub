@@ -33,13 +33,14 @@ import {
   Clock,
   Users,
   Tag,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ArrowLeft
 } from 'lucide-react';
 import { US_STATES } from '@/data/usStates';
 
 const eventFormSchema = z.object({
   title: z.string().min(5, 'Event title must be at least 5 characters'),
-  description: z.string().min(20, 'Description must be at least 20 characters'),
+  description: z.string().optional(),
   categories: z.array(z.string()).min(1, 'Please select at least one category'),
   startDate: z.string().min(1, 'Start date is required'),
   startTime: z.string().min(1, 'Start time is required'),
@@ -53,7 +54,7 @@ const eventFormSchema = z.object({
   zipCode: z.string().min(5, 'ZIP code is required'),
   isOnlineEvent: z.boolean().default(false),
   onlineEventLink: z.string().optional(),
-  capacity: z.string().min(1, 'Capacity is required'),
+  capacity: z.string().optional(),
   ticketPrice: z.string().min(1, 'Ticket price is required'),
 });
 
@@ -255,6 +256,17 @@ const CreateEventPage = () => {
         <div className="container mx-auto max-w-4xl">
           {/* Header */}
           <div className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/events')}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Events
+              </Button>
+            </div>
             <h1 className="text-3xl font-bold mb-2">Create New Event</h1>
             <p className="text-muted-foreground">Set up your stepping event with all the essential details</p>
           </div>
@@ -292,7 +304,7 @@ const CreateEventPage = () => {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Event Description *</FormLabel>
+                      <FormLabel>Event Description</FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Describe your event in detail. Include what attendees can expect, dress code, special guests, etc."
@@ -761,7 +773,7 @@ const CreateEventPage = () => {
                     name="capacity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Event Capacity *</FormLabel>
+                        <FormLabel>Event Capacity</FormLabel>
                         <FormControl>
                           <Input type="number" placeholder="150" {...field} />
                         </FormControl>
@@ -788,7 +800,7 @@ const CreateEventPage = () => {
 
             {/* Submit Buttons */}
             <div className="flex gap-4 justify-end">
-              <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
+              <Button type="button" variant="outline" onClick={() => navigate('/events')}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting} className="bg-stepping-gradient">

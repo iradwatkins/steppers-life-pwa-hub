@@ -377,19 +377,19 @@ const EventDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-stepping-purple" />
-                  <span>{event.date}</span>
+                  <span>{formatEventDate(event.start_date, event.end_date)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-stepping-purple" />
-                  <span>{event.time}</span>
+                  <span>{formatEventTime(event.start_date, event.end_date)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-stepping-purple" />
-                  <span>{event.location}</span>
+                  <span>{event.venues?.name || 'Online Event'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-stepping-purple" />
-                  <span>{event.attending}/{event.capacity} attending</span>
+                  <span>{attendanceInfo.sold}/{attendanceInfo.capacity} attending</span>
                 </div>
               </div>
             </div>
@@ -397,10 +397,14 @@ const EventDetail = () => {
             <Separator />
 
             {/* Detailed Description */}
-            <div>
-              <h2 className="text-2xl font-bold mb-4">About This Event</h2>
-              <p className="text-muted-foreground leading-relaxed">{event.longDescription}</p>
-            </div>
+            {event.description && (
+              <div>
+                <h2 className="text-2xl font-bold mb-4">About This Event</h2>
+                <div className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {event.description}
+                </div>
+              </div>
+            )}
 
             <Separator />
 
@@ -422,22 +426,48 @@ const EventDetail = () => {
             <Separator />
 
             {/* Organizer Info */}
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Event Organizer</h2>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-stepping-gradient rounded-full flex items-center justify-center">
-                      <Users className="h-6 w-6 text-white" />
+            {event.organizers && (
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Event Organizer</h2>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-stepping-gradient rounded-full flex items-center justify-center">
+                        <Users className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{event.organizers.organization_name}</h3>
+                        {event.organizers.contact_email && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {event.organizers.contact_email}
+                          </p>
+                        )}
+                        {event.organizers.contact_phone && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Phone className="h-3 w-3" />
+                            {event.organizers.contact_phone}
+                          </p>
+                        )}
+                        {event.organizers.website_url && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Globe className="h-3 w-3" />
+                            <a 
+                              href={event.organizers.website_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {event.organizers.website_url}
+                            </a>
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold">{event.organizer}</h3>
-                      <p className="text-sm text-muted-foreground">{event.contact}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
 
           {/* Enhanced Sidebar */}
@@ -545,7 +575,6 @@ const EventDetail = () => {
             {event.ticket_types && event.ticket_types.length > 0 && (
               <PromoCodeInput 
                 eventId={event.id}
-                className="w-full"
               />
             )}
 
