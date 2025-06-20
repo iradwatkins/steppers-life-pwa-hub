@@ -50,6 +50,7 @@ import OrganizerEventsPage from "./pages/organizer/OrganizerEventsPage";
 import PWADashboard from "./pages/PWADashboard";
 import { PWACheckinPage } from "./pages/pwa/PWACheckinPage";
 import PWAAttendeeListPage from "./pages/pwa/PWAAttendeeListPage";
+import { PWAStatisticsPage } from "./pages/pwa/PWAStatisticsPage";
 import FollowingPage from "./pages/FollowingPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
@@ -181,6 +182,11 @@ const RouterWrapper = () => {
         <Route path="/pwa/attendees/:eventId" element={
           <ProtectedRoute>
             <PWAAttendeeListPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/pwa/statistics/:eventId" element={
+          <ProtectedRoute>
+            <PWAStatisticsPage />
           </ProtectedRoute>
         } />
         

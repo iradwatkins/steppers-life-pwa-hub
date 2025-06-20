@@ -51,21 +51,21 @@ const PWADashboard: React.FC = () => {
       title: 'QR Check-in',
       description: 'Scan QR codes to check in attendees',
       icon: QrCode,
-      href: '/pwa/checkin',
+      href: '/pwa/checkin/demo-event-001',
       available: true
     },
     {
       title: 'Attendee List',
       description: 'View and manage attendee information',
       icon: Users,
-      href: '/pwa/attendees',
+      href: '/pwa/attendees/demo-event-001',
       available: true
     },
     {
       title: 'Live Statistics',
       description: 'Real-time event analytics and metrics',
       icon: BarChart3,
-      href: '/pwa/stats',
+      href: '/pwa/statistics/demo-event-001',
       available: true
     },
     {
