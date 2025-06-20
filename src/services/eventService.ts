@@ -247,7 +247,7 @@ export class EventService {
     }
   }
 
-  static async getEventsByOrganizer(organizerId: string): Promise<Event[]> {
+  static async getEventsByOrganizerBasic(organizerId: string): Promise<Event[]> {
     try {
       const { data, error } = await supabase
         .from('events')
@@ -317,7 +317,7 @@ export class EventService {
     }
   }
 
-  static async updateEvent(eventId: string, updates: EventUpdate): Promise<Event | null> {
+  static async updateEventBasic(eventId: string, updates: EventUpdate): Promise<Event | null> {
     try {
       const { data, error } = await supabase
         .from('events')
@@ -349,7 +349,7 @@ export class EventService {
     }
   }
 
-  static async deleteEvent(eventId: string): Promise<boolean> {
+  static async deleteEventBasic(eventId: string): Promise<boolean> {
     try {
       // Delete ticket types first (cascade)
       await supabase
@@ -842,6 +842,312 @@ export class EventService {
       return hierarchy;
     } catch (error) {
       console.error('Error fetching location hierarchy:', error);
+      return [];
+    }
+  }
+
+  // ============= CRUD OPERATIONS =============
+
+  // Update event
+  static async updateEvent(eventId: string, eventData: Partial<CreateEventData>, organizerId: string): Promise<Event> {
+    console.log('🔧 EventService.updateEvent called with:', { eventId, eventData, organizerId });
+    
+    try {
+      // First verify ownership
+      const { data: existingEvent, error: fetchError } = await supabase
+        .from('events')
+        .select('organizer_id')
+        .eq('id', eventId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (existingEvent.organizer_id !== organizerId) {
+        throw new Error('Unauthorized: You can only update your own events');
+      }
+
+      // Prepare update data
+      const updateData: EventUpdate = {
+        title: eventData.title,
+        description: eventData.description,
+        short_description: eventData.shortDescription,
+        category: eventData.category,
+        tags: eventData.tags,
+        start_date: eventData.startDate,
+        end_date: eventData.endDate,
+        timezone: eventData.timezone,
+        is_online: eventData.isOnline,
+        online_link: eventData.onlineLink,
+        max_attendees: eventData.maxAttendees,
+        featured_image_url: eventData.featuredImageUrl,
+        gallery_images: eventData.galleryImages,
+        additional_info: eventData.additionalInfo,
+        updated_at: new Date().toISOString()
+      };
+
+      // Update the event
+      const { data: updatedEvent, error: updateError } = await supabase
+        .from('events')
+        .update(updateData)
+        .eq('id', eventId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      // Update venue if provided
+      if (eventData.venue && !eventData.isOnline) {
+        const { error: venueError } = await supabase
+          .from('venues')
+          .update({
+            name: eventData.venue.name,
+            address: eventData.venue.address,
+            city: eventData.venue.city,
+            state: eventData.venue.state,
+            zip_code: eventData.venue.zipCode,
+            capacity: eventData.venue.capacity
+          })
+          .eq('id', updatedEvent.venue_id);
+
+        if (venueError) console.error('Error updating venue:', venueError);
+      }
+
+      console.log('✅ Event updated successfully:', updatedEvent);
+      return updatedEvent;
+
+    } catch (error) {
+      console.error('❌ Error updating event:', error);
+      throw error;
+    }
+  }
+
+  // Delete event
+  static async deleteEvent(eventId: string, organizerId: string): Promise<boolean> {
+    console.log('🔧 EventService.deleteEvent called with:', { eventId, organizerId });
+    
+    try {
+      // First verify ownership
+      const { data: existingEvent, error: fetchError } = await supabase
+        .from('events')
+        .select('organizer_id, venue_id')
+        .eq('id', eventId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (existingEvent.organizer_id !== organizerId) {
+        throw new Error('Unauthorized: You can only delete your own events');
+      }
+
+      // Check if event has any orders/tickets sold
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('event_id', eventId)
+        .limit(1);
+
+      if (ordersError) throw ordersError;
+      
+      if (orders && orders.length > 0) {
+        throw new Error('Cannot delete event: Orders exist for this event. Please cancel the event instead.');
+      }
+
+      // Delete related records first (foreign key constraints)
+      // Only delete from tables that exist in our schema
+      await Promise.all([
+        // Delete ticket types
+        supabase.from('ticket_types').delete().eq('event_id', eventId),
+        // Delete any orders
+        supabase.from('orders').delete().eq('event_id', eventId)
+      ]);
+
+      // Delete the event
+      const { error: deleteError } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (deleteError) throw deleteError;
+
+      // Optionally delete the venue if it's not used by other events
+      if (existingEvent.venue_id) {
+        const { data: otherEvents } = await supabase
+          .from('events')
+          .select('id')
+          .eq('venue_id', existingEvent.venue_id)
+          .limit(1);
+
+        if (!otherEvents || otherEvents.length === 0) {
+          await supabase.from('venues').delete().eq('id', existingEvent.venue_id);
+        }
+      }
+
+      console.log('✅ Event deleted successfully');
+      return true;
+
+    } catch (error) {
+      console.error('❌ Error deleting event:', error);
+      throw error;
+    }
+  }
+
+  // Cancel event (soft delete - keeps data but marks as cancelled)
+  static async cancelEvent(eventId: string, organizerId: string, reason?: string): Promise<Event> {
+    console.log('🔧 EventService.cancelEvent called with:', { eventId, organizerId, reason });
+    
+    try {
+      // First verify ownership and get current data
+      const { data: existingEvent, error: fetchError } = await supabase
+        .from('events')
+        .select('organizer_id, additional_info')
+        .eq('id', eventId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (existingEvent.organizer_id !== organizerId) {
+        throw new Error('Unauthorized: You can only cancel your own events');
+      }
+
+      // Update event status to cancelled
+      const { data: cancelledEvent, error: updateError } = await supabase
+        .from('events')
+        .update({
+          status: 'cancelled',
+          additional_info: {
+            ...(existingEvent.additional_info || {}),
+            cancellation_reason: reason,
+            cancelled_at: new Date().toISOString()
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', eventId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      // TODO: Send cancellation notifications to ticket holders
+      // TODO: Process refunds if applicable
+
+      console.log('✅ Event cancelled successfully:', cancelledEvent);
+      return cancelledEvent;
+
+    } catch (error) {
+      console.error('❌ Error cancelling event:', error);
+      throw error;
+    }
+  }
+
+  // Admin delete (for admin users only)
+  static async adminDeleteEvent(eventId: string): Promise<boolean> {
+    console.log('🔧 EventService.adminDeleteEvent called with:', { eventId });
+    
+    try {
+      // Delete all related records first (only from existing tables)
+      await Promise.all([
+        supabase.from('ticket_types').delete().eq('event_id', eventId),
+        supabase.from('orders').delete().eq('event_id', eventId)
+      ]);
+
+      // Delete the event
+      const { error: deleteError } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (deleteError) throw deleteError;
+
+      console.log('✅ Admin event deletion successful');
+      return true;
+
+    } catch (error) {
+      console.error('❌ Error in admin event deletion:', error);
+      throw error;
+    }
+  }
+
+  // Bulk operations for admin
+  static async bulkDeleteEvents(eventIds: string[]): Promise<{success: string[], failed: string[]}> {
+    console.log('🔧 EventService.bulkDeleteEvents called with:', { eventIds });
+    
+    const results = {
+      success: [] as string[],
+      failed: [] as string[]
+    };
+
+    for (const eventId of eventIds) {
+      try {
+        await this.adminDeleteEvent(eventId);
+        results.success.push(eventId);
+      } catch (error) {
+        console.error(`Failed to delete event ${eventId}:`, error);
+        results.failed.push(eventId);
+      }
+    }
+
+    return results;
+  }
+
+  // Get events by organizer (for organizer dashboard)
+  static async getEventsByOrganizer(organizerId: string): Promise<Event[]> {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select(`
+          *,
+          venues(*),
+          ticket_types(*),
+          organizers(organization_name)
+        `)
+        .eq('organizer_id', organizerId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+
+    } catch (error) {
+      console.error('Error fetching organizer events:', error);
+      return [];
+    }
+  }
+
+  // Get all events for admin management
+  static async getAllEventsForAdmin(filters?: {
+    status?: string;
+    organizer?: string;
+    dateRange?: { start: string; end: string };
+    search?: string;
+  }): Promise<Event[]> {
+    try {
+      let query = supabase
+        .from('events')
+        .select(`
+          *,
+          venues(*),
+          ticket_types(*),
+          organizers(organization_name, user_id, profiles(full_name))
+        `);
+
+      // Apply filters
+      if (filters?.status) {
+        query = query.eq('status', filters.status);
+      }
+      if (filters?.organizer) {
+        query = query.eq('organizer_id', filters.organizer);
+      }
+      if (filters?.dateRange) {
+        query = query.gte('start_date', filters.dateRange.start)
+                     .lte('start_date', filters.dateRange.end);
+      }
+      if (filters?.search) {
+        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+
+    } catch (error) {
+      console.error('Error fetching admin events:', error);
       return [];
     }
   }

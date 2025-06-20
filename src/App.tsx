@@ -63,6 +63,7 @@ import CashPaymentPage from "./pages/CashPaymentPage";
 import TicketHistoryPage from "./pages/TicketHistoryPage";
 import WebAnalyticsPage from "./pages/WebAnalyticsPage";
 import InstructorAnalyticsPage from "./pages/admin/InstructorAnalyticsPage";
+import OrganizerEventManagementPage from "./pages/organizer/OrganizerEventManagementPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -96,6 +97,11 @@ const RouterWrapper = () => {
         <Route path="/organizer/events" element={
           <OrganizerRoute>
             <OrganizerEventsPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/manage-events" element={
+          <OrganizerRoute>
+            <OrganizerEventManagementPage />
           </OrganizerRoute>
         } />
         <Route path="/organizer/event/:eventId" element={
