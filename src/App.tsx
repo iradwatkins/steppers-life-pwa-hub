@@ -14,6 +14,14 @@ import Magazine from "./pages/Magazine";
 import Events from "./pages/Events";
 import Classes from "./pages/Classes";
 import Community from "./pages/Community";
+import CommunityHome from "./pages/community/CommunityHome";
+import CommunityBrowse from "./pages/community/CommunityBrowse";
+import CreateStorePage from "./pages/community/CreateStorePage";
+import CreateServicePage from "./pages/community/CreateServicePage";
+import StoreDetailPage from "./pages/community/StoreDetailPage";
+import ServiceDetailPage from "./pages/community/ServiceDetailPage";
+import StoresBrowse from "./pages/community/StoresBrowse";
+import ServicesBrowse from "./pages/community/ServicesBrowse";
 import About from "./pages/About";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -79,6 +87,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import BlogManagementPage from "./pages/admin/BlogManagementPage";
 import BlogEditorPage from "./pages/admin/BlogEditorPage";
+import CommunityManagementPage from "./pages/admin/CommunityManagementPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -267,6 +276,22 @@ const RouterWrapper = () => {
         <Route path="/classes" element={<Classes />} />
         <Route path="/classes/:id" element={<ClassDetail />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/community/home" element={<CommunityHome />} />
+        <Route path="/community/browse" element={<CommunityBrowse />} />
+        <Route path="/community/stores/create" element={
+          <AuthRoute>
+            <CreateStorePage />
+          </AuthRoute>
+        } />
+        <Route path="/community/services/create" element={
+          <AuthRoute>
+            <CreateServicePage />
+          </AuthRoute>
+        } />
+        <Route path="/community/stores" element={<StoresBrowse />} />
+        <Route path="/community/services" element={<ServicesBrowse />} />
+        <Route path="/community/stores/:id" element={<StoreDetailPage />} />
+        <Route path="/community/services/:id" element={<ServiceDetailPage />} />
         <Route path="/about" element={<About />} />
         
         {/* Blog routes */}
@@ -424,6 +449,11 @@ const RouterWrapper = () => {
         <Route path="/admin/blog/edit/:postId" element={
           <AdminRoute>
             <BlogEditorPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/community" element={
+          <AdminRoute>
+            <CommunityManagementPage />
           </AdminRoute>
         } />
         <Route path="/login" element={<Login />} />
