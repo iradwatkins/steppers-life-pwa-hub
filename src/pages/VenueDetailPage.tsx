@@ -17,7 +17,6 @@ import {
   Phone, 
   Globe, 
   Mail, 
-  Parking, 
   Wifi, 
   Car, 
   Train,
@@ -26,26 +25,18 @@ import {
   Share,
   Bookmark,
   BookmarkPlus,
-  Route,
-  Info,
-  Image as ImageIcon,
   Play,
   Volume2,
-  Camera,
   Grid3X3,
-  Heart,
-  Flag,
   Shield,
   CheckCircle,
-  AlertTriangle,
-  Lightbulb,
   Coffee,
   Utensils,
-  Music,
-  Zap
+  Music
 } from 'lucide-react';
 import { formatLocation, calculateDistance, type LocationData } from '@/utils/geolocation';
 import EventMapView, { type EventWithMapData } from '@/components/maps/EventMapView';
+import InteractiveSeatingChart from '@/components/seating/InteractiveSeatingChart';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -117,6 +108,31 @@ interface VenueData {
     email?: string;
     verified: boolean;
   };
+
+  // Seating Information
+  seating_chart?: {
+    image_url: string;
+    seats: Array<{
+      id: string;
+      seatNumber: string;
+      row?: string;
+      section?: string;
+      x: number;
+      y: number;
+      price: number;
+      category: string;
+      categoryColor: string;
+      isADA: boolean;
+      status: 'available' | 'selected' | 'sold' | 'reserved' | 'held';
+    }>;
+    price_categories: Array<{
+      id: string;
+      name: string;
+      price: number;
+      color: string;
+      description?: string;
+    }>;
+  };
 }
 
 interface VenueReview {
@@ -142,6 +158,8 @@ const VenueDetailPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
+  const [selectedSeats, setSelectedSeats] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     if (venueId) {
@@ -245,6 +263,55 @@ const VenueDetailPage = () => {
           phone: "(312) 595-7440",
           email: "sarah.johnson@navypier.org",
           verified: true
+        },
+
+        seating_chart: {
+          image_url: "/api/placeholder/800/600",
+          price_categories: [
+            { id: "vip", name: "VIP", price: 85, color: "#8B5CF6", description: "Front section with premium amenities" },
+            { id: "premium", name: "Premium", price: 65, color: "#F59E0B", description: "Best view of the dance floor" },
+            { id: "general", name: "General", price: 45, color: "#3B82F6", description: "Standard seating" },
+            { id: "balcony", name: "Balcony", price: 35, color: "#10B981", description: "Upper level seating" }
+          ],
+          seats: [
+            // VIP Section (Front)
+            { id: "v1", seatNumber: "V1", row: "A", section: "VIP", x: 25, y: 75, price: 85, category: "vip", categoryColor: "#8B5CF6", isADA: false, status: "available" },
+            { id: "v2", seatNumber: "V2", row: "A", section: "VIP", x: 30, y: 75, price: 85, category: "vip", categoryColor: "#8B5CF6", isADA: true, status: "available" },
+            { id: "v3", seatNumber: "V3", row: "A", section: "VIP", x: 35, y: 75, price: 85, category: "vip", categoryColor: "#8B5CF6", isADA: false, status: "sold" },
+            { id: "v4", seatNumber: "V4", row: "A", section: "VIP", x: 40, y: 75, price: 85, category: "vip", categoryColor: "#8B5CF6", isADA: false, status: "available" },
+            { id: "v5", seatNumber: "V5", row: "B", section: "VIP", x: 25, y: 80, price: 85, category: "vip", categoryColor: "#8B5CF6", isADA: false, status: "available" },
+            { id: "v6", seatNumber: "V6", row: "B", section: "VIP", x: 30, y: 80, price: 85, category: "vip", categoryColor: "#8B5CF6", isADA: false, status: "held" },
+            { id: "v7", seatNumber: "V7", row: "B", section: "VIP", x: 35, y: 80, price: 85, category: "vip", categoryColor: "#8B5CF6", isADA: false, status: "available" },
+            { id: "v8", seatNumber: "V8", row: "B", section: "VIP", x: 40, y: 80, price: 85, category: "vip", categoryColor: "#8B5CF6", isADA: false, status: "available" },
+
+            // Premium Section
+            { id: "p1", seatNumber: "P1", row: "C", section: "Premium", x: 20, y: 60, price: 65, category: "premium", categoryColor: "#F59E0B", isADA: false, status: "available" },
+            { id: "p2", seatNumber: "P2", row: "C", section: "Premium", x: 25, y: 60, price: 65, category: "premium", categoryColor: "#F59E0B", isADA: false, status: "available" },
+            { id: "p3", seatNumber: "P3", row: "C", section: "Premium", x: 30, y: 60, price: 65, category: "premium", categoryColor: "#F59E0B", isADA: true, status: "available" },
+            { id: "p4", seatNumber: "P4", row: "C", section: "Premium", x: 35, y: 60, price: 65, category: "premium", categoryColor: "#F59E0B", isADA: false, status: "sold" },
+            { id: "p5", seatNumber: "P5", row: "C", section: "Premium", x: 40, y: 60, price: 65, category: "premium", categoryColor: "#F59E0B", isADA: false, status: "available" },
+            { id: "p6", seatNumber: "P6", row: "C", section: "Premium", x: 45, y: 60, price: 65, category: "premium", categoryColor: "#F59E0B", isADA: false, status: "available" },
+
+            // General Section
+            { id: "g1", seatNumber: "G1", row: "D", section: "General", x: 15, y: 45, price: 45, category: "general", categoryColor: "#3B82F6", isADA: false, status: "available" },
+            { id: "g2", seatNumber: "G2", row: "D", section: "General", x: 20, y: 45, price: 45, category: "general", categoryColor: "#3B82F6", isADA: false, status: "available" },
+            { id: "g3", seatNumber: "G3", row: "D", section: "General", x: 25, y: 45, price: 45, category: "general", categoryColor: "#3B82F6", isADA: true, status: "available" },
+            { id: "g4", seatNumber: "G4", row: "D", section: "General", x: 30, y: 45, price: 45, category: "general", categoryColor: "#3B82F6", isADA: false, status: "available" },
+            { id: "g5", seatNumber: "G5", row: "D", section: "General", x: 35, y: 45, price: 45, category: "general", categoryColor: "#3B82F6", isADA: false, status: "available" },
+            { id: "g6", seatNumber: "G6", row: "D", section: "General", x: 40, y: 45, price: 45, category: "general", categoryColor: "#3B82F6", isADA: false, status: "sold" },
+            { id: "g7", seatNumber: "G7", row: "D", section: "General", x: 45, y: 45, price: 45, category: "general", categoryColor: "#3B82F6", isADA: false, status: "available" },
+            { id: "g8", seatNumber: "G8", row: "D", section: "General", x: 50, y: 45, price: 45, category: "general", categoryColor: "#3B82F6", isADA: false, status: "available" },
+
+            // Balcony Section
+            { id: "b1", seatNumber: "B1", row: "E", section: "Balcony", x: 25, y: 25, price: 35, category: "balcony", categoryColor: "#10B981", isADA: false, status: "available" },
+            { id: "b2", seatNumber: "B2", row: "E", section: "Balcony", x: 30, y: 25, price: 35, category: "balcony", categoryColor: "#10B981", isADA: false, status: "available" },
+            { id: "b3", seatNumber: "B3", row: "E", section: "Balcony", x: 35, y: 25, price: 35, category: "balcony", categoryColor: "#10B981", isADA: true, status: "available" },
+            { id: "b4", seatNumber: "B4", row: "E", section: "Balcony", x: 40, y: 25, price: 35, category: "balcony", categoryColor: "#10B981", isADA: false, status: "available" },
+            { id: "b5", seatNumber: "B5", row: "F", section: "Balcony", x: 25, y: 20, price: 35, category: "balcony", categoryColor: "#10B981", isADA: false, status: "available" },
+            { id: "b6", seatNumber: "B6", row: "F", section: "Balcony", x: 30, y: 20, price: 35, category: "balcony", categoryColor: "#10B981", isADA: false, status: "held" },
+            { id: "b7", seatNumber: "B7", row: "F", section: "Balcony", x: 35, y: 20, price: 35, category: "balcony", categoryColor: "#10B981", isADA: false, status: "available" },
+            { id: "b8", seatNumber: "B8", row: "F", section: "Balcony", x: 40, y: 20, price: 35, category: "balcony", categoryColor: "#10B981", isADA: false, status: "available" }
+          ]
         }
       };
 
@@ -357,6 +424,22 @@ const VenueDetailPage = () => {
     return icons[amenity] || <CheckCircle className="h-4 w-4" />;
   };
 
+  const handleSeatSelection = (seats: any[]) => {
+    setSelectedSeats(seats);
+  };
+
+  const handlePurchaseClick = (seats: any[]) => {
+    if (seats.length === 0) {
+      toast.error('Please select at least one seat');
+      return;
+    }
+    
+    // Navigate to ticket purchase page with selected seats
+    const seatIds = seats.map(seat => seat.id).join(',');
+    navigate(`/events/upcoming/tickets?venueSeats=${seatIds}`);
+    toast.success(`Proceeding to purchase ${seats.length} seat(s)`);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -452,10 +535,22 @@ const VenueDetailPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Image Gallery */}
+        {/* Tabs Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="amenities">Amenities</TabsTrigger>
+            <TabsTrigger value="seating">Interactive Seating</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
+          </TabsList>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-8">
+              
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-8">
+                {/* Image Gallery */}
             <Card>
               <CardContent className="p-0">
                 <div className="relative">
@@ -515,84 +610,6 @@ const VenueDetailPage = () => {
               </Card>
             )}
 
-            {/* Amenities and Features */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Amenities & Features</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {venue.parking_available && (
-                    <div className="flex items-center gap-2">
-                      {renderAmenityIcon('parking')}
-                      <span className="text-sm">
-                        Parking ({venue.parking_type})
-                      </span>
-                    </div>
-                  )}
-                  {venue.public_transit_nearby && (
-                    <div className="flex items-center gap-2">
-                      {renderAmenityIcon('transit')}
-                      <span className="text-sm">Public Transit</span>
-                    </div>
-                  )}
-                  {venue.wheelchair_accessible && (
-                    <div className="flex items-center gap-2">
-                      {renderAmenityIcon('wheelchair')}
-                      <span className="text-sm">Wheelchair Accessible</span>
-                    </div>
-                  )}
-                  {venue.wifi_available && (
-                    <div className="flex items-center gap-2">
-                      {renderAmenityIcon('wifi')}
-                      <span className="text-sm">WiFi Available</span>
-                    </div>
-                  )}
-                  {venue.sound_system && (
-                    <div className="flex items-center gap-2">
-                      {renderAmenityIcon('sound')}
-                      <span className="text-sm">Professional Sound System</span>
-                    </div>
-                  )}
-                  {venue.bar_service && (
-                    <div className="flex items-center gap-2">
-                      {renderAmenityIcon('bar')}
-                      <span className="text-sm">Bar Service</span>
-                    </div>
-                  )}
-                  {venue.catering_available && (
-                    <div className="flex items-center gap-2">
-                      {renderAmenityIcon('catering')}
-                      <span className="text-sm">Catering Available</span>
-                    </div>
-                  )}
-                  {venue.coat_check && (
-                    <div className="flex items-center gap-2">
-                      {renderAmenityIcon('coat')}
-                      <span className="text-sm">Coat Check</span>
-                    </div>
-                  )}
-                  {venue.security && (
-                    <div className="flex items-center gap-2">
-                      {renderAmenityIcon('security')}
-                      <span className="text-sm">Security</span>
-                    </div>
-                  )}
-                </div>
-
-                {venue.dance_floor_size && (
-                  <div className="mt-4 p-3 bg-muted rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Music className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium text-sm">Dance Floor</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {venue.dance_floor_size} • Perfect for Chicago stepping
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
             {/* Upcoming Events */}
             {venue.upcoming_events && venue.upcoming_events.length > 0 && (
@@ -641,64 +658,182 @@ const VenueDetailPage = () => {
               </Card>
             )}
 
-            {/* Reviews */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Reviews</CardTitle>
-                <CardDescription>
-                  What people are saying about this venue
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <Avatar>
-                          <AvatarImage src={review.user_avatar} />
-                          <AvatarFallback>{review.user_name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{review.user_name}</span>
-                            {review.verified_attendee && (
-                              <Badge variant="secondary" className="text-xs">
-                                Verified
-                              </Badge>
-                            )}
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={cn(
-                                    "h-3 w-3",
-                                    i < review.rating 
-                                      ? "fill-yellow-400 text-yellow-400" 
-                                      : "text-gray-300"
-                                  )}
-                                />
-                              ))}
+              </TabsContent>
+
+              {/* Amenities Tab */}
+              <TabsContent value="amenities" className="space-y-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Amenities & Features</CardTitle>
+                    <CardDescription>
+                      Everything you need to know about this venue's facilities
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {venue.parking_available && (
+                        <div className="flex items-center gap-2">
+                          {renderAmenityIcon('parking')}
+                          <span className="text-sm">
+                            Parking ({venue.parking_type})
+                          </span>
+                        </div>
+                      )}
+                      {venue.public_transit_nearby && (
+                        <div className="flex items-center gap-2">
+                          {renderAmenityIcon('transit')}
+                          <span className="text-sm">Public Transit</span>
+                        </div>
+                      )}
+                      {venue.wheelchair_accessible && (
+                        <div className="flex items-center gap-2">
+                          {renderAmenityIcon('wheelchair')}
+                          <span className="text-sm">Wheelchair Accessible</span>
+                        </div>
+                      )}
+                      {venue.wifi_available && (
+                        <div className="flex items-center gap-2">
+                          {renderAmenityIcon('wifi')}
+                          <span className="text-sm">WiFi Available</span>
+                        </div>
+                      )}
+                      {venue.sound_system && (
+                        <div className="flex items-center gap-2">
+                          {renderAmenityIcon('sound')}
+                          <span className="text-sm">Professional Sound System</span>
+                        </div>
+                      )}
+                      {venue.bar_service && (
+                        <div className="flex items-center gap-2">
+                          {renderAmenityIcon('bar')}
+                          <span className="text-sm">Bar Service</span>
+                        </div>
+                      )}
+                      {venue.catering_available && (
+                        <div className="flex items-center gap-2">
+                          {renderAmenityIcon('catering')}
+                          <span className="text-sm">Catering Available</span>
+                        </div>
+                      )}
+                      {venue.coat_check && (
+                        <div className="flex items-center gap-2">
+                          {renderAmenityIcon('coat')}
+                          <span className="text-sm">Coat Check</span>
+                        </div>
+                      )}
+                      {venue.security && (
+                        <div className="flex items-center gap-2">
+                          {renderAmenityIcon('security')}
+                          <span className="text-sm">Security</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {venue.dance_floor_size && (
+                      <div className="mt-4 p-3 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Music className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium text-sm">Dance Floor</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {venue.dance_floor_size} • Perfect for Chicago stepping
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Interactive Seating Tab */}
+              <TabsContent value="seating" className="space-y-8">
+                {venue.seating_chart ? (
+                  <InteractiveSeatingChart
+                    venueImageUrl={venue.seating_chart.image_url}
+                    seats={venue.seating_chart.seats}
+                    priceCategories={venue.seating_chart.price_categories}
+                    maxSeatsPerSelection={8}
+                    onSeatSelection={handleSeatSelection}
+                    onPurchaseClick={handlePurchaseClick}
+                    showPricing={true}
+                  />
+                ) : (
+                  <Card>
+                    <CardContent className="py-12 text-center">
+                      <div className="max-w-md mx-auto">
+                        <Grid3X3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="font-semibold mb-2">Seating Chart Not Available</h3>
+                        <p className="text-muted-foreground text-sm mb-4">
+                          This venue doesn't have an interactive seating chart available yet.
+                        </p>
+                        <Button variant="outline" asChild>
+                          <Link to="/events">Browse Events</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              {/* Reviews Tab */}
+              <TabsContent value="reviews" className="space-y-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Reviews</CardTitle>
+                    <CardDescription>
+                      What people are saying about this venue
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {reviews.map((review) => (
+                        <div key={review.id} className="space-y-3">
+                          <div className="flex items-start gap-3">
+                            <Avatar>
+                              <AvatarImage src={review.user_avatar} />
+                              <AvatarFallback>{review.user_name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium">{review.user_name}</span>
+                                {review.verified_attendee && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Verified
+                                  </Badge>
+                                )}
+                                <div className="flex items-center gap-1">
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={cn(
+                                        "h-3 w-3",
+                                        i < review.rating 
+                                          ? "fill-yellow-400 text-yellow-400" 
+                                          : "text-gray-300"
+                                      )}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                {review.review_text}
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span>{new Date(review.date).toLocaleDateString()}</span>
+                                {review.event_attended && (
+                                  <span>• Attended: {review.event_attended}</span>
+                                )}
+                                <span>• {review.helpful_count} found helpful</span>
+                              </div>
                             </div>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {review.review_text}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>{new Date(review.date).toLocaleDateString()}</span>
-                            {review.event_attended && (
-                              <span>• Attended: {review.event_attended}</span>
-                            )}
-                            <span>• {review.helpful_count} found helpful</span>
-                          </div>
+                          {review !== reviews[reviews.length - 1] && <Separator />}
                         </div>
-                      </div>
-                      {review !== reviews[reviews.length - 1] && <Separator />}
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
@@ -768,14 +903,25 @@ const VenueDetailPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {formatOperatingHours(venue.operating_hours).map(({ day, hours }) => (
-                    <div key={day} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{day}</span>
-                      <span className={hours === 'Closed' ? 'text-muted-foreground' : 'font-medium'}>
-                        {hours}
-                      </span>
-                    </div>
-                  ))}
+                  {(() => {
+                    const hours = formatOperatingHours(venue.operating_hours);
+                    if (Array.isArray(hours)) {
+                      return hours.map(({ day, hours }) => (
+                        <div key={day} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">{day}</span>
+                          <span className={hours === 'Closed' ? 'text-muted-foreground' : 'font-medium'}>
+                            {hours}
+                          </span>
+                        </div>
+                      ));
+                    } else {
+                      return (
+                        <div className="text-sm text-muted-foreground">
+                          {hours}
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
               </CardContent>
             </Card>
@@ -809,7 +955,7 @@ const VenueDetailPage = () => {
               <CardContent>
                 <div className="h-48 bg-muted rounded-lg flex items-center justify-center mb-4">
                   <div className="text-center">
-                    <MapIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">Interactive map would be here</p>
                   </div>
                 </div>
@@ -868,6 +1014,7 @@ const VenueDetailPage = () => {
             )}
           </div>
         </div>
+        </Tabs>
       </div>
     </div>
   );
