@@ -57,6 +57,7 @@ import EventPerformancePage from "./pages/EventPerformancePage";
 import MultiEventAnalyticsPage from "./pages/MultiEventAnalyticsPage";
 import AttendeeReportPage from "./pages/AttendeeReportPage";
 import FinancialReportPage from "./pages/FinancialReportPage";
+import VenueDetailPage from "./pages/VenueDetailPage";
 import FollowingPage from "./pages/FollowingPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
@@ -235,6 +236,7 @@ const RouterWrapper = () => {
           </AdminRoute>
         } />
         <Route path="/events/:id" element={<EventDetail />} />
+        <Route path="/venues/:venueId" element={<VenueDetailPage />} />
         
         {/* Checkout routes - require authentication */}
         <Route path="/checkout/details" element={
