@@ -38,7 +38,7 @@ import {
 import type { Database } from '@/integrations/supabase/types';
 
 // Event Status Types
-export type EventStatus = 'draft' | 'published' | 'unpublished' | 'archived';
+export type EventStatus = 'draft' | 'published' | 'unpublished' | 'archived' | 'cancelled' | 'completed';
 
 type Event = Database['public']['Tables']['events']['Row'] & {
   organizers?: any;
@@ -257,6 +257,30 @@ const ManageEventPage: React.FC = () => {
       path: `/organizer/event/${eventId}/branding`,
       completed: false,
       items: ['Brand Colors', 'Typography', 'Custom Styling']
+    },
+    {
+      title: 'Event Performance',
+      description: 'Real-time analytics and performance metrics',
+      icon: <BarChart3 className="h-5 w-5" />,
+      path: `/organizer/event/${eventId}/performance`,
+      completed: true,
+      items: ['Sales Analytics', 'Attendee Metrics', 'Revenue Tracking']
+    },
+    {
+      title: 'Attendee Reports',
+      description: 'Detailed attendee information and management',
+      icon: <FileText className="h-5 w-5" />,
+      path: `/organizer/event/${eventId}/attendees`,
+      completed: true,
+      items: ['Attendee List', 'Check-in Status', 'Export Data']
+    },
+    {
+      title: 'Financial Reports',
+      description: 'Revenue analytics and financial insights',
+      icon: <CreditCard className="h-5 w-5" />,
+      path: `/organizer/event/${eventId}/financial`,
+      completed: true,
+      items: ['Revenue Breakdown', 'P&L Statement', 'Tax Reports']
     }
   ];
 

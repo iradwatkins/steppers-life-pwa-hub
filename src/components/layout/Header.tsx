@@ -119,6 +119,9 @@ const Header = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/events/create">Create Event</Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/organizer/multi-event-analytics">Analytics Dashboard</Link>
+                      </DropdownMenuItem>
                     </>
                   )}
                   {user?.email === 'iradwatkins@gmail.com' && (

@@ -52,6 +52,10 @@ import { PWACheckinPage } from "./pages/pwa/PWACheckinPage";
 import PWAAttendeeListPage from "./pages/pwa/PWAAttendeeListPage";
 import { PWAStatisticsPage } from "./pages/pwa/PWAStatisticsPage";
 import { PWAPaymentPage } from "./pages/pwa/PWAPaymentPage";
+import EventPerformancePage from "./pages/EventPerformancePage";
+import MultiEventAnalyticsPage from "./pages/MultiEventAnalyticsPage";
+import AttendeeReportPage from "./pages/AttendeeReportPage";
+import FinancialReportPage from "./pages/FinancialReportPage";
 import FollowingPage from "./pages/FollowingPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
@@ -161,6 +165,26 @@ const RouterWrapper = () => {
         <Route path="/organizer/event/:eventId/cash-payments" element={
           <OrganizerRoute>
             <EventCashPaymentPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/event/:eventId/performance" element={
+          <OrganizerRoute>
+            <EventPerformancePage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/event/:eventId/attendees" element={
+          <OrganizerRoute>
+            <AttendeeReportPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/event/:eventId/financial" element={
+          <OrganizerRoute>
+            <FinancialReportPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/multi-event-analytics" element={
+          <OrganizerRoute>
+            <MultiEventAnalyticsPage />
           </OrganizerRoute>
         } />
         <Route path="/cash-payment" element={
