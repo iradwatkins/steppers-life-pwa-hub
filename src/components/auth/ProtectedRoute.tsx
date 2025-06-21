@@ -27,7 +27,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   fallbackPath = '/login',
   customFallback
 }) => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { hasPermission, isLoading: rolesLoading, hasOrganizer, canCreateEvents } = useRoles();
   const location = useLocation();
   const navigate = useNavigate();
@@ -146,13 +146,6 @@ export const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }
   console.log('AdminRoute - User:', user?.email);
   console.log('AdminRoute - Checking admin access...');
   
-  // Temporary admin access for iradwatkins@gmail.com
-  if (user?.email === 'iradwatkins@gmail.com') {
-    console.log('AdminRoute - Granting access to iradwatkins@gmail.com');
-    return <>{children}</>;
-  }
-  
-  console.log('AdminRoute - Falling back to role check');
   return (
     <ProtectedRoute requiredRole={['admin', 'super_admin']}>
       {children}

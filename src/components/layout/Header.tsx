@@ -19,7 +19,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user, signOut } = useAuth();
-  const { isOrganizer } = useRoles();
+  const { isOrganizer, canAccessAdmin } = useRoles();
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -127,7 +127,7 @@ const Header = () => {
                       </DropdownMenuItem>
                     </>
                   )}
-                  {user?.email === 'iradwatkins@gmail.com' && (
+                  {canAccessAdmin && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
