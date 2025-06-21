@@ -141,36 +141,6 @@ const EventSeatingChartPage: React.FC = () => {
     reader.readAsDataURL(file);
   }, [form]);
 
-  const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isMapping || !canvasRef.current) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = imageSize.width / rect.width;
-    const scaleY = imageSize.height / rect.height;
-    
-    const x = (event.clientX - rect.left) * scaleX;
-    const y = (event.clientY - rect.top) * scaleY;
-
-    const newSeat: SeatConfig = {
-      id: `seat-${Date.now()}`,
-      x,
-      y,
-      seatNumber: `${mappedSeats.length + 1}`,
-      row: '',
-      section: '',
-      type: selectedSeatType,
-      price: seatTypePrices[selectedSeatType],
-      isBlocked: false,
-      isADA: selectedSeatType === 'ada'
-    };
-
-    setMappedSeats(prev => [...prev, newSeat]);
-    form.setValue('seats', [...mappedSeats, newSeat]);
-    
-    // Redraw canvas with new seat
-    drawSeatsOnCanvas();
-  }, [isMapping, imageSize, mappedSeats, selectedSeatType, form]);
-
   const drawSeatsOnCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !uploadedImage) return;
@@ -212,6 +182,36 @@ const EventSeatingChartPage: React.FC = () => {
     };
     img.src = uploadedImage;
   }, [uploadedImage, mappedSeats, imageSize]);
+
+  const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isMapping || !canvasRef.current) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = imageSize.width / rect.width;
+    const scaleY = imageSize.height / rect.height;
+    
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
+
+    const newSeat: SeatConfig = {
+      id: `seat-${Date.now()}`,
+      x,
+      y,
+      seatNumber: `${mappedSeats.length + 1}`,
+      row: '',
+      section: '',
+      type: selectedSeatType,
+      price: seatTypePrices[selectedSeatType],
+      isBlocked: false,
+      isADA: selectedSeatType === 'ada'
+    };
+
+    setMappedSeats(prev => [...prev, newSeat]);
+    form.setValue('seats', [...mappedSeats, newSeat]);
+    
+    // Redraw canvas with new seat
+    drawSeatsOnCanvas();
+  }, [isMapping, imageSize, mappedSeats, selectedSeatType, form, drawSeatsOnCanvas]);
 
   const removeSeat = (seatId: string) => {
     const updatedSeats = mappedSeats.filter(seat => seat.id !== seatId);
