@@ -138,22 +138,24 @@ const EventDetail = () => {
     
     setIsAddingToCart(true);
     try {
-      addItem({
-        id: ticketType.id,
+      // Create proper TicketType object for cart context
+      const ticketTypeForCart = {
+        id: ticketType.id.toString(),
         name: ticketType.name,
         price: ticketType.price,
         description: ticketType.description || '',
-        availableQuantity: ticketType.quantity_available - ticketType.quantity_sold
-      }, quantity);
+        availableQuantity: (ticketType.quantity_available || 0) - (ticketType.quantity_sold || 0)
+      };
+      
+      addItem(ticketTypeForCart, quantity);
       
       toast.success(`Added ${quantity} ${ticketType.name} ticket(s) to cart`);
       
-      // Reset quantity for this ticket type
-      setSelectedTicketQuantities(prev => ({
-        ...prev,
-        [ticketType.id]: 0
-      }));
+      // Navigate to checkout after adding to cart
+      navigate(`/events/${event?.id}/tickets`);
+      
     } catch (error) {
+      console.error('Error adding to cart:', error);
       toast.error('Failed to add tickets to cart');
     } finally {
       setIsAddingToCart(false);
@@ -408,23 +410,6 @@ const EventDetail = () => {
 
             <Separator />
 
-            {/* Schedule */}
-            {Array.isArray(event.schedule) && event.schedule.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">Event Schedule</h2>
-                <div className="space-y-3">
-                  {(event.schedule || []).map((item, index) => (
-                  <div key={index} className="flex gap-4 p-3 bg-muted/30 rounded-lg">
-                    <div className="font-medium text-stepping-purple min-w-20">{item.time}</div>
-                    <div>{item.activity}</div>
-                  </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Separator />
-
             {/* Organizer Info */}
             {event.organizers && (
               <div>
@@ -574,7 +559,9 @@ const EventDetail = () => {
             {/* Promo Code Integration */}
             {event.ticket_types && event.ticket_types.length > 0 && (
               <PromoCodeInput 
-                eventId={event.id}
+                eventId={event.id.toString()}
+                subtotal={0}
+                onPromoCodeApplied={() => {}}
               />
             )}
 
