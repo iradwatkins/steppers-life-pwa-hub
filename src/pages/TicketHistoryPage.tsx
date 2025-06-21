@@ -29,6 +29,8 @@ import {
   QrCode
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { downloadTicketAsPDF, formatTicketDataForPDF } from '@/utils/ticketPDF';
+import { toast } from 'sonner';
 
 interface TicketPurchase {
   id: string;
@@ -61,59 +63,35 @@ interface TicketStats {
 }
 
 // Utility function for PDF generation
-const downloadTicketAsPDF = (ticket: TicketPurchase) => {
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
+const handleDownloadTicketAsPDF = async (ticket: TicketPurchase) => {
+  try {
+    // Format the ticket data for the PDF utility
+    const ticketData = formatTicketDataForPDF(
+      {
+        id: ticket.id,
+        ticket_type: ticket.ticket_type,
+        qr_code: ticket.qr_codes[0] || `TICKET-${ticket.id}`,
+        attendee_name: 'Current User', // Would come from user context
+        attendee_email: 'user@example.com', // Would come from user context
+        order_number: ticket.order_id,
+        purchase_date: ticket.purchase_date,
+      },
+      {
+        title: ticket.event_title,
+        start_date: ticket.event_date,
+        venues: {
+          name: ticket.event_location,
+          address: ticket.event_location,
+        }
+      }
+    );
 
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Ticket - ${ticket.event_title}</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .ticket { border: 2px solid #000; padding: 20px; margin: 20px 0; }
-        .header { text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 15px; }
-        .details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
-        .qr-section { text-align: center; margin: 20px 0; }
-        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
-      </style>
-    </head>
-    <body>
-      <div class="ticket">
-        <div class="header">
-          <h1>${ticket.event_title}</h1>
-          <p><strong>Order #${ticket.order_id}</strong></p>
-        </div>
-        <div class="details">
-          <div>
-            <p><strong>Date:</strong> ${new Date(ticket.event_date).toLocaleDateString()}</p>
-            <p><strong>Time:</strong> ${new Date(ticket.event_date).toLocaleTimeString()}</p>
-            <p><strong>Location:</strong> ${ticket.event_location}</p>
-            <p><strong>Ticket Type:</strong> ${ticket.ticket_type}</p>
-          </div>
-          <div>
-            <p><strong>Quantity:</strong> ${ticket.quantity}</p>
-            <p><strong>Price:</strong> $${ticket.total_amount.toFixed(2)}</p>
-            <p><strong>Organizer:</strong> ${ticket.organizer_name}</p>
-            <p><strong>Status:</strong> ${ticket.status.toUpperCase()}</p>
-          </div>
-        </div>
-        <div class="qr-section">
-          <p><strong>Ticket Numbers:</strong> ${ticket.ticket_numbers.join(', ')}</p>
-        </div>
-        <div class="footer">
-          <p>Downloaded from Steppers Life • Purchase Date: ${new Date(ticket.purchase_date).toLocaleDateString()}</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
-  printWindow.print();
-  printWindow.close();
+    await downloadTicketAsPDF(ticketData);
+    toast.success('Ticket PDF downloaded successfully!');
+  } catch (error) {
+    console.error('Error downloading ticket PDF:', error);
+    toast.error('Failed to download ticket PDF. Please try again.');
+  }
 };
 
 export default function TicketHistoryPage() {
@@ -279,7 +257,7 @@ export default function TicketHistoryPage() {
   const handleBulkDownload = () => {
     const selectedTicketObjects = tickets.filter(ticket => selectedTickets.includes(ticket.id));
     selectedTicketObjects.forEach((ticket, index) => {
-      setTimeout(() => downloadTicketAsPDF(ticket), index * 1000); // Stagger downloads
+      setTimeout(() => handleDownloadTicketAsPDF(ticket), index * 1000); // Stagger downloads
     });
   };
 
@@ -624,7 +602,7 @@ export default function TicketHistoryPage() {
                               )}
 
                               <div className="flex gap-2 pt-4">
-                                <Button onClick={() => downloadTicketAsPDF(selectedTicket)} className="flex-1">
+                                <Button onClick={() => handleDownloadTicketAsPDF(selectedTicket)} className="flex-1">
                                   <Download className="w-4 h-4 mr-2" />
                                   Download PDF
                                 </Button>
@@ -638,7 +616,7 @@ export default function TicketHistoryPage() {
                         </DialogContent>
                       </Dialog>
                       
-                      <Button variant="outline" size="sm" onClick={() => downloadTicketAsPDF(ticket)}>
+                      <Button variant="outline" size="sm" onClick={() => handleDownloadTicketAsPDF(ticket)}>
                         <Download className="w-3 h-3 mr-1" />
                         PDF
                       </Button>
