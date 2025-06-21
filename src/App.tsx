@@ -20,6 +20,7 @@ import Register from "./pages/auth/Register";
 import AuthCallback from "./pages/auth/AuthCallback";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Profile from "./pages/Profile";
+import AccountDashboard from "./pages/AccountDashboard";
 import Dashboard from "./pages/Dashboard";
 import Notifications from "./pages/Notifications";
 import EventDetail from "./pages/EventDetail";
@@ -262,6 +263,11 @@ const RouterWrapper = () => {
         <Route path="/profile" element={
           <AuthRoute>
             <Profile />
+          </AuthRoute>
+        } />
+        <Route path="/account" element={
+          <AuthRoute>
+            <AccountDashboard />
           </AuthRoute>
         } />
         <Route path="/dashboard" element={
