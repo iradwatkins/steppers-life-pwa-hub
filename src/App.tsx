@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/layout/ThemeProvider";
 import { AuthProvider } from "./hooks/useAuth";
 import { CartProvider } from "./contexts/CartContext";
@@ -94,13 +94,11 @@ import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./compone
 
 const queryClient = new QueryClient();
 
-// Router wrapper to ensure components re-render on location changes
+// Router wrapper component
 const RouterWrapper = () => {
-  const location = useLocation();
-  
   return (
     <Layout>
-      <Routes key={location.pathname}>
+      <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/home" element={<Index />} />
         <Route path="/magazine" element={<Magazine />} />

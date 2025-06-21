@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { imageUploadService } from './imageUploadService';
+import { ImageUploadService } from './imageUploadService';
 import type { ServiceResponse } from '@/types/ticket';
 import type {
   Store,
