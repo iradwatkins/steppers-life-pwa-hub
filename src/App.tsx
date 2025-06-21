@@ -75,6 +75,10 @@ import TicketTransferPage from "./pages/TicketTransferPage";
 import TransferClaimPage from "./pages/TransferClaimPage";
 import GroupBookingPage from "./pages/GroupBookingPage";
 import TicketResalePage from "./pages/TicketResalePage";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import BlogManagementPage from "./pages/admin/BlogManagementPage";
+import BlogEditorPage from "./pages/admin/BlogEditorPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -265,6 +269,10 @@ const RouterWrapper = () => {
         <Route path="/community" element={<Community />} />
         <Route path="/about" element={<About />} />
         
+        {/* Blog routes */}
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
+        
         {/* Protected user routes */}
         <Route path="/profile" element={
           <AuthRoute>
@@ -399,6 +407,23 @@ const RouterWrapper = () => {
         <Route path="/admin/reports" element={
           <AdminRoute>
             <AnalyticsDashboard />
+          </AdminRoute>
+        } />
+        
+        {/* Admin Blog routes */}
+        <Route path="/admin/blog" element={
+          <AdminRoute>
+            <BlogManagementPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/blog/create" element={
+          <AdminRoute>
+            <BlogEditorPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/blog/edit/:postId" element={
+          <AdminRoute>
+            <BlogEditorPage />
           </AdminRoute>
         } />
         <Route path="/login" element={<Login />} />

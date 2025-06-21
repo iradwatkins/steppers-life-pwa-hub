@@ -50,6 +50,9 @@ const Header = () => {
             <Link to="/magazine" className="text-foreground/80 hover:text-foreground transition-colors">
               Magazine
             </Link>
+            <Link to="/blog" className="text-foreground/80 hover:text-foreground transition-colors">
+              Blog
+            </Link>
             <Link to="/events" className="text-foreground/80 hover:text-foreground transition-colors">
               Events
             </Link>
@@ -130,6 +133,9 @@ const Header = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/admin/dashboard">Admin Dashboard</Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/blog">Blog Management</Link>
+                      </DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
@@ -172,6 +178,13 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Magazine
+              </Link>
+              <Link 
+                to="/blog" 
+                className="text-foreground/80 hover:text-foreground transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Blog
               </Link>
               <Link 
                 to="/events" 
