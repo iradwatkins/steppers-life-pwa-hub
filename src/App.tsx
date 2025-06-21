@@ -71,6 +71,10 @@ import TicketHistoryPage from "./pages/TicketHistoryPage";
 import WebAnalyticsPage from "./pages/WebAnalyticsPage";
 import InstructorAnalyticsPage from "./pages/admin/InstructorAnalyticsPage";
 import OrganizerEventManagementPage from "./pages/organizer/OrganizerEventManagementPage";
+import TicketTransferPage from "./pages/TicketTransferPage";
+import TransferClaimPage from "./pages/TransferClaimPage";
+import GroupBookingPage from "./pages/GroupBookingPage";
+import TicketResalePage from "./pages/TicketResalePage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -282,6 +286,27 @@ const RouterWrapper = () => {
             <TicketHistoryPage />
           </AuthRoute>
         } />
+        
+        {/* Epic B: Ticket Transfer Routes */}
+        <Route path="/tickets/:ticketId/transfer" element={
+          <AuthRoute>
+            <TicketTransferPage />
+          </AuthRoute>
+        } />
+        <Route path="/transfer/claim/:linkCode" element={<TransferClaimPage />} />
+        <Route path="/transfer/code/:transferCode?" element={<TransferClaimPage />} />
+        
+        {/* Epic B: Group Booking Routes */}
+        <Route path="/events/:eventId/group-booking" element={
+          <AuthRoute>
+            <GroupBookingPage />
+          </AuthRoute>
+        } />
+        <Route path="/group/join/:inviteCode" element={<TransferClaimPage />} />
+        
+        {/* Epic B: Resale Marketplace Routes */}
+        <Route path="/resale" element={<TicketResalePage />} />
+        <Route path="/resale/:eventId?" element={<TicketResalePage />} />
         <Route path="/notifications" element={
           <AuthRoute>
             <Notifications />
