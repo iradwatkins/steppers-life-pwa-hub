@@ -1,6 +1,6 @@
 # Story B.011: Real-time Inventory Management System
 
-## Status: ✅ Complete
+## Status: Completed ✅
 
 ## Story
 

@@ -1,6 +1,6 @@
 # Story B.014: Event Check-in & Attendance Tracking System
 
-## Status: ✅ Complete
+## Status: Completed ✅
 
 ## Story
 

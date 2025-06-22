@@ -1,6 +1,6 @@
 # Story B.010: Event Details Page
 
-## Status: ✅ Complete
+## Status: Completed ✅
 
 ## Story
 

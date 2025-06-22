@@ -1,6 +1,6 @@
 # Story B.006: Organizer Refund/Cancellation Handling UI
 
-## Status: ✅ Complete
+## Status: Completed ✅
 
 ## Story
 

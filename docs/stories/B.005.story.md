@@ -1,6 +1,6 @@
 # Story B.005: Promo Code System
 
-## Status: ✅ Complete
+## Status: Completed ✅
 
 ## Story
 

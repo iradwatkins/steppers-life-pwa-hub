@@ -1,6 +1,6 @@
 # Story B.013: Event Notifications & Reminders System
 
-## Status: ✅ Complete
+## Status: Completed ✅
 
 ## Story
 

@@ -12,6 +12,9 @@ import { useCart } from '@/contexts/CartContext';
 import { useInventory } from '@/hooks/useInventory';
 import { InventoryStatusBadge } from '@/components/inventory/InventoryStatus';
 import PromoCodeInput from '@/components/checkout/PromoCodeInput';
+import SocialShareButtons from '@/components/SocialShareButtons';
+import { SocialSharingService } from '@/services/socialSharingService';
+import { useEventMetaTags } from '@/hooks/useMetaTags';
 import { Calendar, MapPin, Clock, Users, DollarSign, Share2, Heart, ArrowLeft, Star, ExternalLink, Phone, Mail, Globe, AlertTriangle, CheckCircle2, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -35,6 +38,9 @@ const EventDetail = () => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  
+  // Set up meta tags for social sharing
+  useEventMetaTags(event);
   
   // Load event data
   useEffect(() => {
@@ -162,24 +168,8 @@ const EventDetail = () => {
     }
   };
 
-  const handleShare = async (platform?: string) => {
-    const url = window.location.href;
-    const title = event?.title || 'Check out this event';
-    
-    if (platform === 'facebook') {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-    } else if (platform === 'twitter') {
-      window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`, '_blank');
-    } else {
-      // Copy to clipboard
-      try {
-        await navigator.clipboard.writeText(url);
-        toast.success('Link copied to clipboard');
-      } catch (error) {
-        toast.error('Failed to copy link');
-      }
-    }
-  };
+  // Generate share options for the event
+  const shareOptions = event ? SocialSharingService.generateEventShareOptions(event) : null;
 
   // Loading state
   if (isLoading) {
@@ -310,14 +300,15 @@ const EventDetail = () => {
               >
                 <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
               </Button>
-              <Button 
-                size="icon" 
-                variant="secondary"
-                onClick={() => handleShare()}
-                className="bg-white/90 hover:bg-white"
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
+              {shareOptions && (
+                <SocialShareButtons
+                  shareOptions={shareOptions}
+                  variant="icon-only"
+                  size="sm"
+                  showLabels={false}
+                  className="bg-white/90 hover:bg-white"
+                />
+              )}
             </div>
 
             {/* Bottom info overlay */}
@@ -613,42 +604,25 @@ const EventDetail = () => {
             </Card>
 
             {/* Enhanced Share Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Share2 className="h-5 w-5" />
-                  Share Event
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleShare('facebook')}
-                    >
-                      Facebook
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleShare('twitter')}
-                    >
-                      Twitter
-                    </Button>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => handleShare()}
-                  >
-                    Copy Link
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {shareOptions && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Share2 className="h-5 w-5" />
+                    Share Event
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SocialShareButtons
+                    shareOptions={shareOptions}
+                    variant="inline"
+                    size="sm"
+                    showLabels={true}
+                    maxButtons={6}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Event Status */}
             <Card>

@@ -1,9 +1,14 @@
+/**
+ * ShareableEventCard Component
+ * Enhanced event card with built-in social sharing capabilities
+ */
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Clock, Users, DollarSign, Star, Share2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, DollarSign, Star, Heart } from 'lucide-react';
 import FollowButton from '@/components/following/FollowButton';
 import SocialShareButtons from '@/components/SocialShareButtons';
 import { SocialSharingService } from '@/services/socialSharingService';
@@ -14,22 +19,27 @@ type Event = Database['public']['Tables']['events']['Row'] & {
   venues?: any;
   ticket_types?: any[];
   distance?: number;
+  isFavorited?: boolean;
 };
 
-interface EventCardProps {
+interface ShareableEventCardProps {
   event: Event;
-  variant?: 'grid' | 'list' | 'featured';
+  variant?: 'grid' | 'list' | 'featured' | 'compact';
   showRating?: boolean;
   showSoldOutStatus?: boolean;
   showSocialShare?: boolean;
+  shareVariant?: 'inline' | 'popover' | 'modal' | 'icon-only';
+  onToggleFavorite?: (eventId: string, isFavorited: boolean) => void;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ 
+const ShareableEventCard: React.FC<ShareableEventCardProps> = ({ 
   event, 
   variant = 'grid',
   showRating = true,
   showSoldOutStatus = true,
-  showSocialShare = true
+  showSocialShare = true,
+  shareVariant = 'icon-only',
+  onToggleFavorite
 }) => {
   // Helper functions
   const getCategoryBadgeColor = (category: string) => {
@@ -113,9 +123,101 @@ const EventCard: React.FC<EventCardProps> = ({
     return 4.2 + Math.random() * 0.8; // Random rating between 4.2 and 5.0
   };
 
+  const handleToggleFavorite = () => {
+    if (onToggleFavorite) {
+      onToggleFavorite(event.id, !event.isFavorited);
+    }
+  };
+
   const attendanceInfo = getAttendanceInfo(event.ticket_types || []);
   const eventRating = getEventRating();
   const shareOptions = SocialSharingService.generateEventShareOptions(event);
+
+  // Compact variant for minimal space usage
+  if (variant === 'compact') {
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            {/* Event Image */}
+            <div className="w-16 h-16 bg-muted rounded-md flex-shrink-0 relative">
+              {event.featured_image_url && (
+                <img 
+                  src={event.featured_image_url} 
+                  alt={event.title}
+                  className="w-full h-full object-cover rounded-md"
+                />
+              )}
+              {showSoldOutStatus && attendanceInfo.isSoldOut && (
+                <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center">
+                  <Badge variant="destructive" className="text-xs">Sold Out</Badge>
+                </div>
+              )}
+            </div>
+            
+            {/* Event Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between mb-1">
+                <div className="flex items-center gap-1">
+                  <Badge className={`text-white text-xs ${getCategoryBadgeColor(event.category)}`}>
+                    {event.category}
+                  </Badge>
+                  {showRating && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      {eventRating.toFixed(1)}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {onToggleFavorite && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleToggleFavorite}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Heart className={`h-3 w-3 ${event.isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
+                    </Button>
+                  )}
+                  {showSocialShare && (
+                    <SocialShareButtons
+                      shareOptions={shareOptions}
+                      variant={shareVariant}
+                      size="sm"
+                      showLabels={false}
+                      className="h-6 w-6 p-0"
+                    />
+                  )}
+                </div>
+              </div>
+              
+              <h3 className="font-medium text-sm line-clamp-1 mb-1">{event.title}</h3>
+              
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {formatEventDate(event.start_date, event.end_date)}
+                </div>
+                <div className="flex items-center gap-1">
+                  <DollarSign className="h-3 w-3 text-stepping-purple" />
+                  <span className="font-semibold text-stepping-purple">
+                    {getEventPrice(event.ticket_types || [])}
+                  </span>
+                </div>
+              </div>
+              
+              <Button size="sm" asChild className="w-full bg-stepping-gradient text-xs h-7">
+                <Link to={`/events/${event.id}`}>
+                  {attendanceInfo.isSoldOut ? 'Sold Out' : 'View Details'}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // List View Layout
   if (variant === 'list') {
@@ -163,10 +265,20 @@ const EventCard: React.FC<EventCardProps> = ({
                     {getEventPrice(event.ticket_types || [])}
                   </span>
                 </div>
+                {onToggleFavorite && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleToggleFavorite}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Heart className={`h-4 w-4 ${event.isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
+                  </Button>
+                )}
                 {showSocialShare && (
                   <SocialShareButtons
                     shareOptions={shareOptions}
-                    variant="icon-only"
+                    variant={shareVariant}
                     size="sm"
                     showLabels={false}
                   />
@@ -239,17 +351,30 @@ const EventCard: React.FC<EventCardProps> = ({
               Featured
             </Badge>
           )}
-          {showSocialShare && (
-            <div className="absolute top-2 right-2">
+          
+          {/* Social Share and Favorite buttons overlay */}
+          <div className="absolute top-2 right-2 flex gap-1">
+            {onToggleFavorite && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleToggleFavorite}
+                className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
+              >
+                <Heart className={`h-4 w-4 ${event.isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
+              </Button>
+            )}
+            {showSocialShare && (
               <SocialShareButtons
                 shareOptions={shareOptions}
-                variant="icon-only"
+                variant={shareVariant}
                 size="sm"
                 showLabels={false}
-                className="bg-white/90 hover:bg-white"
+                className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
               />
-            </div>
-          )}
+            )}
+          </div>
+          
           {event.featured_image_url && (
             <img 
               src={event.featured_image_url} 
@@ -345,4 +470,4 @@ const EventCard: React.FC<EventCardProps> = ({
   );
 };
 
-export default EventCard;
+export default ShareableEventCard;
