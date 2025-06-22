@@ -69,8 +69,17 @@ const TicketSelectionPage = () => {
           return;
         }
 
+        // Transform database ticket types to match TicketType interface
+        const transformedTicketTypes = (ticketTypesData || []).map((tt: any) => ({
+          id: tt.id,
+          name: tt.name,
+          price: tt.price,
+          description: tt.description || '',
+          availableQuantity: tt.quantity_available || 0
+        }));
+
         setEventData(eventData);
-        setTicketTypes(ticketTypesData || []);
+        setTicketTypes(transformedTicketTypes);
         setIsLoadingEvent(false);
 
       } catch (error) {
@@ -98,6 +107,8 @@ const TicketSelectionPage = () => {
       setStep(1);
     }
   }, [event, setEvent, setStep]);
+
+
 
   const handleQuantityChange = async (ticketType: TicketType, quantity: number) => {
     const inventoryStatus = getInventoryStatus(ticketType.id);
@@ -130,32 +141,18 @@ const TicketSelectionPage = () => {
         });
       }
     } else {
-      // Create inventory hold for new quantity
-      const hold = await createHold(ticketType.id, quantity, sessionId);
-      if (hold) {
-        if (currentItem) {
-          updateQuantity(ticketType.id, quantity);
-          toast({
-            title: "Cart updated",
-            description: `${ticketType.name} quantity updated to ${quantity}`
-          });
-        } else {
-          addItem(ticketType, quantity);
-          toast({
-            title: "Added to cart",
-            description: `${quantity} ${ticketType.name} ticket${quantity > 1 ? 's' : ''} added to cart`
-          });
-        }
-      } else {
-        // Reset quantity if hold creation failed
-        setSelectedQuantities(prev => ({
-          ...prev,
-          [ticketType.id]: 0
-        }));
+      // Add or update item in cart
+      if (currentItem) {
+        updateQuantity(ticketType.id, quantity);
         toast({
-          title: "Unable to reserve tickets",
-          description: "Please try again in a moment",
-          variant: "destructive"
+          title: "Cart updated",
+          description: `${ticketType.name} quantity updated to ${quantity}`
+        });
+      } else {
+        addItem(ticketType, quantity);
+        toast({
+          title: "Added to cart",
+          description: `${quantity} ${ticketType.name} ticket${quantity > 1 ? 's' : ''} added to cart`
         });
       }
     }
