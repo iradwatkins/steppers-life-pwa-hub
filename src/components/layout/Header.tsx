@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -35,6 +34,16 @@ const Header = () => {
     navigate('/');
   };
 
+  // Navigation handler that forces page refresh
+  const handleNavigation = (path: string) => {
+    window.location.href = path;
+  };
+
+  // Navigation handler for dropdown items
+  const handleDropdownNavigation = (path: string) => {
+    window.location.href = path;
+  };
+
   return (
     <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b">
       <div className="container mx-auto px-4">
@@ -48,27 +57,45 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/magazine" className="text-foreground/80 hover:text-foreground transition-colors">
+            <button 
+              onClick={() => handleNavigation('/magazine')} 
+              className="text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
+            >
               Magazine
-            </Link>
-            <Link to="/blog" className="text-foreground/80 hover:text-foreground transition-colors">
+            </button>
+            <button 
+              onClick={() => handleNavigation('/blog')} 
+              className="text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
+            >
               Blog
-            </Link>
-            <Link to="/events" className="text-foreground/80 hover:text-foreground transition-colors">
+            </button>
+            <button 
+              onClick={() => handleNavigation('/events')} 
+              className="text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
+            >
               Events
-            </Link>
-            <Link to="/classes" className="text-foreground/80 hover:text-foreground transition-colors">
+            </button>
+            <button 
+              onClick={() => handleNavigation('/classes')} 
+              className="text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
+            >
               Classes
-            </Link>
-            <Link to="/community" className="text-foreground/80 hover:text-foreground transition-colors">
+            </button>
+            <button 
+              onClick={() => handleNavigation('/community')} 
+              className="text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
+            >
               Community
-            </Link>
-            <Link to="/about" className="text-foreground/80 hover:text-foreground transition-colors">
+            </button>
+            <button 
+              onClick={() => handleNavigation('/about')} 
+              className="text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
+            >
               About
-            </Link>
+            </button>
             {user && (
-              <Button asChild className="bg-stepping-gradient">
-                <Link to="/events/create">Post Event</Link>
+              <Button onClick={() => handleNavigation('/events/create')} className="bg-stepping-gradient">
+                Post Event
               </Button>
             )}
           </nav>
@@ -100,43 +127,43 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile">Profile</Link>
+                  <DropdownMenuItem onClick={() => handleDropdownNavigation('/profile')}>
+                    Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/dashboard">Dashboard</Link>
+                  <DropdownMenuItem onClick={() => handleDropdownNavigation('/dashboard')}>
+                    Dashboard
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/notifications">Notifications</Link>
+                  <DropdownMenuItem onClick={() => handleDropdownNavigation('/notifications')}>
+                    Notifications
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/tickets">My Tickets</Link>
+                  <DropdownMenuItem onClick={() => handleDropdownNavigation('/tickets')}>
+                    My Tickets
                   </DropdownMenuItem>
                   {isOrganizer && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link to="/organizer/events">My Events</Link>
+                      <DropdownMenuItem onClick={() => handleDropdownNavigation('/organizer/events')}>
+                        My Events
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/organizer/manage-events">Manage Events</Link>
+                      <DropdownMenuItem onClick={() => handleDropdownNavigation('/organizer/manage-events')}>
+                        Manage Events
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/events/create">Create Event</Link>
+                      <DropdownMenuItem onClick={() => handleDropdownNavigation('/events/create')}>
+                        Create Event
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/organizer/multi-event-analytics">Analytics Dashboard</Link>
+                      <DropdownMenuItem onClick={() => handleDropdownNavigation('/organizer/multi-event-analytics')}>
+                        Analytics Dashboard
                       </DropdownMenuItem>
                     </>
                   )}
                   {canAccessAdmin && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin/dashboard">Admin Dashboard</Link>
+                      <DropdownMenuItem onClick={() => handleDropdownNavigation('/admin/dashboard')}>
+                        Admin Dashboard
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin/blog">Blog Management</Link>
+                      <DropdownMenuItem onClick={() => handleDropdownNavigation('/admin/blog')}>
+                        Blog Management
                       </DropdownMenuItem>
                     </>
                   )}
@@ -149,11 +176,11 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <div className="hidden md:flex items-center space-x-2">
-                <Button variant="ghost" asChild>
-                  <Link to="/login">Sign In</Link>
+                <Button variant="ghost" onClick={() => handleNavigation('/login')}>
+                  Sign In
                 </Button>
-                <Button asChild>
-                  <Link to="/register">Join</Link>
+                <Button onClick={() => handleNavigation('/register')}>
+                  Join
                 </Button>
               </div>
             )}
@@ -174,54 +201,70 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden border-t py-4">
             <nav className="flex flex-col space-y-4">
-              <Link 
-                to="/magazine" 
-                className="text-foreground/80 hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+              <button 
+                onClick={() => {
+                  handleNavigation('/magazine');
+                  setIsMenuOpen(false);
+                }}
+                className="text-foreground/80 hover:text-foreground transition-colors text-left"
               >
                 Magazine
-              </Link>
-              <Link 
-                to="/blog" 
-                className="text-foreground/80 hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button 
+                onClick={() => {
+                  handleNavigation('/blog');
+                  setIsMenuOpen(false);
+                }}
+                className="text-foreground/80 hover:text-foreground transition-colors text-left"
               >
                 Blog
-              </Link>
-              <Link 
-                to="/events" 
-                className="text-foreground/80 hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button 
+                onClick={() => {
+                  handleNavigation('/events');
+                  setIsMenuOpen(false);
+                }}
+                className="text-foreground/80 hover:text-foreground transition-colors text-left"
               >
                 Events
-              </Link>
-              <Link 
-                to="/classes" 
-                className="text-foreground/80 hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button 
+                onClick={() => {
+                  handleNavigation('/classes');
+                  setIsMenuOpen(false);
+                }}
+                className="text-foreground/80 hover:text-foreground transition-colors text-left"
               >
                 Classes
-              </Link>
-              <Link 
-                to="/community" 
-                className="text-foreground/80 hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button 
+                onClick={() => {
+                  handleNavigation('/community');
+                  setIsMenuOpen(false);
+                }}
+                className="text-foreground/80 hover:text-foreground transition-colors text-left"
               >
                 Community
-              </Link>
-              <Link 
-                to="/about" 
-                className="text-foreground/80 hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button 
+                onClick={() => {
+                  handleNavigation('/about');
+                  setIsMenuOpen(false);
+                }}
+                className="text-foreground/80 hover:text-foreground transition-colors text-left"
               >
                 About
-              </Link>
+              </button>
               
               {user && (
-                <Button asChild className="bg-stepping-gradient w-fit">
-                  <Link to="/events/create" onClick={() => setIsMenuOpen(false)}>
-                    Post Event
-                  </Link>
+                <Button 
+                  onClick={() => {
+                    handleNavigation('/events/create');
+                    setIsMenuOpen(false);
+                  }} 
+                  className="bg-stepping-gradient w-fit"
+                >
+                  Post Event
                 </Button>
               )}
               
@@ -241,11 +284,22 @@ const Header = () => {
               
               {!user && (
                 <div className="flex flex-col space-y-2 pt-2">
-                  <Button variant="ghost" asChild onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/login">Sign In</Link>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => {
+                      handleNavigation('/login');
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Sign In
                   </Button>
-                  <Button asChild onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/register">Join</Link>
+                  <Button 
+                    onClick={() => {
+                      handleNavigation('/register');
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Join
                   </Button>
                 </div>
               )}
