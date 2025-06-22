@@ -25,36 +25,36 @@
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create PWA QR scanner interface (AC: 1, 2, 6)
-  - [ ] Implement camera integration with proper permissions handling
-  - [ ] Build QR code detection and validation logic with error handling
-  - [ ] Create visual feedback system (success/error states, sound alerts)
-  - [ ] Add duplicate ticket and already-checked-in detection
-- [ ] Task 2: Build offline check-in capabilities (AC: 3, 10)
-  - [ ] Create local queue system for offline check-ins with encryption
-  - [ ] Implement automatic sync mechanism when connectivity is restored
-  - [ ] Add conflict resolution for offline/online check-in discrepancies
-  - [ ] Integrate with existing attendance tracking from B-014
-- [ ] Task 3: Implement manual lookup and guest management (AC: 4, 5)
-  - [ ] Create fuzzy search interface for attendee lookup by name/email/phone
-  - [ ] Build guest list interface with VIP status and special notes
-  - [ ] Add manual check-in flow for attendees without mobile tickets
-  - [ ] Implement attendee details display with purchase information
-- [ ] Task 4: Create staff analytics and monitoring (AC: 7, 9)
-  - [ ] Build real-time check-in statistics dashboard for staff view
-  - [ ] Add capacity monitoring with visual progress indicators
-  - [ ] Implement arrival rate tracking and peak time identification
-  - [ ] Create multi-event switching interface with event status overview
-- [ ] Task 5: Add emergency features and backup methods (AC: 8, 12)
-  - [ ] Implement manual override system with authorization requirements
-  - [ ] Create emergency check-in mode for system failures
-  - [ ] Add manual ticket entry as backup when QR scanning fails
-  - [ ] Build offline-first fallback for complete connectivity loss
-- [ ] Task 6: Mobile optimization and integration testing (AC: 11, All)
-  - [ ] Optimize interface for various mobile screen sizes and orientations
-  - [ ] Test camera performance across different mobile devices
-  - [ ] Validate offline/online sync reliability under various network conditions
-  - [ ] Integration testing with PWA auth system from D.001
+- [x] Task 1: Create PWA QR scanner interface (AC: 1, 2, 6)
+  - [x] Implement camera integration with proper permissions handling
+  - [x] Build QR code detection and validation logic with error handling
+  - [x] Create visual feedback system (success/error states, sound alerts)
+  - [x] Add duplicate ticket and already-checked-in detection
+- [x] Task 2: Build offline check-in capabilities (AC: 3, 10)
+  - [x] Create local queue system for offline check-ins with encryption
+  - [x] Implement automatic sync mechanism when connectivity is restored
+  - [x] Add conflict resolution for offline/online check-in discrepancies
+  - [x] Integrate with existing attendance tracking from B-014
+- [x] Task 3: Implement manual lookup and guest management (AC: 4, 5)
+  - [x] Create fuzzy search interface for attendee lookup by name/email/phone
+  - [x] Build guest list interface with VIP status and special notes
+  - [x] Add manual check-in flow for attendees without mobile tickets
+  - [x] Implement attendee details display with purchase information
+- [x] Task 4: Create staff analytics and monitoring (AC: 7, 9)
+  - [x] Build real-time check-in statistics dashboard for staff view
+  - [x] Add capacity monitoring with visual progress indicators
+  - [x] Implement arrival rate tracking and peak time identification
+  - [x] Create multi-event switching interface with event status overview
+- [x] Task 5: Add emergency features and backup methods (AC: 8, 12)
+  - [x] Implement manual override system with authorization requirements
+  - [x] Create emergency check-in mode for system failures
+  - [x] Add manual ticket entry as backup when QR scanning fails
+  - [x] Build offline-first fallback for complete connectivity loss
+- [x] Task 6: Mobile optimization and integration testing (AC: 11, All)
+  - [x] Optimize interface for various mobile screen sizes and orientations
+  - [x] Test camera performance across different mobile devices
+  - [x] Validate offline/online sync reliability under various network conditions
+  - [x] Integration testing with PWA auth system from D.001
 
 ## Dev Technical Guidance
 
