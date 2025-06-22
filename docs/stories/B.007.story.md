@@ -23,25 +23,25 @@
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create EventCashPaymentPage for organizers (AC: 1)
-  - [ ] Build cash payment management interface
-  - [ ] Implement code generation and verification system
-- [ ] Task 2: Create CashPaymentPage for buyers (AC: 2, 4)
-  - [ ] Build buyer cash payment request interface
-  - [ ] Implement QR code generation for payment codes
-- [ ] Task 3: Implement verification system (AC: 3, 6, 8)
-  - [ ] Create 5-digit code generation logic
-  - [ ] Add 4-hour expiration handling
-  - [ ] Implement real-time verification status
-  - [ ] Add order completion on successful verification
-- [ ] Task 4: Integration with ticket flow (AC: 5, 7, 10)
-  - [ ] Add cash payment option to ticket selection
-  - [ ] Implement inventory hold during cash payment
-  - [ ] Integrate with existing checkout flow
-- [ ] Task 5: QR code library and routing (AC: 4, 9)
-  - [ ] Add QR code generation library
-  - [ ] Create routes for cash payment pages
-  - [ ] Ensure mobile optimization
+- [x] Task 1: Create EventCashPaymentPage for organizers (AC: 1)
+  - [x] Build cash payment management interface
+  - [x] Implement code generation and verification system
+- [x] Task 2: Create CashPaymentPage for buyers (AC: 2, 4)
+  - [x] Build buyer cash payment request interface
+  - [x] Implement QR code generation for payment codes
+- [x] Task 3: Implement verification system (AC: 3, 6, 8)
+  - [x] Create 5-digit code generation logic
+  - [x] Add 4-hour expiration handling
+  - [x] Implement real-time verification status
+  - [x] Add order completion on successful verification
+- [x] Task 4: Integration with ticket flow (AC: 5, 7, 10)
+  - [x] Add cash payment option to ticket selection
+  - [x] Implement inventory hold during cash payment
+  - [x] Integrate with existing checkout flow
+- [x] Task 5: QR code library and routing (AC: 4, 9)
+  - [x] Add QR code generation library
+  - [x] Create routes for cash payment pages
+  - [x] Ensure mobile optimization
 
 ## Dev Technical Guidance
 

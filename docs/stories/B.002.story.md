@@ -10,7 +10,7 @@
 
 ## Acceptance Criteria (ACs)
 
-- [] **AC1:** System provides a 4-step checkout flow: Selection → Details → Payment → Confirmation
+- [x] **AC1:** System provides a 4-step checkout flow: Selection → Details → Payment → Confirmation
 - [x] **AC2:** TicketSelectionPage allows users to select tickets with quantity and type options
 - [x] **AC3:** CheckoutDetailsPage collects attendee information and validates required fields
 - [x] **AC4:** CheckoutPaymentPage integrates secure payment processing with multiple gateway options

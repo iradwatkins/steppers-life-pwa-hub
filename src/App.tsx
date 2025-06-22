@@ -40,6 +40,7 @@ import CheckoutConfirmationPage from "./pages/CheckoutConfirmationPage";
 import CartPage from "./pages/CartPage";
 import CashPaymentPage from "./pages/CashPaymentPage";
 import CreateEventPage from "./pages/CreateEventPage";
+import CreateClassPage from "./pages/CreateClassPage";
 import EventTicketingPage from "./pages/EventTicketingPage";
 import EventSeatingPage from "./pages/EventSeatingPage";
 import EventSeatingChartPage from "./pages/EventSeatingChartPage";
@@ -113,6 +114,12 @@ const RouterWrapper = () => {
           <OrganizerRoute>
             <CreateEventPage />
           </OrganizerRoute>
+        } />
+        <Route path="/classes" element={<Classes />} />
+        <Route path="/classes/create" element={
+          <AuthRoute>
+            <CreateClassPage />
+          </AuthRoute>
         } />
         <Route path="/organizer/setup" element={
           <AuthRoute>

@@ -15,7 +15,7 @@
 - [x] **AC3:** Profile management with personal information (name, email, phone, address)
 - [x] **AC4:** Account security settings with password change and two-factor authentication
 - [x] **AC5:** Email preferences and notification settings for marketing and event updates
-- [ ] **AC6:** Saved payment methods with secure storage and management
+- [x] **AC6:** Saved payment methods with secure storage and management
 - [x] **AC7:** Event preferences and interests for personalized recommendations
 - [x] **AC8:** Account dashboard showing upcoming events, past purchases, and saved events
 - [x] **AC9:** Privacy settings and data management with GDPR compliance options

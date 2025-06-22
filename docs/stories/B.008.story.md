@@ -23,24 +23,24 @@
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create TicketHistoryPage component (AC: 1)
-  - [ ] Build comprehensive ticket history interface
-  - [ ] Implement ticket purchase record display
-- [ ] Task 2: Implement search and filtering (AC: 2, 6)
-  - [ ] Add search functionality across ticket data
-  - [ ] Create filtering options (status, date, event)
-  - [ ] Implement status tracking and categorization
-- [ ] Task 3: Create detailed ticket views (AC: 3, 8)
-  - [ ] Build detailed ticket information display
-  - [ ] Implement modal dialogs for ticket details
-- [ ] Task 4: Implement download functionality (AC: 4, 5)
-  - [ ] Create downloadTicketAsPDF utility function
-  - [ ] Add individual ticket download options
-  - [ ] Implement bulk download capabilities
-- [ ] Task 5: Add sharing and integration (AC: 7, 9, 10)
-  - [ ] Implement ticket sharing capabilities
-  - [ ] Ensure mobile-responsive design
-  - [ ] Update Profile.tsx with links to ticket history
+- [x] Task 1: Create TicketHistoryPage component (AC: 1)
+  - [x] Build comprehensive ticket history interface
+  - [x] Implement ticket purchase record display
+- [x] Task 2: Implement search and filtering (AC: 2, 6)
+  - [x] Add search functionality across ticket data
+  - [x] Create filtering options (status, date, event)
+  - [x] Implement status tracking and categorization
+- [x] Task 3: Create detailed ticket views (AC: 3, 8)
+  - [x] Build detailed ticket information display
+  - [x] Implement modal dialogs for ticket details
+- [x] Task 4: Implement download functionality (AC: 4, 5)
+  - [x] Create downloadTicketAsPDF utility function
+  - [x] Add individual ticket download options
+  - [x] Implement bulk download capabilities
+- [x] Task 5: Add sharing and integration (AC: 7, 9, 10)
+  - [x] Implement ticket sharing capabilities
+  - [x] Ensure mobile-responsive design
+  - [x] Update Profile.tsx with links to ticket history
 
 ## Dev Technical Guidance
 

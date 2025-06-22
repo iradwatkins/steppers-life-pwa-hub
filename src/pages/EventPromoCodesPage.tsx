@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useAuth } from '@/hooks/useAuth';
 import { PromoCodeService } from '@/services/promoCodeService';
 import { toast } from 'sonner';
@@ -320,9 +321,13 @@ const EventPromoCodesPage: React.FC = () => {
                     name="validFrom"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Valid From</FormLabel>
+                        <FormLabel>Valid From (Optional)</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DatePicker
+                            value={field.value ? new Date(field.value) : undefined}
+                            onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                            placeholder="Select start date"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -334,9 +339,13 @@ const EventPromoCodesPage: React.FC = () => {
                     name="validUntil"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Valid Until</FormLabel>
+                        <FormLabel>Valid Until (Optional)</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DatePicker
+                            value={field.value ? new Date(field.value) : undefined}
+                            onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                            placeholder="Select end date"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
