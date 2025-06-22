@@ -521,90 +521,118 @@ ALTER TABLE security_activity_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saved_events ENABLE ROW LEVEL SECURITY;
 
 -- ===============================================
--- CREATE RLS POLICIES
+-- CREATE RLS POLICIES (PostgreSQL Compatible)
 -- ===============================================
 
--- Content Management Policies
-CREATE POLICY IF NOT EXISTS "Public can read published content" ON public.content_pages
-    FOR SELECT USING (status = 'published');
+-- Drop existing policies to avoid conflicts, then recreate
+DO $$ 
+BEGIN
+    -- Content Management Policies
+    DROP POLICY IF EXISTS "Public can read published content" ON public.content_pages;
+    CREATE POLICY "Public can read published content" ON public.content_pages
+        FOR SELECT USING (status = 'published');
 
-CREATE POLICY IF NOT EXISTS "Admin users can manage content" ON public.content_pages
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles 
-            WHERE profiles.id = auth.uid() 
-            AND profiles.role IN ('admin', 'super_admin')
-        )
-    );
+    DROP POLICY IF EXISTS "Admin users can manage content" ON public.content_pages;
+    CREATE POLICY "Admin users can manage content" ON public.content_pages
+        FOR ALL USING (
+            EXISTS (
+                SELECT 1 FROM public.profiles 
+                WHERE profiles.id = auth.uid() 
+                AND profiles.role IN ('admin', 'super_admin')
+            )
+        );
 
--- Platform Configuration Policies
-CREATE POLICY IF NOT EXISTS "Public can read active categories" ON public.platform_categories
-    FOR SELECT USING (is_active = true);
+    -- Platform Configuration Policies
+    DROP POLICY IF EXISTS "Public can read active categories" ON public.platform_categories;
+    CREATE POLICY "Public can read active categories" ON public.platform_categories
+        FOR SELECT USING (is_active = true);
 
-CREATE POLICY IF NOT EXISTS "Public can read public settings" ON public.platform_settings
-    FOR SELECT USING (is_public = true);
+    DROP POLICY IF EXISTS "Public can read public settings" ON public.platform_settings;
+    CREATE POLICY "Public can read public settings" ON public.platform_settings
+        FOR SELECT USING (is_public = true);
 
-CREATE POLICY IF NOT EXISTS "Admin users can manage categories" ON public.platform_categories
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles 
-            WHERE profiles.id = auth.uid() 
-            AND profiles.role IN ('admin', 'super_admin')
-        )
-    );
+    DROP POLICY IF EXISTS "Admin users can manage categories" ON public.platform_categories;
+    CREATE POLICY "Admin users can manage categories" ON public.platform_categories
+        FOR ALL USING (
+            EXISTS (
+                SELECT 1 FROM public.profiles 
+                WHERE profiles.id = auth.uid() 
+                AND profiles.role IN ('admin', 'super_admin')
+            )
+        );
 
--- Analytics Policies
-CREATE POLICY IF NOT EXISTS "Admins can view all analytics sessions" ON web_analytics_sessions 
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM profiles 
-            WHERE profiles.id = auth.uid() 
-            AND profiles.role IN ('admin', 'super_admin')
-        )
-    );
+    -- Analytics Policies
+    DROP POLICY IF EXISTS "Admins can view all analytics sessions" ON web_analytics_sessions;
+    CREATE POLICY "Admins can view all analytics sessions" ON web_analytics_sessions 
+        FOR SELECT USING (
+            EXISTS (
+                SELECT 1 FROM profiles 
+                WHERE profiles.id = auth.uid() 
+                AND profiles.role IN ('admin', 'super_admin')
+            )
+        );
 
-CREATE POLICY IF NOT EXISTS "Users can view their own analytics sessions" ON web_analytics_sessions 
-    FOR SELECT USING (user_id = auth.uid());
+    DROP POLICY IF EXISTS "Users can view their own analytics sessions" ON web_analytics_sessions;
+    CREATE POLICY "Users can view their own analytics sessions" ON web_analytics_sessions 
+        FOR SELECT USING (user_id = auth.uid());
 
--- Instructor Profiles Policies
-CREATE POLICY IF NOT EXISTS "Instructors can view and edit their own profile" ON instructor_profiles 
-    FOR ALL USING (user_id = auth.uid());
+    -- Instructor Profiles Policies
+    DROP POLICY IF EXISTS "Instructors can view and edit their own profile" ON instructor_profiles;
+    CREATE POLICY "Instructors can view and edit their own profile" ON instructor_profiles 
+        FOR ALL USING (user_id = auth.uid());
 
-CREATE POLICY IF NOT EXISTS "Public can view active instructor profiles" ON instructor_profiles 
-    FOR SELECT USING (status = 'active');
+    DROP POLICY IF EXISTS "Public can view active instructor profiles" ON instructor_profiles;
+    CREATE POLICY "Public can view active instructor profiles" ON instructor_profiles 
+        FOR SELECT USING (status = 'active');
 
--- Payment Methods Policies
-CREATE POLICY IF NOT EXISTS "Users can view their own payment methods" ON saved_payment_methods
-    FOR SELECT USING (auth.uid() = user_id);
+    -- Payment Methods Policies
+    DROP POLICY IF EXISTS "Users can view their own payment methods" ON saved_payment_methods;
+    CREATE POLICY "Users can view their own payment methods" ON saved_payment_methods
+        FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can insert their own payment methods" ON saved_payment_methods
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "Users can insert their own payment methods" ON saved_payment_methods;
+    CREATE POLICY "Users can insert their own payment methods" ON saved_payment_methods
+        FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can update their own payment methods" ON saved_payment_methods
-    FOR UPDATE USING (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "Users can update their own payment methods" ON saved_payment_methods;
+    CREATE POLICY "Users can update their own payment methods" ON saved_payment_methods
+        FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can delete their own payment methods" ON saved_payment_methods
-    FOR DELETE USING (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "Users can delete their own payment methods" ON saved_payment_methods;
+    CREATE POLICY "Users can delete their own payment methods" ON saved_payment_methods
+        FOR DELETE USING (auth.uid() = user_id);
 
--- Security Activity Policies
-CREATE POLICY IF NOT EXISTS "Users can view their own security activity" ON security_activity_log
-    FOR SELECT USING (auth.uid() = user_id);
+    -- Security Activity Policies
+    DROP POLICY IF EXISTS "Users can view their own security activity" ON security_activity_log;
+    CREATE POLICY "Users can view their own security activity" ON security_activity_log
+        FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "System can insert security activity" ON security_activity_log
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "System can insert security activity" ON security_activity_log;
+    CREATE POLICY "System can insert security activity" ON security_activity_log
+        FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Saved Events Policies
-CREATE POLICY IF NOT EXISTS "Users can view their own saved events" ON saved_events
-    FOR SELECT USING (auth.uid() = user_id);
+    -- Saved Events Policies
+    DROP POLICY IF EXISTS "Users can view their own saved events" ON saved_events;
+    CREATE POLICY "Users can view their own saved events" ON saved_events
+        FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can save events" ON saved_events
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "Users can save events" ON saved_events;
+    CREATE POLICY "Users can save events" ON saved_events
+        FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can update their own saved events" ON saved_events
-    FOR UPDATE USING (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "Users can update their own saved events" ON saved_events;
+    CREATE POLICY "Users can update their own saved events" ON saved_events
+        FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can remove their own saved events" ON saved_events
-    FOR DELETE USING (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "Users can remove their own saved events" ON saved_events;
+    CREATE POLICY "Users can remove their own saved events" ON saved_events
+        FOR DELETE USING (auth.uid() = user_id);
+
+EXCEPTION 
+    WHEN OTHERS THEN 
+        -- Continue if policies don't exist
+        NULL;
+END $$;
 
 -- ===============================================
 -- CREATE FUNCTIONS AND TRIGGERS
@@ -619,20 +647,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop existing triggers to avoid conflicts
+DROP TRIGGER IF EXISTS update_content_pages_updated_at ON public.content_pages;
+DROP TRIGGER IF EXISTS update_platform_categories_updated_at ON public.platform_categories;
+DROP TRIGGER IF EXISTS update_instructor_profiles_updated_at ON instructor_profiles;
+DROP TRIGGER IF EXISTS update_saved_payment_methods_updated_at ON saved_payment_methods;
+
 -- Create triggers for updated_at timestamps
-CREATE TRIGGER IF NOT EXISTS update_content_pages_updated_at 
+CREATE TRIGGER update_content_pages_updated_at 
     BEFORE UPDATE ON public.content_pages 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_platform_categories_updated_at 
+CREATE TRIGGER update_platform_categories_updated_at 
     BEFORE UPDATE ON public.platform_categories 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_instructor_profiles_updated_at 
+CREATE TRIGGER update_instructor_profiles_updated_at 
     BEFORE UPDATE ON instructor_profiles 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER IF NOT EXISTS update_saved_payment_methods_updated_at 
+CREATE TRIGGER update_saved_payment_methods_updated_at 
     BEFORE UPDATE ON saved_payment_methods 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -651,7 +685,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER IF NOT EXISTS trigger_ensure_single_default_payment_method
+-- Drop existing trigger to avoid conflicts
+DROP TRIGGER IF EXISTS trigger_ensure_single_default_payment_method ON saved_payment_methods;
+
+CREATE TRIGGER trigger_ensure_single_default_payment_method
   BEFORE INSERT OR UPDATE ON saved_payment_methods
   FOR EACH ROW
   EXECUTE FUNCTION ensure_single_default_payment_method();
@@ -671,24 +708,35 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Storage RLS policies
-CREATE POLICY IF NOT EXISTS "Users can upload their own files" ON storage.objects
-FOR INSERT WITH CHECK (
-  bucket_id = 'user-uploads'
-  AND auth.uid()::text = (storage.foldername(name))[1]
-);
+-- Storage RLS policies (drop and recreate to avoid conflicts)
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "Users can upload their own files" ON storage.objects;
+    CREATE POLICY "Users can upload their own files" ON storage.objects
+    FOR INSERT WITH CHECK (
+      bucket_id = 'user-uploads'
+      AND auth.uid()::text = (storage.foldername(name))[1]
+    );
 
-CREATE POLICY IF NOT EXISTS "Users can view their own files" ON storage.objects
-FOR SELECT USING (
-  bucket_id = 'user-uploads'
-  AND auth.uid()::text = (storage.foldername(name))[1]
-);
+    DROP POLICY IF EXISTS "Users can view their own files" ON storage.objects;
+    CREATE POLICY "Users can view their own files" ON storage.objects
+    FOR SELECT USING (
+      bucket_id = 'user-uploads'
+      AND auth.uid()::text = (storage.foldername(name))[1]
+    );
 
-CREATE POLICY IF NOT EXISTS "Public access to profile images" ON storage.objects
-FOR SELECT USING (
-  bucket_id = 'user-uploads'
-  AND (storage.foldername(name))[2] = 'profile-images'
-);
+    DROP POLICY IF EXISTS "Public access to profile images" ON storage.objects;
+    CREATE POLICY "Public access to profile images" ON storage.objects
+    FOR SELECT USING (
+      bucket_id = 'user-uploads'
+      AND (storage.foldername(name))[2] = 'profile-images'
+    );
+
+EXCEPTION 
+    WHEN OTHERS THEN 
+        -- Continue if policies don't exist
+        NULL;
+END $$;
 
 -- ===============================================
 -- SEED DATA
