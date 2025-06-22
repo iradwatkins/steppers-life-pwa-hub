@@ -88,6 +88,7 @@ import BlogPost from "./pages/BlogPost";
 import BlogManagementPage from "./pages/admin/BlogManagementPage";
 import BlogEditorPage from "./pages/admin/BlogEditorPage";
 import CommunityManagementPage from "./pages/admin/CommunityManagementPage";
+import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -202,6 +203,16 @@ const RouterWrapper = () => {
         <Route path="/organizer/multi-event-analytics" element={
           <OrganizerRoute>
             <MultiEventAnalyticsPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/team" element={
+          <OrganizerRoute>
+            <FollowerManagementPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/event/:eventId/team" element={
+          <OrganizerRoute>
+            <FollowerManagementPage />
           </OrganizerRoute>
         } />
         <Route path="/cash-payment" element={
