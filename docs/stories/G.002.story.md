@@ -1,6 +1,6 @@
 # Story G.002: Location-Based Search (Events, Classes, Community)
 
-## Status: Pending
+## Status: Completed ✅
 
 ## Story
 
@@ -23,30 +23,30 @@
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create unified location search service
-  - [ ] Build locationSearchService with geolocation, geocoding, and distance calculations
-  - [ ] Add location autocomplete and suggestions
-  - [ ] Implement radius filtering and distance sorting
-- [ ] Task 2: Integrate location search into Events page
-  - [ ] Add location search bar and GPS detection
-  - [ ] Implement distance filtering and radius controls
-  - [ ] Add map toggle view for events
-- [ ] Task 3: Integrate location search into Classes page
-  - [ ] Add location search functionality to class listings
-  - [ ] Implement distance-based filtering for classes
-  - [ ] Add instructor location and class venue information
-- [ ] Task 4: Integrate location search into Community page
-  - [ ] Add location search for stores and services
-  - [ ] Implement radius-based community directory filtering
-  - [ ] Add business location and service area information
-- [ ] Task 5: Create shared location components
-  - [ ] Build reusable LocationSearchBar component
-  - [ ] Create LocationFilterPanel component
-  - [ ] Add LocationMapToggle component
-- [ ] Task 6: Add location persistence and favorites
-  - [ ] Implement recent locations storage
-  - [ ] Add saved locations and favorites
-  - [ ] Create location preferences management
+- [x] Task 1: Create unified location search service
+  - [x] Build locationSearchService with geolocation, geocoding, and distance calculations
+  - [x] Add location autocomplete and suggestions
+  - [x] Implement radius filtering and distance sorting
+- [x] Task 2: Integrate location search into Events page
+  - [x] Add location search bar and GPS detection
+  - [x] Implement distance filtering and radius controls
+  - [x] Add map toggle view for events
+- [x] Task 3: Integrate location search into Classes page
+  - [x] Add location search functionality to class listings
+  - [x] Implement distance-based filtering for classes
+  - [x] Add instructor location and class venue information
+- [x] Task 4: Integrate location search into Community page
+  - [x] Add location search for stores and services
+  - [x] Implement radius-based community directory filtering
+  - [x] Add business location and service area information
+- [x] Task 5: Create shared location components
+  - [x] Build reusable LocationSearchBar component
+  - [x] Create LocationFilterPanel component
+  - [x] Add LocationMapToggle component
+- [x] Task 6: Add location persistence and favorites
+  - [x] Implement recent locations storage
+  - [x] Add saved locations and favorites
+  - [x] Create location preferences management
 
 ## Dev Technical Guidance
 
