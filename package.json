@@ -15,7 +15,7 @@
     "migrate:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && supabase db push --linked",
     "schema:diff": "supabase db diff --linked",
     "deploy:schema:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && psql $SUPABASE_DB_URL -f COMPLETE-PRODUCTION-SCHEMA-DEPLOYMENT.sql",
-    "reset:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && psql $SUPABASE_DB_URL -f PRODUCTION-DATABASE-RESET-ENHANCED.sql",
+    "reset:prod:safe": "supabase link --project-ref nvryyufpbcruyqqndyjn && psql $SUPABASE_DB_URL -f PRODUCTION-DATABASE-RESET-SAFE.sql",
     "check:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && psql $SUPABASE_DB_URL -f PRODUCTION-DATABASE-CHECK.sql",
     "deploy:production": "npm run build && npm run migrate:prod"
   },
