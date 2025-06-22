@@ -31,6 +31,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { downloadTicketAsPDF, formatTicketDataForPDF } from '@/utils/ticketPDF';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TicketPurchase {
   id: string;
@@ -111,120 +112,140 @@ export default function TicketHistoryPage() {
   const [selectedTicket, setSelectedTicket] = useState<TicketPurchase | null>(null);
   const [showTicketDialog, setShowTicketDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for development
+  // PRODUCTION: Fetch real ticket data from Supabase
   useEffect(() => {
-    const mockTickets: TicketPurchase[] = [
-      {
-        id: 'tkt_001',
-        event_id: 'evt_001',
-        event_title: 'Beginner Salsa Class',
-        event_date: '2024-06-25T19:00:00Z',
-        event_location: 'Dance Studio Downtown',
-        ticket_type: 'General Admission',
-        quantity: 1,
-        price_per_ticket: 45.00,
-        total_amount: 45.00,
-        purchase_date: '2024-06-15T14:20:00Z',
-        status: 'upcoming',
-        payment_method: 'stripe',
-        order_id: 'ORD_001',
-        ticket_numbers: ['TKT-001-001'],
-        qr_codes: ['QR001'],
-        organizer_name: 'Maria Dance Studio',
-        organizer_email: 'maria@dancestudio.com'
-      },
-      {
-        id: 'tkt_002',
-        event_id: 'evt_002',
-        event_title: 'Advanced Bachata Workshop',
-        event_date: '2024-06-20T18:00:00Z',
-        event_location: 'Community Center Hall A',
-        ticket_type: 'VIP Access',
-        quantity: 2,
-        price_per_ticket: 32.50,
-        total_amount: 65.00,
-        purchase_date: '2024-06-10T09:15:00Z',
-        status: 'past',
-        payment_method: 'cash',
-        order_id: 'ORD_002',
-        ticket_numbers: ['TKT-002-001', 'TKT-002-002'],
-        qr_codes: ['QR002A', 'QR002B'],
-        organizer_name: 'Carlos Rodriguez',
-        organizer_email: 'carlos@bachataworkshop.com',
-        notes: 'Brought partner - great class!'
-      },
-      {
-        id: 'tkt_003',
-        event_id: 'evt_003',
-        event_title: 'Merengue Fundamentals',
-        event_date: '2024-06-18T20:00:00Z',
-        event_location: 'Riverside Dance Academy',
-        ticket_type: 'Student Discount',
-        quantity: 1,
-        price_per_ticket: 25.00,
-        total_amount: 25.00,
-        purchase_date: '2024-06-14T16:45:00Z',
-        status: 'cancelled',
-        payment_method: 'stripe',
-        order_id: 'ORD_003',
-        ticket_numbers: ['TKT-003-001'],
-        qr_codes: ['QR003'],
-        organizer_name: 'Ana Martinez',
-        organizer_email: 'ana@riversidedance.com'
-      },
-      {
-        id: 'tkt_004',
-        event_id: 'evt_004',
-        event_title: 'Latin Dance Intensive Weekend',
-        event_date: '2024-07-05T10:00:00Z',
-        event_location: 'Grand Ballroom',
-        ticket_type: 'Weekend Pass',
-        quantity: 1,
-        price_per_ticket: 150.00,
-        total_amount: 150.00,
-        purchase_date: '2024-06-18T11:30:00Z',
-        status: 'upcoming',
-        payment_method: 'stripe',
-        order_id: 'ORD_004',
-        ticket_numbers: ['TKT-004-001'],
-        qr_codes: ['QR004'],
-        organizer_name: 'Elite Dance Academy',
-        organizer_email: 'info@elitedance.com'
-      },
-      {
-        id: 'tkt_005',
-        event_id: 'evt_005',
-        event_title: 'Reggaeton Dance Battle',
-        event_date: '2024-06-12T21:00:00Z',
-        event_location: 'Club Latinx',
-        ticket_type: 'General Admission',
-        quantity: 3,
-        price_per_ticket: 20.00,
-        total_amount: 60.00,
-        purchase_date: '2024-06-08T20:15:00Z',
-        status: 'past',
-        payment_method: 'paypal',
-        order_id: 'ORD_005',
-        ticket_numbers: ['TKT-005-001', 'TKT-005-002', 'TKT-005-003'],
-        qr_codes: ['QR005A', 'QR005B', 'QR005C'],
-        organizer_name: 'Reggaeton Society',
-        organizer_email: 'events@reggaetonsociety.com'
+    const fetchTicketData = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
       }
-    ];
 
-    const mockStats: TicketStats = {
-      total_tickets: 8,
-      upcoming_events: 2,
-      past_events: 2,
-      cancelled_tickets: 1,
-      total_spent: 345.00
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch orders for the current user
+        const { data: orders, error: ordersError } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            order_number,
+            total_amount,
+            status,
+            payment_method,
+            created_at,
+            billing_details,
+            events (
+              id,
+              title,
+              start_date,
+              venues (
+                name,
+                city,
+                state
+              ),
+              organizers (
+                organization_name,
+                profiles (
+                  email
+                )
+              )
+            ),
+            order_items (
+              id,
+              quantity,
+              price_per_item,
+              ticket_types (
+                id,
+                name,
+                description
+              )
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (ordersError) {
+          throw ordersError;
+        }
+
+        // Transform orders into ticket purchases
+        const ticketPurchases: TicketPurchase[] = [];
+        let totalSpent = 0;
+        let upcomingEvents = 0;
+        let pastEvents = 0;
+        let cancelledTickets = 0;
+        let totalTickets = 0;
+
+        orders?.forEach(order => {
+          const event = order.events;
+          const venue = event?.venues;
+          const organizer = event?.organizers;
+          
+          order.order_items?.forEach(item => {
+            const ticketType = item.ticket_types;
+            const eventDate = new Date(event?.start_date || '');
+            const now = new Date();
+            
+            let status: TicketPurchase['status'] = 'upcoming';
+            if (order.status === 'cancelled') {
+              status = 'cancelled';
+              cancelledTickets += item.quantity;
+            } else if (order.status === 'refunded') {
+              status = 'refunded';
+            } else if (eventDate < now) {
+              status = 'past';
+              pastEvents++;
+            } else {
+              upcomingEvents++;
+            }
+
+            totalTickets += item.quantity;
+            totalSpent += item.quantity * item.price_per_item;
+
+            ticketPurchases.push({
+              id: `${order.id}-${item.id}`,
+              event_id: event?.id || '',
+              event_title: event?.title || 'Unknown Event',
+              event_date: event?.start_date || '',
+              event_location: venue ? `${venue.name}, ${venue.city}, ${venue.state}` : 'Unknown Location',
+              ticket_type: ticketType?.name || 'General Admission',
+              quantity: item.quantity,
+              price_per_ticket: item.price_per_item,
+              total_amount: item.quantity * item.price_per_item,
+              purchase_date: order.created_at,
+              status,
+              payment_method: order.payment_method as TicketPurchase['payment_method'],
+              order_id: order.order_number || order.id,
+              ticket_numbers: Array.from({ length: item.quantity }, (_, i) => `TKT-${order.order_number}-${i + 1}`),
+              qr_codes: Array.from({ length: item.quantity }, (_, i) => `QR-${order.id}-${i + 1}`),
+              organizer_name: organizer?.organization_name || 'Unknown Organizer',
+              organizer_email: organizer?.profiles?.email || ''
+            });
+          });
+        });
+
+        setTickets(ticketPurchases);
+        setStats({
+          total_tickets: totalTickets,
+          upcoming_events: upcomingEvents,
+          past_events: pastEvents,
+          cancelled_tickets: cancelledTickets,
+          total_spent: totalSpent
+        });
+
+      } catch (error: any) {
+        console.error('Error fetching ticket data:', error);
+        setError('Failed to load ticket history. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setTickets(mockTickets);
-    setStats(mockStats);
-    setLoading(false);
-  }, []);
+    fetchTicketData();
+  }, [user?.id]);
 
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.event_title.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -176,64 +176,107 @@ const Profile = () => {
   };
 
   const handleProfileImageUpdate = (imageUrl: string | null) => {
-    setProfileData(prev => ({ ...prev, profilePictureUrl: imageUrl || '' }));
+    setProfileData(prev => ({ ...prev, profilePicture: imageUrl }));
     console.log('✅ Profile image updated:', imageUrl);
   };
 
-  // Mock ticket data
-  const mockTickets = [
-    {
-      id: 'TKT001',
-      orderNumber: 'SL12345678',
-      eventTitle: 'Chicago Stepping Championship',
-      eventDate: '2024-12-15',
-      eventTime: '7:00 PM',
-      venue: 'Navy Pier Grand Ballroom',
-      ticketType: 'VIP Experience',
-      seatInfo: 'Section A, Table 5',
-      price: 85,
-      qrCode: 'QR_CODE_DATA_001',
-      status: 'upcoming',
-      purchaseDate: '2024-11-20',
-      attendeeName: `${profileData.firstName} ${profileData.lastName}`,
-      specialRequests: 'Vegetarian meal'
-    },
-    {
-      id: 'TKT002',
-      orderNumber: 'SL12345679',
-      eventTitle: 'New Year\'s Eve Stepping Gala',
-      eventDate: '2024-12-31',
-      eventTime: '8:00 PM',
-      venue: 'Palmer House Hilton',
-      ticketType: 'General Admission',
-      seatInfo: 'Floor Seating',
-      price: 85,
-      qrCode: 'QR_CODE_DATA_002',
-      status: 'upcoming',
-      purchaseDate: '2024-11-22',
-      attendeeName: `${profileData.firstName} ${profileData.lastName}`,
-      specialRequests: ''
-    },
-    {
-      id: 'TKT003',
-      orderNumber: 'SL12345677',
-      eventTitle: 'Halloween Stepping Social',
-      eventDate: '2024-10-31',
-      eventTime: '7:30 PM',
-      venue: 'South Side Cultural Center',
-      ticketType: 'General Admission',
-      seatInfo: 'General Admission',
-      price: 35,
-      qrCode: 'QR_CODE_DATA_003',
-      status: 'past',
-      purchaseDate: '2024-10-15',
-      attendeeName: `${profileData.firstName} ${profileData.lastName}`,
-      specialRequests: ''
-    }
-  ];
+  // PRODUCTION: Fetch real ticket data from database
+  const [userTickets, setUserTickets] = useState<any[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
 
-  const upcomingTickets = mockTickets.filter(ticket => ticket.status === 'upcoming');
-  const pastTickets = mockTickets.filter(ticket => ticket.status === 'past');
+  useEffect(() => {
+    const fetchUserTickets = async () => {
+      if (!user?.id) {
+        setTicketsLoading(false);
+        return;
+      }
+
+      try {
+        setTicketsLoading(true);
+
+        // Fetch user's orders and tickets from Supabase
+        const { data: orders, error } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            order_number,
+            total_amount,
+            status,
+            created_at,
+            events (
+              id,
+              title,
+              start_date,
+              venues (
+                name,
+                city,
+                state
+              )
+            ),
+            order_items (
+              id,
+              quantity,
+              price_per_item,
+              ticket_types (
+                id,
+                name,
+                description
+              )
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching tickets:', error);
+          setUserTickets([]);
+          return;
+        }
+
+        // Transform orders into ticket format
+        const tickets = [];
+        orders?.forEach(order => {
+          const event = order.events;
+          const venue = event?.venues;
+          
+          order.order_items?.forEach(item => {
+            const ticketType = item.ticket_types;
+            const eventDate = new Date(event?.start_date || '');
+            const now = new Date();
+            
+            tickets.push({
+              id: `${order.id}-${item.id}`,
+              orderNumber: order.order_number || order.id,
+              eventTitle: event?.title || 'Unknown Event',
+              eventDate: event?.start_date ? new Date(event.start_date).toLocaleDateString() : 'TBD',
+              eventTime: event?.start_date ? new Date(event.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD',
+              venue: venue ? `${venue.name}, ${venue.city}, ${venue.state}` : 'Unknown Venue',
+              ticketType: ticketType?.name || 'General Admission',
+              seatInfo: 'General Admission',
+              price: item.price_per_item,
+              qrCode: `QR_${order.id}_${item.id}`,
+              status: eventDate > now ? 'upcoming' : 'past',
+              purchaseDate: new Date(order.created_at).toLocaleDateString(),
+              attendeeName: `${profileData.firstName} ${profileData.lastName}`,
+              specialRequests: ''
+            });
+          });
+        });
+
+        setUserTickets(tickets);
+      } catch (error) {
+        console.error('Error fetching user tickets:', error);
+        setUserTickets([]);
+      } finally {
+        setTicketsLoading(false);
+      }
+    };
+
+    fetchUserTickets();
+  }, [user?.id, profileData.firstName, profileData.lastName]);
+
+  const upcomingTickets = userTickets.filter(ticket => ticket.status === 'upcoming');
+  const pastTickets = userTickets.filter(ticket => ticket.status === 'past');
 
   const handleShareTicket = (ticket: any) => {
     if (navigator.share) {

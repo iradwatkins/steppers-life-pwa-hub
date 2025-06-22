@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -50,42 +49,7 @@ const EventDetail = () => {
         const eventData = await EventService.getEventById(id);
         console.log('📊 Event data received:', eventData);
         if (eventData) {
-          // Add mock ticket types if none exist (for testing)
-          if (!(eventData as any).ticket_types || (eventData as any).ticket_types.length === 0) {
-            console.log('⚠️ No ticket types found, adding mock data for testing');
-            (eventData as any).ticket_types = [
-              {
-                id: 'general-' + eventData.id,
-                name: 'General Admission',
-                description: 'Access to main floor seating and dance area',
-                price: 45,
-                quantity_available: 150,
-                quantity_sold: 0,
-                is_active: true,
-                max_per_order: 10
-              },
-              {
-                id: 'vip-' + eventData.id,
-                name: 'VIP Experience',
-                description: 'Premium seating, complimentary drinks, and meet & greet',
-                price: 85,
-                quantity_available: 25,
-                quantity_sold: 0,
-                is_active: true,
-                max_per_order: 8
-              },
-              {
-                id: 'table-' + eventData.id,
-                name: 'Reserved Table (8 seats)',
-                description: 'Private table for 8 with premium service',
-                price: 320,
-                quantity_available: 10,
-                quantity_sold: 0,
-                is_active: true,
-                max_per_order: 1
-              }
-            ];
-          }
+          // PRODUCTION: Only use real ticket types from database
           setEventData(eventData);
           console.log('✅ Event data loaded successfully');
         } else {

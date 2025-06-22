@@ -140,25 +140,25 @@ const CheckoutPaymentPage = () => {
         paymentIntentId: `payment_${Date.now()}`, // In real app, this would come from payment processor
       };
 
-      // Mock payment processing delay (simulate payment gateway)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Save order to database
-      console.log('Creating order:', orderData);
-      const order = await OrderService.createOrder(orderData);
-      
-      if (!order) {
-        throw new Error('Failed to create order in database');
-      }
+      // PRODUCTION: Real payment processing and order creation
+      const order = await OrderService.createOrder(orderData, user.id);
 
-      console.log('Order created successfully:', order);
-      toast.success('Payment processed successfully!');
-      
-      // Clear cart after successful order
-      clearCart();
-      
-      // Navigate to confirmation with order ID
-      navigate(`/checkout/confirmation?orderId=${order.id}&orderNumber=${order.order_number}`);
+      if (order) {
+        console.log('✅ Order created successfully:', order);
+        
+        // Clear cart after successful order creation
+        clearCart();
+        
+        // Navigate to confirmation with order details
+        navigate(`/checkout/confirmation?orderId=${order.id}&orderNumber=${order.order_number}`);
+        
+        toast({
+          title: "Payment successful!",
+          description: "Your order has been confirmed. Check your email for details.",
+        });
+      } else {
+        throw new Error('Failed to create order');
+      }
     } catch (error) {
       console.error('Payment processing error:', error);
       

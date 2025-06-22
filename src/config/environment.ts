@@ -13,21 +13,16 @@ const getEnvironmentConfig = (): EnvironmentConfig => {
   const isDevelopment = import.meta.env.DEV || import.meta.env.VITE_APP_ENV === 'development';
   const isProduction = import.meta.env.PROD || import.meta.env.VITE_APP_ENV === 'production';
   
-  // Development configuration
-  const devConfig = {
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'https://nwoteszpvvefbopbbvrl.supabase.co',
-    supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53b3Rlc3pwdnZlZmJvcGJidnJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NzY1MzQsImV4cCI6MjA2NTI1MjUzNH0.x9Ncuy3O_ZHEjcG-9x_Psa5eHweviIyKuh0OiFCbExI',
-    appUrl: 'http://localhost:8080'
-  };
-
-  // Production configuration  
+  // PRODUCTION OVERRIDE: Always use production database for real data
+  // This ensures we're always working with real production data, not mock data
   const prodConfig = {
     supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'https://nvryyufpbcruyqqndyjn.supabase.co',
     supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52cnl5dWZwYmNydXlxcW5keWpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NzY1MDUsImV4cCI6MjA2NTI1MjUwNX0.W6vriRZnO7n8FPm5Zjd_fe41cY20tWkDOqYF59wulzs',
-    appUrl: 'https://stepperslife.com'
+    appUrl: isDevelopment ? 'http://localhost:8080' : 'https://stepperslife.com'
   };
 
-  const config = isProduction ? prodConfig : devConfig;
+  // Always use production config for database
+  const config = prodConfig;
 
   return {
     supabaseUrl: config.supabaseUrl,
@@ -50,14 +45,12 @@ if (!env.supabaseAnonKey || env.supabaseAnonKey === 'PRODUCTION_KEY_NEEDED') {
   console.warn(`Missing or placeholder Supabase anon key for ${env.appEnv} environment`);
 }
 
-// Log environment info (only in development)
-if (env.isDevelopment) {
-  console.log('🔧 Environment Configuration:', {
-    environment: env.appEnv,
-    supabaseUrl: env.supabaseUrl,
-    appUrl: env.appUrl,
-    hasValidKey: env.supabaseAnonKey !== 'PRODUCTION_KEY_NEEDED',
-    database: env.supabaseUrl.includes('nwoteszpvvefbopbbvrl') ? 'Development' : 'Production',
-    branch: env.supabaseUrl.includes('nwoteszpvvefbopbbvrl') ? 'development' : 'main'
-  });
-}
+// Log environment info for debugging
+console.log('🔧 Environment Configuration:', {
+  environment: env.appEnv,
+  supabaseUrl: env.supabaseUrl,
+  appUrl: env.appUrl,
+  hasValidKey: env.supabaseAnonKey !== 'PRODUCTION_KEY_NEEDED',
+  database: 'PRODUCTION (Real Data Only)',
+  note: 'Always using production database for real data'
+});
