@@ -1,72 +1,17 @@
--- SAFE PRODUCTION DATABASE RESET - CHECKS TABLE EXISTENCE FIRST
--- This script only deletes from tables that actually exist
--- Preserves: Users, Admin accounts, essential system settings only
--- Clears: ALL existing event/commerce data
-
--- ===============================================
--- DATABASE VERIFICATION & TABLE DISCOVERY
--- ===============================================
-
-DO $$
-DECLARE
-    db_name TEXT;
-    table_count INTEGER;
-    user_count INTEGER;
-    admin_count INTEGER;
-BEGIN
-    -- Get current database name for verification
-    SELECT current_database() INTO db_name;
-    
-    -- Count existing tables
-    SELECT COUNT(*) INTO table_count 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public';
-    
-    -- Count users and admins
-    SELECT COUNT(*) INTO user_count FROM auth.users;
-    
-    SELECT COUNT(*) INTO admin_count 
-    FROM profiles 
-    WHERE role IN ('admin', 'super_admin');
-    
-    RAISE NOTICE '========================================';
-    RAISE NOTICE 'SAFE PRODUCTION DATABASE RESET';
-    RAISE NOTICE '========================================';
-    RAISE NOTICE 'Connected to database: %', db_name;
-    RAISE NOTICE 'Total public tables found: %', table_count;
-    RAISE NOTICE 'Current users: %', user_count;
-    RAISE NOTICE 'Current admins: %', admin_count;
-    RAISE NOTICE '========================================';
-    
-    IF admin_count = 0 THEN
-        RAISE WARNING 'WARNING: No admin accounts found!';
-    END IF;
-END $$;
-
--- ===============================================
--- SHOW EXISTING TABLES AND THEIR ROW COUNTS
--- ===============================================
-
-DO $$
-DECLARE
-    tbl_name TEXT;
-    row_count INTEGER;
-    sql_query TEXT;
-BEGIN
-    RAISE NOTICE 'CURRENT TABLE DATA COUNTS:';
+TS:';
     RAISE NOTICE '----------------------------------------';
     
     -- Loop through all public tables and show counts
-    FOR tbl_name IN 
+    FOR table_name IN 
         SELECT t.table_name 
         FROM information_schema.tables t
         WHERE t.table_schema = 'public'
         AND t.table_type = 'BASE TABLE'
         ORDER BY t.table_name
     LOOP
-        sql_query := 'SELECT COUNT(*) FROM ' || quote_ident(tbl_name);
+        sql_query := 'SELECT COUNT(*) FROM ' || quote_ident(table_name);
         EXECUTE sql_query INTO row_count;
-        RAISE NOTICE '%: %', tbl_name, row_count;
+        RAISE NOTICE '%: %', table_name, row_count;
     END LOOP;
     
     RAISE NOTICE '----------------------------------------';
@@ -80,7 +25,7 @@ END $$;
 SET session_replication_role = replica;
 
 -- Function to safely delete from table if it exists
-CREATE OR REPLACE FUNCTION safe_delete_from_table(target_table TEXT)
+CREATE OR REPLACE FUNCTION safe_delete_from_table(table_name TEXT)
 RETURNS INTEGER AS $$
 DECLARE
     row_count INTEGER := 0;
@@ -88,20 +33,20 @@ DECLARE
 BEGIN
     -- Check if table exists
     IF EXISTS (
-        SELECT 1 FROM information_schema.tables t
-        WHERE t.table_schema = 'public' 
-        AND t.table_name = target_table
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = safe_delete_from_table.table_name
     ) THEN
         -- Get count before deletion
-        EXECUTE 'SELECT COUNT(*) FROM ' || quote_ident(target_table) INTO row_count;
+        EXECUTE 'SELECT COUNT(*) FROM ' || quote_ident(table_name) INTO row_count;
         
         -- Delete all rows
-        EXECUTE 'DELETE FROM ' || quote_ident(target_table);
+        EXECUTE 'DELETE FROM ' || quote_ident(table_name);
         
-        RAISE NOTICE 'Cleared table %: % rows deleted', target_table, row_count;
+        RAISE NOTICE 'Cleared table %: % rows deleted', table_name, row_count;
         RETURN row_count;
     ELSE
-        RAISE NOTICE 'Table % does not exist - skipping', target_table;
+        RAISE NOTICE 'Table % does not exist - skipping', table_name;
         RETURN 0;
     END IF;
 END;
@@ -218,7 +163,7 @@ END $$;
 
 DO $$
 DECLARE
-    tbl_name TEXT;
+    table_name TEXT;
     row_count INTEGER;
     sql_query TEXT;
     total_users INTEGER;
@@ -230,19 +175,19 @@ BEGIN
     RAISE NOTICE '========================================';
     
     -- Show final counts for all tables
-    FOR tbl_name IN 
+    FOR table_name IN 
         SELECT t.table_name 
         FROM information_schema.tables t
         WHERE t.table_schema = 'public'
         AND t.table_type = 'BASE TABLE'
         ORDER BY t.table_name
     LOOP
-        sql_query := 'SELECT COUNT(*) FROM ' || quote_ident(tbl_name);
+        sql_query := 'SELECT COUNT(*) FROM ' || quote_ident(table_name);
         EXECUTE sql_query INTO row_count;
         total_rows := total_rows + row_count;
         
         IF row_count > 0 THEN
-            RAISE NOTICE '%: % rows', tbl_name, row_count;
+            RAISE NOTICE '%: % rows', table_name, row_count;
         END IF;
     END LOOP;
     
@@ -266,4 +211,59 @@ BEGIN
     END IF;
     
     RAISE NOTICE '========================================';
+END $$;-- SAFE PRODUCTION DATABASE RESET - CHECKS TABLE EXISTENCE FIRST
+-- This script only deletes from tables that actually exist
+-- Preserves: Users, Admin accounts, essential system settings only
+-- Clears: ALL existing event/commerce data
+
+-- ===============================================
+-- DATABASE VERIFICATION & TABLE DISCOVERY
+-- ===============================================
+
+DO $$
+DECLARE
+    db_name TEXT;
+    table_count INTEGER;
+    user_count INTEGER;
+    admin_count INTEGER;
+BEGIN
+    -- Get current database name for verification
+    SELECT current_database() INTO db_name;
+    
+    -- Count existing tables
+    SELECT COUNT(*) INTO table_count 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public';
+    
+    -- Count users and admins
+    SELECT COUNT(*) INTO user_count FROM auth.users;
+    
+    SELECT COUNT(*) INTO admin_count 
+    FROM profiles 
+    WHERE role IN ('admin', 'super_admin');
+    
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'SAFE PRODUCTION DATABASE RESET';
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'Connected to database: %', db_name;
+    RAISE NOTICE 'Total public tables found: %', table_count;
+    RAISE NOTICE 'Current users: %', user_count;
+    RAISE NOTICE 'Current admins: %', admin_count;
+    RAISE NOTICE '========================================';
+    
+    IF admin_count = 0 THEN
+        RAISE WARNING 'WARNING: No admin accounts found!';
+    END IF;
 END $$;
+
+-- ===============================================
+-- SHOW EXISTING TABLES AND THEIR ROW COUNTS
+-- ===============================================
+
+DO $$
+DECLARE
+    table_name TEXT;
+    row_count INTEGER;
+    sql_query TEXT;
+BEGIN
+    RAISE NOTICE 'CURRENT TABLE DATA COUN
