@@ -301,6 +301,7 @@ class FollowingServiceClass {
 
   /**
    * Get trending entities (organizers, instructors, businesses)
+   * Enhanced with activity-based and growth-based trending algorithms
    */
   async getTrendingEntities(
     type?: 'organizer' | 'instructor' | 'business',
@@ -310,10 +311,27 @@ class FollowingServiceClass {
       const mockEntities = this.generateMockEntities(30);
       let filteredEntities = type ? mockEntities.filter(entity => entity.type === type) : mockEntities;
       
-      // Sort by follower count and rating for trending
+      // Enhanced trending algorithm with activity and growth metrics
       filteredEntities.sort((a, b) => {
-        const scoreA = (a.followerCount * 0.7) + ((a.rating || 0) * 100);
-        const scoreB = (b.followerCount * 0.7) + ((b.rating || 0) * 100);
+        // Calculate growth rate (mock recent growth percentage)
+        const growthRateA = Math.random() * 0.3 + 0.05; // 5-35% growth
+        const growthRateB = Math.random() * 0.3 + 0.05;
+        
+        // Calculate activity score (mock recent activity)
+        const activityScoreA = Math.random() * 100;
+        const activityScoreB = Math.random() * 100;
+        
+        // Weighted trending score
+        const scoreA = (a.followerCount * 0.4) + 
+                      ((a.rating || 0) * 50) + 
+                      (growthRateA * 1000) + 
+                      (activityScoreA * 0.3);
+        
+        const scoreB = (b.followerCount * 0.4) + 
+                      ((b.rating || 0) * 50) + 
+                      (growthRateB * 1000) + 
+                      (activityScoreB * 0.3);
+        
         return scoreB - scoreA;
       });
 
@@ -321,6 +339,93 @@ class FollowingServiceClass {
 
     } catch (error) {
       console.error('❌ Error getting trending entities:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get featured organizers and instructor spotlights
+   */
+  async getFeaturedEntities(
+    type?: 'organizer' | 'instructor' | 'business',
+    limit: number = 5
+  ): Promise<FollowableEntity[]> {
+    try {
+      const mockEntities = this.generateMockEntities(20);
+      let filteredEntities = type ? mockEntities.filter(entity => entity.type === type) : mockEntities;
+      
+      // Filter for high-quality featured entities
+      const featuredEntities = filteredEntities.filter(entity => 
+        entity.verifiedStatus && 
+        (entity.rating || 0) >= 4.5 && 
+        entity.followerCount > 200
+      );
+      
+      // Sort by a combination of rating, followers, and verification
+      featuredEntities.sort((a, b) => {
+        const scoreA = ((a.rating || 0) * 200) + (a.followerCount * 0.5) + (a.verifiedStatus ? 100 : 0);
+        const scoreB = ((b.rating || 0) * 200) + (b.followerCount * 0.5) + (b.verifiedStatus ? 100 : 0);
+        return scoreB - scoreA;
+      });
+
+      return featuredEntities.slice(0, limit);
+
+    } catch (error) {
+      console.error('❌ Error getting featured entities:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get mutual connections between user and entity
+   */
+  async getMutualConnections(
+    entityId: string,
+    userId: string
+  ): Promise<{ count: number; names: string[] }> {
+    try {
+      // Mock mutual connections (in production, this would query actual user networks)
+      const mutualCount = Math.floor(Math.random() * 15);
+      const mockNames = [
+        'Sarah Johnson', 'Michael Brown', 'Lisa Davis', 'Robert Wilson',
+        'Amanda Taylor', 'David Martinez', 'Jennifer Garcia', 'Christopher Lee'
+      ];
+      
+      const selectedNames = mockNames
+        .sort(() => 0.5 - Math.random())
+        .slice(0, Math.min(mutualCount, 3)); // Show up to 3 names
+      
+      return {
+        count: mutualCount,
+        names: selectedNames
+      };
+
+    } catch (error) {
+      console.error('❌ Error getting mutual connections:', error);
+      return { count: 0, names: [] };
+    }
+  }
+
+  /**
+   * Get popular follows (entities that are commonly followed together)
+   */
+  async getPopularFollows(
+    entityId: string,
+    limit: number = 5
+  ): Promise<FollowableEntity[]> {
+    try {
+      const allEntities = this.generateMockEntities(20);
+      
+      // Filter out the current entity and randomly select popular follows
+      const popularFollows = allEntities
+        .filter(entity => entity.id !== entityId)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, limit);
+      
+      return popularFollows;
+
+    } catch (error) {
+      console.error('❌ Error getting popular follows:', error);
       return [];
     }
   }

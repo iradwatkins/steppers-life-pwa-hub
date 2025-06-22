@@ -74,6 +74,7 @@ import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
 import AdminEventManagementPage from "./pages/admin/AdminEventManagementPage";
 import ContentManagementPage from "./pages/admin/ContentManagementPage";
 import PlatformConfigPage from "./pages/admin/PlatformConfigPage";
+import ThemeCustomizationPage from "./pages/admin/ThemeCustomizationPage";
 import EventRefundsPage from "./pages/admin/EventRefundsPage";
 import InventoryDashboardPage from "./pages/admin/InventoryDashboardPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
@@ -448,6 +449,11 @@ const RouterWrapper = () => {
         <Route path="/admin/platform-config" element={
           <AdminRoute>
             <PlatformConfigPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/theme" element={
+          <AdminRoute>
+            <ThemeCustomizationPage />
           </AdminRoute>
         } />
         <Route path="/admin/refunds" element={
