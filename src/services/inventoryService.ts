@@ -27,6 +27,7 @@ export class InventoryService {
   private static instance: InventoryService;
   private config: InventoryConfig = DEFAULT_INVENTORY_CONFIG;
   private inventoryCache = new Map<string, TicketInventory>();
+  private failedTicketTypes = new Set<string>(); // Cache failed ticket type lookups
   private activeHolds = new Map<string, InventoryHold>();
   private updateListeners = new Set<(event: InventoryUpdateEvent) => void>();
   private cleanupInterval: NodeJS.Timeout | null = null;
@@ -325,29 +326,46 @@ export class InventoryService {
   }
 
   public async getInventory(ticketTypeId: string): Promise<TicketInventory | null> {
+    // Check if this ticket type has already failed
+    if (this.failedTicketTypes.has(ticketTypeId)) {
+      return null;
+    }
+
     let inventory = this.inventoryCache.get(ticketTypeId);
     
     if (!inventory) {
-      const { data: ticketType, error } = await supabase
-        .from('ticket_types')
-        .select('id, event_id, quantity_available, quantity_sold')
-        .eq('id', ticketTypeId)
-        .single();
+      try {
+        const { data: ticketType, error } = await supabase
+          .from('ticket_types')
+          .select('id, event_id, quantity_available, quantity_sold')
+          .eq('id', ticketTypeId)
+          .single();
 
-      if (error || !ticketType) return null;
+        if (error || !ticketType) {
+          console.warn(`⚠️ Ticket type not found: ${ticketTypeId}`);
+          // Cache the failed ticket type to prevent repeated queries
+          this.failedTicketTypes.add(ticketTypeId);
+          return null;
+        }
 
-      inventory = {
-        ticketTypeId: ticketType.id,
-        eventId: ticketType.event_id,
-        totalQuantity: (ticketType.quantity_available || 0) + (ticketType.quantity_sold || 0),
-        availableQuantity: ticketType.quantity_available || 0,
-        soldQuantity: ticketType.quantity_sold || 0,
-        heldQuantity: 0,
-        lastUpdated: new Date(),
-        version: 1
-      };
+        inventory = {
+          ticketTypeId: ticketType.id,
+          eventId: ticketType.event_id,
+          totalQuantity: (ticketType.quantity_available || 0) + (ticketType.quantity_sold || 0),
+          availableQuantity: ticketType.quantity_available || 0,
+          soldQuantity: ticketType.quantity_sold || 0,
+          heldQuantity: 0,
+          lastUpdated: new Date(),
+          version: 1
+        };
 
-      this.inventoryCache.set(ticketTypeId, inventory);
+        this.inventoryCache.set(ticketTypeId, inventory);
+      } catch (error) {
+        console.error(`❌ Error fetching inventory for ${ticketTypeId}:`, error);
+        // Cache the failed ticket type to prevent repeated queries
+        this.failedTicketTypes.add(ticketTypeId);
+        return null;
+      }
     }
 
     return inventory;
@@ -417,7 +435,12 @@ export class InventoryService {
     
     for (const ticketTypeId of ticketTypeIds) {
       const status = await InventoryService.getInventoryStatus(ticketTypeId);
-      if (status) results.push(status);
+      if (status) {
+        results.push({
+          ticketTypeId,
+          ...status
+        });
+      }
     }
     
     return results;
@@ -534,6 +557,11 @@ export class InventoryService {
       inventory,
       timestamp: new Date()
     });
+  }
+
+  public clearFailedTicketTypesCache(): void {
+    this.failedTicketTypes.clear();
+    console.log('🔄 Cleared failed ticket types cache');
   }
 
   public async getInventoryStatusSummary(): Promise<InventoryStatusSummary> {

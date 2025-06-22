@@ -10,6 +10,7 @@ import { ExtensionWarningBanner } from '@/components/ExtensionWarningBanner';
 import { useCart, type TicketType } from '@/contexts/CartContext';
 import { useInventory, useBulkInventory, useInventoryHold } from '@/hooks/useInventory';
 import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus, AlertTriangle, Zap } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const TicketSelectionPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
@@ -19,53 +20,82 @@ const TicketSelectionPage = () => {
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
   const { createHold, releaseHold, currentHolds } = useInventoryHold();
 
-  // Mock event data - in real app, this would come from API
-  const mockEvent = {
-    id: eventId || '1',
-    title: 'Chicago Stepping Championship',
-    date: 'December 15, 2024',
-    time: '7:00 PM',
-    location: 'Navy Pier Grand Ballroom',
-    description: 'Join us for the most prestigious stepping competition in Chicago.',
-    image: '/placeholder.svg',
-    ticketTypes: [
-      {
-        id: 'general',
-        name: 'General Admission',
-        price: 45,
-        description: 'Access to main floor seating and dance area',
-        availableQuantity: 150
-      },
-      {
-        id: 'vip',
-        name: 'VIP Experience',
-        price: 85,
-        description: 'Premium seating, complimentary drinks, and meet & greet',
-        availableQuantity: 25
-      },
-      {
-        id: 'table',
-        name: 'Reserved Table (8 seats)',
-        price: 320,
-        description: 'Private table for 8 with premium service',
-        availableQuantity: 10
+  // PRODUCTION: Fetch real event and ticket data from database
+  const [event, setEventData] = useState<any>(null);
+  const [ticketTypes, setTicketTypes] = useState<TicketType[]>([]);
+  const [isLoadingEvent, setIsLoadingEvent] = useState(true);
+  const [eventError, setEventError] = useState<string | null>(null);
+
+  // Fetch real event data from Supabase
+  useEffect(() => {
+    const fetchEventData = async () => {
+      if (!eventId) {
+        setEventError('No event ID provided');
+        setIsLoadingEvent(false);
+        return;
       }
-    ] as TicketType[]
-  };
+
+      try {
+        setIsLoadingEvent(true);
+        setEventError(null);
+
+        // Fetch event details
+        const { data: eventData, error: eventError } = await supabase
+          .from('events')
+          .select('*')
+          .eq('id', eventId)
+          .single();
+
+        if (eventError) {
+          console.error('Error fetching event:', eventError);
+          setEventError('Event not found');
+          setIsLoadingEvent(false);
+          return;
+        }
+
+        // Fetch ticket types for this event
+        const { data: ticketTypesData, error: ticketTypesError } = await supabase
+          .from('ticket_types')
+          .select('*')
+          .eq('event_id', eventId)
+          .order('price', { ascending: true });
+
+        if (ticketTypesError) {
+          console.error('Error fetching ticket types:', ticketTypesError);
+          setEventError('Unable to load ticket information');
+          setIsLoadingEvent(false);
+          return;
+        }
+
+        setEventData(eventData);
+        setTicketTypes(ticketTypesData || []);
+        setIsLoadingEvent(false);
+
+      } catch (error) {
+        console.error('Error loading event data:', error);
+        setEventError('Failed to load event data');
+        setIsLoadingEvent(false);
+      }
+    };
+
+    fetchEventData();
+  }, [eventId]);
 
   // Get real-time inventory for all ticket types
-  const ticketTypeIds = Array.isArray(mockEvent.ticketTypes) ? mockEvent.ticketTypes.map(tt => tt.id) : [];
+  const ticketTypeIds = ticketTypes.map(tt => tt.id);
   const { statuses: inventoryStatuses, isLoading: inventoryLoading } = useBulkInventory(ticketTypeIds);
 
-  // Helper to get real inventory status for a ticket type
+  // PRODUCTION: Only use real inventory data, no fallbacks
   const getInventoryStatus = (ticketTypeId: string) => {
     return inventoryStatuses.find(status => status.ticketTypeId === ticketTypeId);
   };
 
   useEffect(() => {
-    setEvent(mockEvent.id, mockEvent.title);
-    setStep(1);
-  }, [eventId, setEvent, setStep]);
+    if (event) {
+      setEvent(event.id, event.title);
+      setStep(1);
+    }
+  }, [event, setEvent, setStep]);
 
   const handleQuantityChange = async (ticketType: TicketType, quantity: number) => {
     const inventoryStatus = getInventoryStatus(ticketType.id);
@@ -166,6 +196,53 @@ const TicketSelectionPage = () => {
     );
   };
 
+  // Show loading state
+  if (isLoadingEvent) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-stepping-purple mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading event details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (eventError || !event) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Event Not Found</h1>
+          <p className="text-muted-foreground mb-4">{eventError || 'The requested event could not be found.'}</p>
+          <Button onClick={() => navigate('/events')} variant="outline">
+            Browse Events
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show no tickets available
+  if (ticketTypes.length === 0) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <div className="container mx-auto px-4 py-8">
+          <ExtensionWarningBanner />
+          <div className="text-center py-12">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold mb-2">No Tickets Available</h1>
+            <p className="text-muted-foreground mb-4">There are currently no ticket types available for this event.</p>
+            <Button onClick={() => navigate('/events')} variant="outline">
+              Browse Other Events
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto px-4 py-8">
@@ -178,25 +255,33 @@ const TicketSelectionPage = () => {
             <CardHeader>
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="flex-1">
-                  <CardTitle className="text-2xl md:text-3xl mb-2">{mockEvent.title}</CardTitle>
+                  <CardTitle className="text-2xl md:text-3xl mb-2">{event.title}</CardTitle>
                   <div className="flex flex-wrap gap-4 text-muted-foreground mb-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      {mockEvent.date}
+                      {new Date(event.event_date).toLocaleDateString()}
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      {mockEvent.time}
+                      {event.start_time || 'Time TBA'}
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
-                      {mockEvent.location}
+                      {event.venue || 'Venue TBA'}
                     </div>
                   </div>
-                  <CardDescription>{mockEvent.description}</CardDescription>
+                  <CardDescription>{event.description}</CardDescription>
                 </div>
                 <div className="lg:w-48">
-                  <div className="aspect-square bg-muted rounded-lg"></div>
+                  {event.image_url ? (
+                    <img 
+                      src={event.image_url} 
+                      alt={event.title}
+                      className="aspect-square object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="aspect-square bg-muted rounded-lg"></div>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -218,7 +303,7 @@ const TicketSelectionPage = () => {
           <div className="lg:col-span-2">
             <h2 className="text-2xl font-bold mb-6">Select Your Tickets</h2>
             <div className="space-y-4">
-              {mockEvent.ticketTypes.map((ticketType) => (
+              {ticketTypes.map((ticketType) => (
                 <Card key={ticketType.id}>
                   <CardHeader className="pb-4">
                     <div className="flex justify-between items-start">
