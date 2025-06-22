@@ -14,6 +14,7 @@
     "migrate:dev": "supabase db push --linked",
     "migrate:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && supabase db push --linked",
     "schema:diff": "supabase db diff --linked",
+    "deploy:schema:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && psql $SUPABASE_DB_URL -f COMPLETE-PRODUCTION-SCHEMA-DEPLOYMENT.sql",
     "deploy:production": "npm run build && npm run migrate:prod"
   },
   "dependencies": {
