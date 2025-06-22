@@ -9,12 +9,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ExtensionWarningBanner } from '@/components/ExtensionWarningBanner';
 import { useCart, type TicketType } from '@/contexts/CartContext';
 import { useInventory, useBulkInventory, useInventoryHold } from '@/hooks/useInventory';
+import { useToast } from '@/hooks/use-toast';
 import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus, AlertTriangle, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const TicketSelectionPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { state, addItem, updateQuantity, removeItem, setEvent, setStep } = useCart();
   const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
@@ -102,7 +104,11 @@ const TicketSelectionPage = () => {
     
     // Check if requested quantity is available
     if (quantity > 0 && inventoryStatus && quantity > inventoryStatus.available) {
-      alert(`Only ${inventoryStatus.available} tickets available for ${ticketType.name}`);
+      toast({
+        title: "Not enough tickets available",
+        description: `Only ${inventoryStatus.available} tickets available for ${ticketType.name}`,
+        variant: "destructive"
+      });
       return;
     }
 
@@ -118,6 +124,10 @@ const TicketSelectionPage = () => {
       await releaseHold(sessionId, ticketType.id);
       if (currentItem) {
         removeItem(ticketType.id);
+        toast({
+          title: "Ticket removed",
+          description: `${ticketType.name} removed from cart`
+        });
       }
     } else {
       // Create inventory hold for new quantity
@@ -125,8 +135,16 @@ const TicketSelectionPage = () => {
       if (hold) {
         if (currentItem) {
           updateQuantity(ticketType.id, quantity);
+          toast({
+            title: "Cart updated",
+            description: `${ticketType.name} quantity updated to ${quantity}`
+          });
         } else {
           addItem(ticketType, quantity);
+          toast({
+            title: "Added to cart",
+            description: `${quantity} ${ticketType.name} ticket${quantity > 1 ? 's' : ''} added to cart`
+          });
         }
       } else {
         // Reset quantity if hold creation failed
@@ -134,7 +152,11 @@ const TicketSelectionPage = () => {
           ...prev,
           [ticketType.id]: 0
         }));
-        alert('Unable to reserve tickets. Please try again.');
+        toast({
+          title: "Unable to reserve tickets",
+          description: "Please try again in a moment",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -415,13 +437,25 @@ const TicketSelectionPage = () => {
                   </div>
                 )}
                 
-                <Button 
-                  className="w-full mt-6" 
-                  disabled={!canProceed}
-                  onClick={handleProceedToCheckout}
-                >
-                  Proceed to Checkout
-                </Button>
+                <div className="space-y-3 mt-6">
+                  <Button 
+                    className="w-full bg-stepping-gradient" 
+                    disabled={!canProceed}
+                    onClick={handleProceedToCheckout}
+                  >
+                    Proceed to Checkout
+                  </Button>
+                  
+                  {state.items.length > 0 && (
+                    <Button 
+                      variant="outline"
+                      className="w-full" 
+                      onClick={() => navigate('/cart')}
+                    >
+                      View Cart ({state.items.reduce((sum, item) => sum + item.quantity, 0)})
+                    </Button>
+                  )}
+                </div>
                 
                 {!canProceed && (
                   <p className="text-sm text-muted-foreground text-center mt-2">

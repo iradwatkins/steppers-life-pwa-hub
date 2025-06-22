@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, MapPin, Phone, Globe, Star, Clock, Plus, Store, Briefcase } from 'lucide-react';
+import { Search, Filter, MapPin, Phone, Globe, Star, Clock, Plus, Store as StoreIcon, Briefcase } from 'lucide-react';
 import { communityService } from '@/services/communityService';
 import { useAuth } from '@/hooks/useAuth';
 import FollowButton from '@/components/following/FollowButton';
@@ -120,7 +120,7 @@ const CommunityHome = () => {
                 onClick={() => navigate('/community/stores/create')}
                 className="bg-stepping-gradient"
               >
-                <Store className="h-4 w-4 mr-2" />
+                <StoreIcon className="h-4 w-4 mr-2" />
                 List Your Store
               </Button>
               <Button 

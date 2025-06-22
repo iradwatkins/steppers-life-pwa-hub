@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles } from '@/hooks/useRoles';
+import CartButton from '@/components/cart/CartButton';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -88,6 +89,7 @@ const Header = () => {
 
           {/* Theme Toggle & Auth Buttons */}
           <div className="flex items-center space-x-4">
+            <CartButton />
             <ThemeToggle />
             
             {user ? (

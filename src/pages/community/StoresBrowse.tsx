@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, MapPin, Phone, Globe, Star, Clock, SlidersHorizontal, Store, Plus } from 'lucide-react';
+import { Search, Filter, MapPin, Phone, Globe, Star, Clock, SlidersHorizontal, Store as StoreIcon, Plus } from 'lucide-react';
 import { communityService } from '@/services/communityService';
 import { useAuth } from '@/hooks/useAuth';
 import FollowButton from '@/components/following/FollowButton';
@@ -111,7 +111,7 @@ const StoresBrowse = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Store className="h-8 w-8 text-blue-500" />
+              <StoreIcon className="h-8 w-8 text-blue-500" />
               <div>
                 <h1 className="text-3xl font-bold">Stores Directory</h1>
                 <p className="text-muted-foreground">

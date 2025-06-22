@@ -37,6 +37,7 @@ import TicketSelectionPage from "./pages/TicketSelectionPage";
 import CheckoutDetailsPage from "./pages/CheckoutDetailsPage";
 import CheckoutPaymentPage from "./pages/CheckoutPaymentPage";
 import CheckoutConfirmationPage from "./pages/CheckoutConfirmationPage";
+import CartPage from "./pages/CartPage";
 import CashPaymentPage from "./pages/CashPaymentPage";
 import CreateEventPage from "./pages/CreateEventPage";
 import EventTicketingPage from "./pages/EventTicketingPage";
@@ -268,7 +269,12 @@ const RouterWrapper = () => {
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/venues/:venueId" element={<VenueDetailPage />} />
         
-        {/* Checkout routes - require authentication */}
+        {/* Cart and Checkout routes - require authentication */}
+        <Route path="/cart" element={
+          <AuthRoute>
+            <CartPage />
+          </AuthRoute>
+        } />
         <Route path="/checkout/details" element={
           <AuthRoute>
             <CheckoutDetailsPage />

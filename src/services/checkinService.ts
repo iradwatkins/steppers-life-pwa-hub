@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 // Event Check-in Service
 export interface AttendeeCheckinData {
   id: string;
@@ -33,72 +35,55 @@ class CheckinService {
   // Get all attendees for an event
   async getEventAttendees(eventId: string): Promise<AttendeeCheckinData[]> {
     try {
-      // Mock data for development - replace with actual API call
-      const mockAttendees: AttendeeCheckinData[] = [
-        {
-          id: 'att_001',
-          event_id: eventId,
-          ticket_id: 'tkt_001',
-          attendee_name: 'Maria Rodriguez',
-          attendee_email: 'maria@example.com',
-          ticket_type: 'VIP Experience',
-          qr_code: 'TICKET-001-SALSA-NIGHT',
-          is_checked_in: true,
-          check_in_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          checked_in_by: 'staff_001',
-          seat_assignment: 'VIP-A1'
-        },
-        {
-          id: 'att_002',
-          event_id: eventId,
-          ticket_id: 'tkt_002',
-          attendee_name: 'Carlos Mendez',
-          attendee_email: 'carlos@example.com',
-          ticket_type: 'General Admission',
-          qr_code: 'TICKET-002-SALSA-NIGHT',
-          is_checked_in: false,
-          special_requirements: 'Wheelchair accessible'
-        },
-        {
-          id: 'att_003',
-          event_id: eventId,
-          ticket_id: 'tkt_003',
-          attendee_name: 'Sofia Chen',
-          attendee_email: 'sofia@example.com',
-          ticket_type: 'General Admission',
-          qr_code: 'TICKET-003-SALSA-NIGHT',
-          is_checked_in: true,
-          check_in_time: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-          checked_in_by: 'staff_002'
-        },
-        {
-          id: 'att_004',
-          event_id: eventId,
-          ticket_id: 'tkt_004',
-          attendee_name: 'Ahmed Hassan',
-          attendee_email: 'ahmed@example.com',
-          ticket_type: 'VIP Experience',
-          qr_code: 'TICKET-004-SALSA-NIGHT',
-          is_checked_in: false
-        },
-        {
-          id: 'att_005',
-          event_id: eventId,
-          ticket_id: 'tkt_005',
-          attendee_name: 'Jennifer Wu',
-          attendee_email: 'jennifer@example.com',
-          ticket_type: 'General Admission',
-          qr_code: 'TICKET-005-SALSA-NIGHT',
-          is_checked_in: true,
-          check_in_time: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-          checked_in_by: 'staff_001'
-        }
-      ];
+      const { data, error } = await supabase
+        .from('order_items')
+        .select(`
+          id,
+          attendee_name,
+          attendee_email,
+          order:orders(
+            event_id,
+            user_id
+          ),
+          ticket_type:ticket_types(
+            name,
+            price
+          ),
+          tickets(
+            id,
+            status
+          )
+        `)
+        .eq('order.event_id', eventId);
 
-      return mockAttendees;
+      if (error) {
+        console.error('Error fetching attendees:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.log('No attendees found for event:', eventId);
+        return [];
+      }
+
+      // Transform data to match our interface
+      const attendees: AttendeeCheckinData[] = data.map(item => ({
+        id: item.id,
+        event_id: eventId,
+        ticket_id: item.tickets?.id || '',
+        attendee_name: item.attendee_name || 'Unknown',
+        attendee_email: item.attendee_email || '',
+        ticket_type: item.ticket_type?.name || 'General',
+        qr_code: `TICKET-${item.id}-${eventId}`,
+        is_checked_in: false, // TODO: Add checkin tracking
+        special_requirements: item.special_requests || undefined
+      }));
+
+      return attendees;
     } catch (error) {
-      console.error('Error fetching event attendees:', error);
-      throw error;
+      console.error('Error in getEventAttendees:', error);
+      // Return empty array instead of mock data
+      return [];
     }
   }
 
@@ -106,23 +91,27 @@ class CheckinService {
   async getCheckinStats(eventId: string): Promise<CheckinStats> {
     try {
       const attendees = await this.getEventAttendees(eventId);
-      
-      const total_attendees = attendees.length;
-      const checked_in = attendees.filter(a => a.is_checked_in).length;
-      const pending = total_attendees - checked_in;
-      const no_show = 0; // Would be calculated based on event end time
-      const check_in_rate = total_attendees > 0 ? (checked_in / total_attendees) * 100 : 0;
+      const total = attendees.length;
+      const checkedIn = attendees.filter(a => a.is_checked_in).length;
+      const pending = total - checkedIn;
+      const rate = total > 0 ? (checkedIn / total) * 100 : 0;
 
       return {
-        total_attendees,
-        checked_in,
+        total_attendees: total,
+        checked_in: checkedIn,
         pending,
-        no_show,
-        check_in_rate: Math.round(check_in_rate * 10) / 10
+        no_show: 0, // Would be calculated based on event end time
+        check_in_rate: Math.round(rate * 100) / 100
       };
     } catch (error) {
-      console.error('Error fetching check-in stats:', error);
-      throw error;
+      console.error('Error getting checkin stats:', error);
+      return {
+        total_attendees: 0,
+        checked_in: 0,
+        pending: 0,
+        no_show: 0,
+        check_in_rate: 0
+      };
     }
   }
 

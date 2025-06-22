@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 // Organizer Follower System Service
 export interface OrganizerFollower {
   id: string;
@@ -32,67 +34,21 @@ export interface FollowerStats {
   new_followers_this_month: number;
   active_followers: number;
   engagement_rate: number;
-  top_events_by_followers: Array<{
-    event_id: string;
-    event_name: string;
-    followers_registered: number;
-  }>;
+  top_locations: string[];
 }
 
 class FollowerService {
   // Get all followers for an organizer
   async getOrganizerFollowers(organizerId: string): Promise<OrganizerFollower[]> {
     try {
-      // Mock data for development - replace with actual API call
-      const mockFollowers: OrganizerFollower[] = [
-        {
-          id: 'fol_001',
-          organizer_id: organizerId,
-          follower_user_id: 'user_001',
-          follower_name: 'Maria Rodriguez',
-          follower_email: 'maria@example.com',
-          followed_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          notification_preferences: {
-            new_events: true,
-            event_updates: true,
-            special_offers: false
-          },
-          status: 'active'
-        },
-        {
-          id: 'fol_002',
-          organizer_id: organizerId,
-          follower_user_id: 'user_002',
-          follower_name: 'Carlos Mendez',
-          follower_email: 'carlos@example.com',
-          followed_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-          notification_preferences: {
-            new_events: true,
-            event_updates: false,
-            special_offers: true
-          },
-          status: 'active'
-        },
-        {
-          id: 'fol_003',
-          organizer_id: organizerId,
-          follower_user_id: 'user_003',
-          follower_name: 'Sofia Chen',
-          follower_email: 'sofia@example.com',
-          followed_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          notification_preferences: {
-            new_events: true,
-            event_updates: true,
-            special_offers: true
-          },
-          status: 'active'
-        }
-      ];
-
-      return mockFollowers;
+      // TODO: Implement actual database query when follower system is built
+      console.log('Fetching followers for organizer:', organizerId);
+      
+      // For now, return empty array since follower system isn't implemented yet
+      return [];
     } catch (error) {
       console.error('Error fetching organizer followers:', error);
-      throw error;
+      return [];
     }
   }
 
@@ -148,41 +104,31 @@ class FollowerService {
     try {
       const followers = await this.getOrganizerFollowers(organizerId);
       
-      const now = new Date();
-      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      
-      const newFollowersThisMonth = followers.filter(f => 
-        new Date(f.followed_at) >= oneMonthAgo
-      ).length;
+      const total = followers.length;
+      const active = followers.filter(f => f.status === 'active').length;
+      const thisMonth = followers.filter(f => {
+        const followDate = new Date(f.followed_at);
+        const now = new Date();
+        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        return followDate >= monthAgo;
+      }).length;
 
-      const mockStats: FollowerStats = {
-        total_followers: followers.length,
-        new_followers_this_month: newFollowersThisMonth,
-        active_followers: followers.filter(f => f.status === 'active').length,
-        engagement_rate: 67.5, // Mock engagement rate
-        top_events_by_followers: [
-          {
-            event_id: 'evt_001',
-            event_name: 'Salsa Night Spectacular',
-            followers_registered: 45
-          },
-          {
-            event_id: 'evt_002',
-            event_name: 'Bachata Workshop Series',
-            followers_registered: 32
-          },
-          {
-            event_id: 'evt_003',
-            event_name: 'Latin Dance Competition',
-            followers_registered: 28
-          }
-        ]
+      return {
+        total_followers: total,
+        new_followers_this_month: thisMonth,
+        active_followers: active,
+        engagement_rate: total > 0 ? (active / total) * 100 : 0,
+        top_locations: [] // TODO: Implement when location data is available
       };
-
-      return mockStats;
     } catch (error) {
       console.error('Error fetching follower stats:', error);
-      throw error;
+      return {
+        total_followers: 0,
+        new_followers_this_month: 0,
+        active_followers: 0,
+        engagement_rate: 0,
+        top_locations: []
+      };
     }
   }
 
@@ -317,6 +263,30 @@ class FollowerService {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  }
+
+  // Follow an organizer
+  async followOrganizer(organizerId: string, userId: string): Promise<boolean> {
+    try {
+      // TODO: Implement actual follow functionality
+      console.log('Following organizer:', organizerId, 'by user:', userId);
+      return true;
+    } catch (error) {
+      console.error('Error following organizer:', error);
+      return false;
+    }
+  }
+
+  // Unfollow an organizer
+  async unfollowOrganizer(organizerId: string, userId: string): Promise<boolean> {
+    try {
+      // TODO: Implement actual unfollow functionality
+      console.log('Unfollowing organizer:', organizerId, 'by user:', userId);
+      return true;
+    } catch (error) {
+      console.error('Error unfollowing organizer:', error);
+      return false;
+    }
   }
 }
 
