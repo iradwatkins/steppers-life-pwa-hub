@@ -12,6 +12,8 @@ import { useInventory, useBulkInventory, useInventoryHold } from '@/hooks/useInv
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus, AlertTriangle, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { checkEventExists } from '@/utils/eventChecker';
+import { LoadingPage } from '@/components/LoadingPage';
 
 const TicketSelectionPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
@@ -32,16 +34,19 @@ const TicketSelectionPage = () => {
   useEffect(() => {
     const fetchEventData = async () => {
       if (!eventId) {
+        console.error('❌ No event ID provided');
         setEventError('No event ID provided');
         setIsLoadingEvent(false);
         return;
       }
 
       try {
+        console.log(`🔍 Loading ticket page for event: ${eventId}`);
         setIsLoadingEvent(true);
         setEventError(null);
 
         // Fetch event details
+        console.log('📡 Fetching event details...');
         const { data: eventData, error: eventError } = await supabase
           .from('events')
           .select('*')
@@ -49,13 +54,17 @@ const TicketSelectionPage = () => {
           .single();
 
         if (eventError) {
-          console.error('Error fetching event:', eventError);
-          setEventError('Event not found');
+          console.error('❌ Error fetching event:', eventError);
+          console.error('❌ Event ID that failed:', eventId);
+          setEventError(`Event not found: ${eventError.message}`);
           setIsLoadingEvent(false);
           return;
         }
 
+        console.log('✅ Event data loaded:', eventData);
+
         // Fetch ticket types for this event
+        console.log('🎫 Fetching ticket types...');
         const { data: ticketTypesData, error: ticketTypesError } = await supabase
           .from('ticket_types')
           .select('*')
@@ -63,11 +72,13 @@ const TicketSelectionPage = () => {
           .order('price', { ascending: true });
 
         if (ticketTypesError) {
-          console.error('Error fetching ticket types:', ticketTypesError);
-          setEventError('Unable to load ticket information');
+          console.error('❌ Error fetching ticket types:', ticketTypesError);
+          setEventError(`Unable to load ticket information: ${ticketTypesError.message}`);
           setIsLoadingEvent(false);
           return;
         }
+
+        console.log(`🎫 Found ${ticketTypesData?.length || 0} ticket types:`, ticketTypesData);
 
         // Transform database ticket types to match TicketType interface
         const transformedTicketTypes = (ticketTypesData || []).map((tt: any) => ({
@@ -78,9 +89,13 @@ const TicketSelectionPage = () => {
           availableQuantity: tt.quantity_available || 0
         }));
 
+        console.log('✅ Transformed ticket types:', transformedTicketTypes);
+
         setEventData(eventData);
         setTicketTypes(transformedTicketTypes);
         setIsLoadingEvent(false);
+
+        console.log('✅ Ticket page loaded successfully');
 
       } catch (error) {
         console.error('Error loading event data:', error);
@@ -217,14 +232,7 @@ const TicketSelectionPage = () => {
 
   // Show loading state
   if (isLoadingEvent) {
-    return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-stepping-purple mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading event details...</p>
-        </div>
-      </div>
-    );
+    return <LoadingPage message="Loading event details..." />;
   }
 
   // Show error state

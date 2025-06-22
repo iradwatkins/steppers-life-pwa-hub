@@ -82,6 +82,8 @@ import WebAnalyticsPage from "./pages/WebAnalyticsPage";
 import InstructorAnalyticsPage from "./pages/admin/InstructorAnalyticsPage";
 import OrganizerEventManagementPage from "./pages/organizer/OrganizerEventManagementPage";
 import TicketDiagnosticsPage from "./pages/organizer/TicketDiagnosticsPage";
+import { TicketPageErrorBoundary } from "./components/TicketPageErrorBoundary";
+import { EventDebugger } from "./components/EventDebugger";
 import TicketTransferPage from "./pages/TicketTransferPage";
 import TransferClaimPage from "./pages/TransferClaimPage";
 import GroupBookingPage from "./pages/GroupBookingPage";
@@ -268,7 +270,11 @@ const RouterWrapper = () => {
         
         {/* Event routes */}
         <Route path="/events/:id/purchase" element={<EnhancedPurchasePage />} />
-        <Route path="/events/:id/tickets" element={<TicketSelectionPage />} />
+        <Route path="/events/:id/tickets" element={
+          <TicketPageErrorBoundary>
+            <TicketSelectionPage />
+          </TicketPageErrorBoundary>
+        } />
         <Route path="/events/:id/edit" element={
           <OrganizerRoute>
             <CreateEventPage />
@@ -387,6 +393,9 @@ const RouterWrapper = () => {
             <ClaimableEventsPage />
           </AuthRoute>
         } />
+        
+        {/* Debug routes */}
+        <Route path="/debug/event" element={<EventDebugger />} />
         
         {/* Admin routes */}
         <Route path="/admin/test" element={<div>Admin Test Route Works!</div>} />
