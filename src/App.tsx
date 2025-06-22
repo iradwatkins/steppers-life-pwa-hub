@@ -98,17 +98,14 @@ import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
-import { useLocationChange, getRouteKey } from "./utils/navigationFix";
+// Navigation utilities no longer needed for router wrapper
 
 const queryClient = new QueryClient();
 
 // Router wrapper component
 const RouterWrapper = () => {
-  const location = useLocationChange();
-  const routeKey = getRouteKey(location);
-  
   return (
-    <Layout key={routeKey}>
+    <Layout>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/home" element={<Index />} />
@@ -523,10 +520,7 @@ const App = () => (
               <CartProvider>
               <Toaster />
               <Sonner />
-              <BrowserRouter future={{ 
-                v7_startTransition: true,
-                v7_relativeSplatPath: true 
-              }}>
+              <BrowserRouter>
                 <RouterWrapper />
               </BrowserRouter>
               </CartProvider>

@@ -34,14 +34,14 @@ const Header = () => {
     navigate('/');
   };
 
-  // Navigation handler that forces page refresh
+  // Navigation handler using React Router
   const handleNavigation = (path: string) => {
-    window.location.href = path;
+    navigate(path);
   };
 
   // Navigation handler for dropdown items
   const handleDropdownNavigation = (path: string) => {
-    window.location.href = path;
+    navigate(path);
   };
 
   return (

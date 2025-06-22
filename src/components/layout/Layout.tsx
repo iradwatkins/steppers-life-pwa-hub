@@ -12,14 +12,15 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const location = useLocationChange();
+  // Initialize location change for scroll behavior only
+  useLocationChange();
   
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <OfflineIndicator />
       <PWAUpdatePrompt />
-      <Header key={`header-${location.pathname}`} />
-      <main className="flex-1" key={`main-${location.pathname}`}>
+      <Header />
+      <main className="flex-1">
         {children}
       </main>
       <Footer />

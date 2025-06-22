@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,16 @@ const EventCard: React.FC<EventCardProps> = ({
   showSoldOutStatus = true,
   showSocialShare = true
 }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on buttons or links inside the card
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, [role="button"]')) {
+      return;
+    }
+    navigate(`/events/${event.id}`);
+  };
   // Helper functions
   const getCategoryBadgeColor = (category: string) => {
     const categoryLower = category.toLowerCase();
@@ -120,7 +130,10 @@ const EventCard: React.FC<EventCardProps> = ({
   // List View Layout
   if (variant === 'list') {
     return (
-      <Card className="hover:shadow-lg transition-shadow p-4">
+      <Card 
+        className="hover:shadow-lg transition-shadow p-4 cursor-pointer"
+        onClick={handleCardClick}
+      >
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Event Image */}
           <div className="w-full sm:w-32 h-24 bg-muted rounded-md flex-shrink-0 relative">
@@ -213,13 +226,14 @@ const EventCard: React.FC<EventCardProps> = ({
             <div className="flex justify-end">
               <Button 
                 size="sm" 
-                asChild 
                 className="bg-stepping-gradient"
                 disabled={showSoldOutStatus && attendanceInfo.isSoldOut}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent card click
+                  navigate(`/events/${event.id}`);
+                }}
               >
-                <Link to={`/events/${event.id}`}>
-                  {attendanceInfo.isSoldOut ? 'Sold Out' : 'View Details'}
-                </Link>
+                {attendanceInfo.isSoldOut ? 'Sold Out' : 'View Details'}
               </Button>
             </div>
           </div>
@@ -230,7 +244,10 @@ const EventCard: React.FC<EventCardProps> = ({
 
   // Grid View Layout (default and featured)
   return (
-    <Card className={`hover:shadow-lg transition-shadow ${variant === 'featured' ? 'border-yellow-200' : ''}`}>
+    <Card 
+      className={`hover:shadow-lg transition-shadow cursor-pointer ${variant === 'featured' ? 'border-yellow-200' : ''}`}
+      onClick={handleCardClick}
+    >
       <CardHeader>
         <div className="aspect-video bg-muted rounded-md mb-4 relative">
           {variant === 'featured' && (
@@ -331,13 +348,14 @@ const EventCard: React.FC<EventCardProps> = ({
           </div>
           <Button 
             size="sm" 
-            asChild 
             className="bg-stepping-gradient"
             disabled={showSoldOutStatus && attendanceInfo.isSoldOut}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent card click
+              navigate(`/events/${event.id}`);
+            }}
           >
-            <Link to={`/events/${event.id}`}>
-              {attendanceInfo.isSoldOut ? 'Sold Out' : 'View Details'}
-            </Link>
+            {attendanceInfo.isSoldOut ? 'Sold Out' : 'View Details'}
           </Button>
         </div>
       </CardContent>
