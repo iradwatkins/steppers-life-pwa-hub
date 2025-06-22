@@ -8,7 +8,13 @@
     "build": "vite build --mode production",
     "build:dev": "vite build --mode development",
     "lint": "eslint . || true",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "supabase:link:dev": "supabase link --project-ref nwoteszpvvefbopbbvrl",
+    "supabase:link:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn",
+    "migrate:dev": "supabase db push --linked",
+    "migrate:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && supabase db push --linked",
+    "schema:diff": "supabase db diff --linked",
+    "deploy:production": "npm run build && npm run migrate:prod"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

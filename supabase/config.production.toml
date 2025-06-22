@@ -1,0 +1,29 @@
+# Production Supabase Configuration
+project_id = "nvryyufpbcruyqqndyjn"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54320
+site_url = "https://stepperslife.com"
+additional_redirect_urls = ["https://stepperslife.com/auth/callback"]
+jwt_expiry = 3600
+enable_signup = true
+enable_email_confirmations = true
+
+[auth.external.google]
+enabled = false
+
+[auth.external.github]
+enabled = false
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
