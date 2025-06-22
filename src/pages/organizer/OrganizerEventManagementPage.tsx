@@ -281,6 +281,14 @@ const OrganizerEventManagementPage: React.FC = () => {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/organizer/ticket-diagnostics')}
+                className="border-orange-500 text-orange-700 hover:bg-orange-50"
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Ticket Diagnostics
+              </Button>
             </div>
           </div>
         </div>

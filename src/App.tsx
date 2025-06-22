@@ -81,6 +81,7 @@ import TicketHistoryPage from "./pages/TicketHistoryPage";
 import WebAnalyticsPage from "./pages/WebAnalyticsPage";
 import InstructorAnalyticsPage from "./pages/admin/InstructorAnalyticsPage";
 import OrganizerEventManagementPage from "./pages/organizer/OrganizerEventManagementPage";
+import TicketDiagnosticsPage from "./pages/organizer/TicketDiagnosticsPage";
 import TicketTransferPage from "./pages/TicketTransferPage";
 import TransferClaimPage from "./pages/TransferClaimPage";
 import GroupBookingPage from "./pages/GroupBookingPage";
@@ -195,6 +196,11 @@ const RouterWrapper = () => {
         <Route path="/organizer/event/:eventId/cash-payments" element={
           <OrganizerRoute>
             <EventCashPaymentPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/ticket-diagnostics" element={
+          <OrganizerRoute>
+            <TicketDiagnosticsPage />
           </OrganizerRoute>
         } />
         <Route path="/organizer/event/:eventId/performance" element={

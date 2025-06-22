@@ -168,13 +168,13 @@ const CreateEventPage = () => {
         timezone: 'America/Chicago', // Default to Chicago timezone
         isOnline: data.isOnlineEvent,
         onlineLink: data.onlineEventLink,
-        maxAttendees: parseInt(data.capacity),
+        maxAttendees: data.capacity ? parseInt(data.capacity) : 100,
         ticketTypes: [
           {
             name: 'General Admission',
             description: 'Standard event ticket',
-            price: parseFloat(data.ticketPrice),
-            quantityAvailable: parseInt(data.capacity),
+            price: data.ticketPrice ? parseFloat(data.ticketPrice) : 0,
+            quantityAvailable: data.capacity ? parseInt(data.capacity) : 100,
             maxPerOrder: 10,
           }
         ],
@@ -189,7 +189,7 @@ const CreateEventPage = () => {
           city: data.city,
           state: data.state,
           zipCode: data.zipCode,
-          capacity: parseInt(data.capacity),
+          capacity: data.capacity ? parseInt(data.capacity) : 100,
         };
         console.log('🏢 Venue data:', eventData.venue);
       }
