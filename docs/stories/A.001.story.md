@@ -21,7 +21,7 @@
 - [x] **AC9:** Image upload capability for up to three event images/banners
 - [x] **AC10:** System provides recommended image dimensions for social media optimization
 - [x] **AC11:** Image preview functionality showing how uploads will appear
-- [ ] **AC12:** Support for common 4x6 flyer formats with cropping preview
+- [x] **AC12:** Support for common 4x6 flyer formats with cropping preview
 - [x] **AC13:** Form validation and error handling for all required fields
 - [x] **AC14:** Mobile-responsive event creation interface
 
@@ -45,7 +45,7 @@
   - [x] Build image upload interface for up to three images
   - [x] Add recommended dimensions guidance
   - [x] Implement image preview functionality
-  - [ ] Support common flyer formats with cropping
+  - [x] Support common flyer formats with cropping
 - [x] Task 6: Navigation and integration (AC: 14)
   - [x] Add route for event creation page
   - [x] Link from header "Post Event" option
