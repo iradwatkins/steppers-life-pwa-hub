@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/hooks/useAuth';
-import { OrderService, CreateOrderData } from '@/services/orderService';
+import { OrderService } from '@/services/orderService';
 import { EmailService } from '@/services/emailService';
 import { TicketPDFService } from '@/services/ticketPDFService';
 import type { OrderWithItems } from '@/services/orderService';
@@ -32,105 +32,97 @@ const CheckoutConfirmationPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { state, clearCart, setStep } = useCart();
+  const { clearCart, setStep } = useCart();
+  const [searchParams] = useSearchParams();
   const [order, setOrder] = useState<OrderWithItems | null>(null);
-  const [isProcessing, setIsProcessing] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     setStep(4);
-    // Redirect if no items in cart or no attendee info
-    if (state.items.length === 0 || !state.attendeeInfo || !user) {
+    
+    // Get order ID from URL parameters
+    const orderId = searchParams.get('orderId');
+    const orderNumber = searchParams.get('orderNumber');
+    
+    if (orderId) {
+      loadOrder(orderId);
+    } else if (orderNumber) {
+      loadOrderByNumber(orderNumber);
+    } else {
+      // Redirect if no order information
       navigate('/events');
       return;
     }
+  }, [setStep, searchParams, navigate]);
 
-    // Process the order
-    processOrder();
-  }, [setStep, state.items.length, state.attendeeInfo, user, navigate]);
-
-  const processOrder = async () => {
-    if (!user || !state.attendeeInfo || state.items.length === 0) return;
-
+  const loadOrder = async (orderId: string) => {
     try {
-      setIsProcessing(true);
+      setIsLoading(true);
       setError(null);
 
-      // Calculate totals
-      const subtotal = state.total;
-      const processingFee = subtotal * 0.029 + 0.30;
-      const totalAmount = subtotal + processingFee;
-
-      // Prepare order data
-      const orderData: CreateOrderData = {
-        userId: user.id,
-        eventId: state.eventId || '',
-        totalAmount: subtotal,
-        feesAmount: processingFee,
-        finalAmount: totalAmount,
-        billingDetails: {
-          firstName: state.attendeeInfo.firstName,
-          lastName: state.attendeeInfo.lastName,
-          email: state.attendeeInfo.email,
-          phone: state.attendeeInfo.phone,
-          dietaryRestrictions: state.attendeeInfo.dietaryRestrictions,
-          specialRequests: state.attendeeInfo.specialRequests
-        },
-        items: (state.items || []).map(item => ({
-          ticketTypeId: item.ticketType.id,
-          quantity: item.quantity,
-          price: item.ticketType.price,
-          attendeeName: `${state.attendeeInfo!.firstName} ${state.attendeeInfo!.lastName}`,
-          attendeeEmail: state.attendeeInfo!.email
-        })),
-        paymentIntentId: 'mock_payment_intent_' + Date.now()
-      };
-
-      // Create order in database
-      const createdOrder = await OrderService.createOrder(orderData);
-      if (!createdOrder) {
-        throw new Error('Failed to create order');
-      }
-
-      // Get full order details
-      const orderWithDetails = await OrderService.getOrderWithDetails(createdOrder.id);
+      // Get order details from database
+      const orderWithDetails = await OrderService.getOrderWithDetails(orderId);
       if (!orderWithDetails) {
-        throw new Error('Failed to retrieve order details');
+        throw new Error('Order not found');
       }
 
       setOrder(orderWithDetails);
 
-      // Send email receipt
-      try {
-        const emailSent = await EmailService.sendReceiptEmail({
-          order: orderWithDetails,
-          customerEmail: state.attendeeInfo.email,
-          customerName: `${state.attendeeInfo.firstName} ${state.attendeeInfo.lastName}`
-        });
-        setEmailSent(emailSent);
-        
-        if (emailSent) {
-          toast({
-            title: "Receipt Sent",
-            description: "Order confirmation sent to your email"
+      // Send email receipt if not already sent
+      if (orderWithDetails.billing_details?.email) {
+        try {
+          const emailSent = await EmailService.sendReceiptEmail({
+            order: orderWithDetails,
+            customerEmail: orderWithDetails.billing_details.email,
+            customerName: `${orderWithDetails.billing_details.firstName || ''} ${orderWithDetails.billing_details.lastName || ''}`.trim()
           });
+          setEmailSent(emailSent);
+          
+          if (emailSent) {
+            toast({
+              title: "Receipt Sent",
+              description: "Order confirmation sent to your email"
+            });
+          }
+        } catch (emailError) {
+          console.error('Email sending failed:', emailError);
         }
-      } catch (emailError) {
-        console.error('Email sending failed:', emailError);
       }
 
     } catch (error) {
-      console.error('Order processing failed:', error);
-      setError(error instanceof Error ? error.message : 'Failed to process order');
+      console.error('Failed to load order:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load order');
       toast({
-        title: "Order Processing Failed",
-        description: "There was an error processing your order. Please contact support.",
+        title: "Order Not Found",
+        description: "Could not find your order. Please contact support if you need assistance.",
         variant: "destructive"
       });
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
+    }
+  };
+
+  const loadOrderByNumber = async (orderNumber: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Get order details by order number
+      const orderWithDetails = await OrderService.getOrderByNumber(orderNumber);
+      if (!orderWithDetails) {
+        throw new Error('Order not found');
+      }
+
+      setOrder(orderWithDetails);
+
+    } catch (error) {
+      console.error('Failed to load order by number:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load order');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -202,12 +194,7 @@ const CheckoutConfirmationPage = () => {
     }
   };
 
-  if (state.items.length === 0 || !state.attendeeInfo || !user) {
-    return null; // Will redirect
-  }
-
-  // Show loading state while processing
-  if (isProcessing || !order) {
+  if (isLoading || !order) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <Card className="w-96">
@@ -225,7 +212,6 @@ const CheckoutConfirmationPage = () => {
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">

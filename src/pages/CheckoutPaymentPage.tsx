@@ -15,6 +15,9 @@ import { ExtensionProtection } from '@/utils/extensionProtection';
 import { ExtensionWarningBanner } from '@/components/ExtensionWarningBanner';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/hooks/useAuth';
+import { OrderService } from '@/services/orderService';
+import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock, Smartphone, Building, DollarSign } from 'lucide-react';
 
 const paymentFormSchema = z.object({
@@ -41,7 +44,8 @@ type PaymentFormData = z.infer<typeof paymentFormSchema>;
 
 const CheckoutPaymentPage = () => {
   const navigate = useNavigate();
-  const { state, setStep } = useCart();
+  const { state, setStep, clearCart } = useCart();
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const form = useForm<PaymentFormData>({
@@ -70,6 +74,18 @@ const CheckoutPaymentPage = () => {
   }, [setStep, state.items.length, state.attendeeInfo, state.eventId, navigate]);
 
   const onSubmit = async (data: PaymentFormData) => {
+    if (!user) {
+      toast.error('You must be logged in to complete your purchase');
+      navigate('/login');
+      return;
+    }
+
+    if (!state.eventId || !state.attendeeInfo) {
+      toast.error('Missing order information. Please start over.');
+      navigate(`/events/${state.eventId}/tickets`);
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
@@ -96,21 +112,64 @@ const CheckoutPaymentPage = () => {
         return;
       }
       
-      // Mock payment processing for other methods
+      // Create order data for database
+      const orderData = {
+        userId: user.id,
+        eventId: state.eventId,
+        totalAmount: state.subtotal,
+        discountAmount: state.discountAmount || 0,
+        feesAmount: 0, // You can calculate fees if needed
+        finalAmount: state.total,
+        promoCodeUsed: state.promoCode || undefined,
+        billingDetails: {
+          firstName: state.attendeeInfo.firstName,
+          lastName: state.attendeeInfo.lastName,
+          email: state.attendeeInfo.email,
+          phone: state.attendeeInfo.phone,
+          dietaryRestrictions: state.attendeeInfo.dietaryRestrictions || undefined,
+          specialRequests: state.attendeeInfo.specialRequests || undefined,
+        },
+        items: state.items.map(item => ({
+          ticketTypeId: item.ticketType.id,
+          quantity: item.quantity,
+          price: item.ticketType.price,
+          attendeeName: `${state.attendeeInfo!.firstName} ${state.attendeeInfo!.lastName}`,
+          attendeeEmail: state.attendeeInfo!.email,
+          specialRequests: state.attendeeInfo!.specialRequests || undefined,
+        })),
+        paymentIntentId: `payment_${Date.now()}`, // In real app, this would come from payment processor
+      };
+
+      // Mock payment processing delay (simulate payment gateway)
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // In a real app, you would process the payment here
-      console.log('Processing payment:', data);
+      // Save order to database
+      console.log('Creating order:', orderData);
+      const order = await OrderService.createOrder(orderData);
       
-      navigate('/checkout/confirmation');
+      if (!order) {
+        throw new Error('Failed to create order in database');
+      }
+
+      console.log('Order created successfully:', order);
+      toast.success('Payment processed successfully!');
+      
+      // Clear cart after successful order
+      clearCart();
+      
+      // Navigate to confirmation with order ID
+      navigate(`/checkout/confirmation?orderId=${order.id}&orderNumber=${order.order_number}`);
     } catch (error) {
       console.error('Payment processing error:', error);
       
+      const errorMessage = error instanceof Error ? error.message : 'Payment processing failed';
+      toast.error(errorMessage);
+      
       // Check if this might be extension-related
-      const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
-      if (errorMessage.includes('could not establish connection') || 
-          errorMessage.includes('receiving end does not exist') ||
-          errorMessage.includes('extension')) {
+      const errorString = errorMessage.toLowerCase();
+      if (errorString.includes('could not establish connection') || 
+          errorString.includes('receiving end does not exist') ||
+          errorString.includes('extension')) {
         ExtensionProtection.showExtensionInterferenceNotification(() => {
           onSubmit(data);
         });
