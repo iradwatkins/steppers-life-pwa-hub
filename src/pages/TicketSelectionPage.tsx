@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ExtensionWarningBanner } from '@/components/ExtensionWarningBanner';
 import { useCart, type TicketType } from '@/contexts/CartContext';
 import { useInventory, useBulkInventory, useInventoryHold } from '@/hooks/useInventory';
 import { Calendar, MapPin, Clock, Users, ShoppingCart, Plus, Minus, AlertTriangle, Zap } from 'lucide-react';
@@ -168,6 +169,9 @@ const TicketSelectionPage = () => {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto px-4 py-8">
+        {/* Extension Warning Banner */}
+        <ExtensionWarningBanner />
+        
         {/* Event Header */}
         <div className="mb-8">
           <Card>

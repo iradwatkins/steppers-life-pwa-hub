@@ -11,6 +11,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { ExtensionProtection } from '@/utils/extensionProtection';
+import { ExtensionWarningBanner } from '@/components/ExtensionWarningBanner';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
 import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock, Smartphone, Building, DollarSign } from 'lucide-react';
@@ -71,6 +73,23 @@ const CheckoutPaymentPage = () => {
     setIsProcessing(true);
     
     try {
+      // Check for extension interference before processing payment
+      const interferenceResult = ExtensionProtection.detectExtensionInterference();
+      if (interferenceResult.hasInterference) {
+        console.warn('⚠️ Extension interference detected during payment:', interferenceResult);
+        
+        // Show user-friendly notification with retry option
+        const notificationShown = ExtensionProtection.showExtensionInterferenceNotification(() => {
+          // Retry the payment submission
+          onSubmit(data);
+        });
+        
+        if (notificationShown) {
+          setIsProcessing(false);
+          return;
+        }
+      }
+      
       if (data.paymentMethod === 'cash') {
         // Redirect to cash payment page
         navigate('/cash-payment');
@@ -86,6 +105,16 @@ const CheckoutPaymentPage = () => {
       navigate('/checkout/confirmation');
     } catch (error) {
       console.error('Payment processing error:', error);
+      
+      // Check if this might be extension-related
+      const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
+      if (errorMessage.includes('could not establish connection') || 
+          errorMessage.includes('receiving end does not exist') ||
+          errorMessage.includes('extension')) {
+        ExtensionProtection.showExtensionInterferenceNotification(() => {
+          onSubmit(data);
+        });
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -135,6 +164,9 @@ const CheckoutPaymentPage = () => {
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto px-4 py-8">
+        {/* Extension Warning Banner */}
+        <ExtensionWarningBanner />
+        
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
