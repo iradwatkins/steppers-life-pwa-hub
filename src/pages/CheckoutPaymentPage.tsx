@@ -547,16 +547,22 @@ const CheckoutPaymentPage = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>${state.total}</span>
+                      <span>${state.subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-muted-foreground">
                       <span>Processing Fee</span>
-                      <span>${(state.total * 0.029 + 0.30).toFixed(2)}</span>
+                      <span>${(state.subtotal * 0.029 + 0.30).toFixed(2)}</span>
                     </div>
+                    {state.discountAmount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount</span>
+                        <span>-${state.discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span>${(state.total + state.total * 0.029 + 0.30).toFixed(2)}</span>
+                      <span>${(state.total + state.subtotal * 0.029 + 0.30).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

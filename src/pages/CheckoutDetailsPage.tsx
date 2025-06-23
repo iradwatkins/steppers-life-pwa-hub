@@ -57,7 +57,7 @@ const CheckoutDetailsPage = () => {
   };
 
   const handleBack = () => {
-    navigate(`/events/${state.eventId}/tickets`);
+    navigate('/cart');
   };
 
   if (state.items.length === 0) {
@@ -241,7 +241,7 @@ const CheckoutDetailsPage = () => {
                     <div className="flex justify-between pt-6">
                       <Button type="button" variant="outline" onClick={handleBack}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Selection
+                        Back to Cart
                       </Button>
                       <Button type="submit">
                         Continue to Payment

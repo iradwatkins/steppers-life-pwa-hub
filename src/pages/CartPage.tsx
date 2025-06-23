@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ShoppingCart, Trash2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import PromoCodeInput from '@/components/checkout/PromoCodeInput';
@@ -13,16 +13,8 @@ import PromoCodeInput from '@/components/checkout/PromoCodeInput';
 const CartPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { state, updateQuantity, removeItem, setPromoCode } = useCart();
+  const { state, removeItem, setPromoCode } = useCart();
 
-  const handleQuantityChange = (ticketTypeId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeItem(ticketTypeId);
-      toast.success('Item removed from cart');
-    } else {
-      updateQuantity(ticketTypeId, newQuantity);
-    }
-  };
 
   const handleRemoveItem = (ticketTypeId: string, ticketName: string) => {
     removeItem(ticketTypeId);
@@ -116,28 +108,11 @@ const CartPage = () => {
                       </div>
                     </div>
 
-                    {/* Quantity Controls */}
+                    {/* Quantity Display */}
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleQuantityChange(item.ticketType.id, item.quantity - 1)}
-                        className="h-8 w-8"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleQuantityChange(item.ticketType.id, item.quantity + 1)}
-                        className="h-8 w-8"
-                        disabled={item.quantity >= (item.ticketType.availableQuantity || 10)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      <span className="text-sm text-muted-foreground">Quantity:</span>
+                      <span className="font-medium text-lg">{item.quantity}</span>
+                      <span className="text-xs text-muted-foreground">(Change quantities on ticket selection)</span>
                     </div>
 
                     {/* Item Total */}
