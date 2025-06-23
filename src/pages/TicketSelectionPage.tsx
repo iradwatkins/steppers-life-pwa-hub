@@ -28,6 +28,7 @@ const TicketSelectionPage = () => {
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([]);
   const [isLoadingEvent, setIsLoadingEvent] = useState(true);
   const [eventError, setEventError] = useState<string | null>(null);
+  const [isUpdatingQuantity, setIsUpdatingQuantity] = useState(false);
 
   // Fetch real event data from Supabase
   useEffect(() => {
@@ -125,46 +126,52 @@ const TicketSelectionPage = () => {
 
 
   const handleQuantityChange = async (ticketType: TicketType, quantity: number) => {
-    const inventoryStatus = getInventoryStatus(ticketType.id);
+    if (isUpdatingQuantity) return; // Prevent concurrent updates
     
-    // Check if requested quantity is available
-    if (quantity > 0 && inventoryStatus && quantity > inventoryStatus.available) {
+    try {
+      setIsUpdatingQuantity(true);
+      const inventoryStatus = getInventoryStatus(ticketType.id);
+      
+      // Check if requested quantity is available
+      if (quantity > 0 && inventoryStatus && quantity > inventoryStatus.available) {
+        toast({
+          title: "Not enough tickets available",
+          description: `Only ${inventoryStatus.available} tickets available for ${ticketType.name}`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const currentItem = state.items.find(item => item.ticketType.id === ticketType.id);
+      
+      if (quantity === 0) {
+        // Release any holds for this ticket type
+        try {
+          await releaseHold(sessionId, ticketType.id);
+        } catch (error) {
+          console.warn('Failed to release hold:', error);
+        }
+        
+        if (currentItem) {
+          removeItem(ticketType.id);
+        }
+      } else {
+        // Add or update item in cart
+        if (currentItem) {
+          updateQuantity(ticketType.id, quantity);
+        } else {
+          addItem(ticketType, quantity);
+        }
+      }
+    } catch (error) {
+      console.error('Error handling quantity change:', error);
       toast({
-        title: "Not enough tickets available",
-        description: `Only ${inventoryStatus.available} tickets available for ${ticketType.name}`,
+        title: "Error updating cart",
+        description: "Please try again",
         variant: "destructive"
       });
-      return;
-    }
-
-
-    const currentItem = state.items.find(item => item.ticketType.id === ticketType.id);
-    
-    if (quantity === 0) {
-      // Release any holds for this ticket type
-      await releaseHold(sessionId, ticketType.id);
-      if (currentItem) {
-        removeItem(ticketType.id);
-        toast({
-          title: "Ticket removed",
-          description: `${ticketType.name} removed from cart`
-        });
-      }
-    } else {
-      // Add or update item in cart
-      if (currentItem) {
-        updateQuantity(ticketType.id, quantity);
-        toast({
-          title: "Cart updated",
-          description: `${ticketType.name} quantity updated to ${quantity}`
-        });
-      } else {
-        addItem(ticketType, quantity);
-        toast({
-          title: "Added to cart",
-          description: `${quantity} ${ticketType.name} ticket${quantity > 1 ? 's' : ''} added to cart`
-        });
-      }
+    } finally {
+      setIsUpdatingQuantity(false);
     }
   };
 
@@ -351,8 +358,14 @@ const TicketSelectionPage = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleQuantityChange(ticketType, Math.max(0, getQuantity(ticketType.id) - 1))}
-                          disabled={getQuantity(ticketType.id) === 0}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const currentQty = getQuantity(ticketType.id);
+                            if (currentQty > 0) {
+                              handleQuantityChange(ticketType, currentQty - 1);
+                            }
+                          }}
+                          disabled={getQuantity(ticketType.id) === 0 || inventoryLoading || isUpdatingQuantity}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -362,10 +375,17 @@ const TicketSelectionPage = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleQuantityChange(ticketType, getQuantity(ticketType.id) + 1)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const currentQty = getQuantity(ticketType.id);
+                            const inventoryStatus = getInventoryStatus(ticketType.id);
+                            if (inventoryStatus?.isAvailable && currentQty < (inventoryStatus.available || 0)) {
+                              handleQuantityChange(ticketType, currentQty + 1);
+                            }
+                          }}
                           disabled={(() => {
                             const inventoryStatus = getInventoryStatus(ticketType.id);
-                            return !inventoryStatus?.isAvailable || getQuantity(ticketType.id) >= (inventoryStatus?.available || 0);
+                            return inventoryLoading || isUpdatingQuantity || !inventoryStatus?.isAvailable || getQuantity(ticketType.id) >= (inventoryStatus?.available || 0);
                           })()}
                         >
                           <Plus className="h-4 w-4" />
