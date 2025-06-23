@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { BlogPost, BlogCategory, BlogTag, BlogListFilters } from '@/types/blog';
+import { blogService } from '@/services/blogService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,16 +38,13 @@ const Blog = () => {
         status: 'published'
       };
 
-      const response = await fetch('/api/blog/posts?' + new URLSearchParams(filters as any));
-      const data = await response.json();
-      setPosts(data.posts || []);
-      setCategories(data.categories || []);
-      setTags(data.tags || []);
+      const data = await blogService.getPosts(filters);
+      setPosts(data.posts);
+      setCategories(data.categories);
+      setTags(data.tags);
     } catch (error) {
       console.error('Error fetching blog data:', error);
-      setPosts(mockBlogPosts);
-      setCategories(mockCategories);
-      setTags(mockTags);
+      // Service already handles fallback to mock data
     } finally {
       setLoading(false);
     }

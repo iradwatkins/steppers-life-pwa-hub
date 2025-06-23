@@ -76,6 +76,10 @@ import AdminEventManagementPage from "./pages/admin/AdminEventManagementPage";
 import ContentManagementPage from "./pages/admin/ContentManagementPage";
 import PlatformConfigPage from "./pages/admin/PlatformConfigPage";
 import ThemeCustomizationPage from "./pages/admin/ThemeCustomizationPage";
+import VanityURLManagementPage from "./pages/admin/VanityURLManagementPage";
+import VanityURLRequestPage from "./pages/VanityURLRequestPage";
+import AdvertisingManagementPage from "./pages/admin/AdvertisingManagementPage";
+import AdPlacementPortalPage from "./pages/AdPlacementPortalPage";
 import EventRefundsPage from "./pages/admin/EventRefundsPage";
 import InventoryDashboardPage from "./pages/admin/InventoryDashboardPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
@@ -500,6 +504,16 @@ const RouterWrapper = () => {
           <AdminRoute>
             <ThemeCustomizationPage />
           </AdminRoute>
+        } />
+        <Route path="/admin/vanity-urls" element={
+          <AdminRoute>
+            <VanityURLManagementPage />
+          </AdminRoute>
+        } />
+        <Route path="/vanity-urls" element={
+          <AuthRoute>
+            <VanityURLRequestPage />
+          </AuthRoute>
         } />
         <Route path="/admin/refunds" element={
           <AdminRoute>
