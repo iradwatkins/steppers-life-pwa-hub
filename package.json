@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -59,6 +60,7 @@
     "@tiptap/react": "^2.14.0",
     "@tiptap/starter-kit": "^2.14.0",
     "@types/crypto-js": "^4.2.2",
+    "@vercel/node": "^5.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -79,6 +81,7 @@
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
     "sonner": "^1.5.0",
+    "square": "^43.0.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
