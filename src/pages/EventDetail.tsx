@@ -45,7 +45,11 @@ const EventDetail = () => {
   // Load event data
   useEffect(() => {
     const loadEvent = async () => {
-      if (!id) return;
+      if (!id) {
+        setError('No event ID provided');
+        setIsLoading(false);
+        return;
+      }
       
       setIsLoading(true);
       setError(null);

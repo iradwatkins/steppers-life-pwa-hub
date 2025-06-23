@@ -259,6 +259,15 @@ CREATE POLICY "Users can view own order items" ON public.order_items FOR SELECT 
     )
 );
 
+-- Order items: Users can create items for their own orders
+CREATE POLICY "Users can create own order items" ON public.order_items FOR INSERT WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.orders 
+        WHERE orders.id = order_items.order_id 
+        AND orders.user_id = auth.uid()
+    )
+);
+
 -- Functions for automatic timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

@@ -119,8 +119,8 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     },
     {
       id: 'cash',
-      name: 'Cash Payment',
-      description: 'Pay in person with verification code',
+      name: 'Pay Cash at Venue',
+      description: 'Reserve tickets and pay cash to event organizers',
       icon: <DollarSign className="h-5 w-5" />,
       processingTime: '4 hours to confirm',
       available: availability.cash,
@@ -292,7 +292,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                   Payment will be processed by {paymentGatewayManager.getPaymentMethodDisplayName(selectedMethod)}.
                   {selectedMethod === 'cash' && (
                     <span className="block mt-1 text-orange-600">
-                      Cash payments require in-person verification within 4 hours.
+                      Cash payments are made directly to event organizers at the venue. Confirm payment within 4 hours.
                     </span>
                   )}
                 </p>
