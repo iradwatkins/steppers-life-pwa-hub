@@ -95,6 +95,12 @@ import BlogManagementPage from "./pages/admin/BlogManagementPage";
 import BlogEditorPage from "./pages/admin/BlogEditorPage";
 import CommunityManagementPage from "./pages/admin/CommunityManagementPage";
 import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
+import CreatePhysicalClassPage from "./pages/classes/CreatePhysicalClassPage";
+import InstructorDashboard from "./pages/instructor/InstructorDashboard";
+import EarningsPage from "./pages/instructor/EarningsPage";
+import VODPurchasePage from "./pages/vod/VODPurchasePage";
+import PromotionalStorePage from "./pages/store/PromotionalStorePage";
+import MerchandiseStorePage from "./pages/merchandise/MerchandiseStorePage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -120,6 +126,11 @@ const RouterWrapper = () => {
         <Route path="/classes/create" element={
           <AuthRoute>
             <CreateClassPage />
+          </AuthRoute>
+        } />
+        <Route path="/classes/create-physical" element={
+          <AuthRoute>
+            <CreatePhysicalClassPage />
           </AuthRoute>
         } />
         <Route path="/organizer/setup" element={
@@ -311,6 +322,25 @@ const RouterWrapper = () => {
         {/* Public routes */}
         <Route path="/classes" element={<Classes />} />
         <Route path="/classes/:id" element={<ClassDetail />} />
+        
+        {/* VOD Routes */}
+        <Route path="/vod/:id/purchase" element={<VODPurchasePage />} />
+        
+        {/* Store Routes */}
+        <Route path="/store" element={<PromotionalStorePage />} />
+        <Route path="/merchandise" element={<MerchandiseStorePage />} />
+        
+        {/* Instructor Routes */}
+        <Route path="/instructor/dashboard" element={
+          <AuthRoute>
+            <InstructorDashboard />
+          </AuthRoute>
+        } />
+        <Route path="/instructor/earnings" element={
+          <AuthRoute>
+            <EarningsPage />
+          </AuthRoute>
+        } />
         <Route path="/community" element={<Community />} />
         <Route path="/community/home" element={<CommunityHome />} />
         <Route path="/community/browse" element={<CommunityBrowse />} />
