@@ -284,10 +284,9 @@ const CheckoutDetailsPage = () => {
                   
                   {/* Promo Code Section */}
                   <PromoCodeInput 
-                    eventId={parseInt(state.eventId || '1')}
-                    subtotal={state.subtotal}
+                    eventId={state.eventId || ''}
                     onPromoCodeApplied={setPromoCode}
-                    appliedPromoCode={state.promoCodeApplication}
+                    currentPromoCode={state.promoCodeApplication}
                   />
                   
                   <Separator />

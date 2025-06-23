@@ -37,6 +37,7 @@ import TicketSelectionPage from "./pages/TicketSelectionPage";
 import CheckoutDetailsPage from "./pages/CheckoutDetailsPage";
 import CheckoutPaymentPage from "./pages/CheckoutPaymentPage";
 import CheckoutConfirmationPage from "./pages/CheckoutConfirmationPage";
+import PayPalReturnPage from "./pages/PayPalReturnPage";
 import CartPage from "./pages/CartPage";
 import CashPaymentPage from "./pages/CashPaymentPage";
 import CreateEventPage from "./pages/CreateEventPage";
@@ -328,6 +329,11 @@ const RouterWrapper = () => {
         <Route path="/checkout/confirmation" element={
           <AuthRoute>
             <CheckoutConfirmationPage />
+          </AuthRoute>
+        } />
+        <Route path="/paypal/return" element={
+          <AuthRoute>
+            <PayPalReturnPage />
           </AuthRoute>
         } />
         

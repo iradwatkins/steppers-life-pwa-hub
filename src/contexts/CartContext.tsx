@@ -102,8 +102,8 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
 
     case 'REMOVE_ITEM': {
       const newItems = state.items.filter(item => item.ticketType.id !== action.payload.ticketTypeId);
-      const { subtotal, discountAmount, total } = calculateTotals(newItems, state.promoCodeApplication);
-      return { ...state, items: newItems, subtotal, discountAmount, total };
+      const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.promoCodeApplication);
+      return { ...state, items: newItems, subtotal, discountAmount, discount, total };
     }
 
     case 'UPDATE_QUANTITY': {
@@ -113,8 +113,8 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
           : item
       ).filter(item => item.quantity > 0);
 
-      const { subtotal, discountAmount, total } = calculateTotals(newItems, state.promoCodeApplication);
-      return { ...state, items: newItems, subtotal, discountAmount, total };
+      const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.promoCodeApplication);
+      return { ...state, items: newItems, subtotal, discountAmount, discount, total };
     }
 
     case 'SET_EVENT':

@@ -20,7 +20,6 @@ const TicketSelectionPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { state, addItem, updateQuantity, removeItem, setEvent, setStep } = useCart();
-  const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
   const { createHold, releaseHold, currentHolds } = useInventoryHold();
 
@@ -138,10 +137,6 @@ const TicketSelectionPage = () => {
       return;
     }
 
-    setSelectedQuantities(prev => ({
-      ...prev,
-      [ticketType.id]: quantity
-    }));
 
     const currentItem = state.items.find(item => item.ticketType.id === ticketType.id);
     
@@ -174,7 +169,8 @@ const TicketSelectionPage = () => {
   };
 
   const getQuantity = (ticketTypeId: string) => {
-    return selectedQuantities[ticketTypeId] || 0;
+    const cartItem = state.items.find(item => item.ticketType.id === ticketTypeId);
+    return cartItem ? cartItem.quantity : 0;
   };
 
   const canProceed = state.items.length > 0;

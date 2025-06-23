@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/hooks/useAuth';
 import { OrderService } from '@/services/orderService';
+import { RealPaymentService } from '@/services/realPaymentService';
 import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock, Smartphone, Building, DollarSign } from 'lucide-react';
 
@@ -140,25 +141,73 @@ const CheckoutPaymentPage = () => {
         paymentIntentId: `payment_${Date.now()}`, // In real app, this would come from payment processor
       };
 
-      // PRODUCTION: Real payment processing and order creation
-      const order = await OrderService.createOrder(orderData, user.id);
+      // Create order first
+      const order = await OrderService.createOrder(orderData);
 
-      if (order) {
-        console.log('✅ Order created successfully:', order);
-        
-        // Clear cart after successful order creation
-        clearCart();
-        
-        // Navigate to confirmation with order details
-        navigate(`/checkout/confirmation?orderId=${order.id}&orderNumber=${order.order_number}`);
-        
-        toast({
-          title: "Payment successful!",
-          description: "Your order has been confirmed. Check your email for details.",
-        });
-      } else {
+      if (!order) {
         throw new Error('Failed to create order');
       }
+
+      console.log('✅ Order created successfully:', order);
+
+      // Process payment if not cash
+      if (data.paymentMethod !== 'cash') {
+        const paymentRequest = {
+          orderId: order.id,
+          userId: user.id,
+          amount: state.total,
+          currency: 'USD',
+          paymentMethod: data.paymentMethod as 'card' | 'paypal' | 'apple_pay' | 'google_pay',
+          paymentData: {
+            sourceId: data.paymentMethod === 'card' ? 'card-payment-token' : undefined, // In real implementation, this would come from Square Web SDK
+          },
+        };
+
+        const paymentResult = await RealPaymentService.processPayment(paymentRequest);
+
+        if (!paymentResult.success) {
+          // Update order status to failed
+          await OrderService.updateOrderStatus(order.id, 'cancelled');
+          throw new Error(paymentResult.error || 'Payment processing failed');
+        }
+
+        console.log('✅ Payment processed successfully:', paymentResult);
+
+        // For PayPal, handle redirect flow
+        if (data.paymentMethod === 'paypal' && paymentResult.approvalUrl) {
+          // Store order info in sessionStorage for return
+          sessionStorage.setItem('pendingOrder', JSON.stringify({
+            orderId: order.id,
+            orderNumber: order.order_number,
+            paypalOrderId: paymentResult.paypalOrderId,
+          }));
+          
+          // Redirect to PayPal for approval
+          window.location.href = paymentResult.approvalUrl;
+          return;
+        }
+      }
+
+      // Send receipt email
+      try {
+        const emailSent = await RealPaymentService.sendReceiptEmail(
+          order.id,
+          user.id,
+          data.billingDetails.email,
+          `${data.billingDetails.firstName} ${data.billingDetails.lastName}`
+        );
+        console.log(emailSent ? '📧 Receipt email sent' : '⚠️ Receipt email failed');
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+      }
+
+      // Clear cart after successful payment
+      clearCart();
+      
+      // Navigate to confirmation with order details
+      navigate(`/checkout/confirmation?orderId=${order.id}&orderNumber=${order.order_number}`);
+      
+      toast.success("Payment successful! Your order has been confirmed.");
     } catch (error) {
       console.error('Payment processing error:', error);
       
