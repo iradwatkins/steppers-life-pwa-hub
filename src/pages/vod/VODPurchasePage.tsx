@@ -133,18 +133,18 @@ const VODPurchasePage = () => {
 
   if (loading) {
     return (
-      <div className=\"container mx-auto px-4 py-8\">
-        <div className=\"max-w-4xl mx-auto space-y-6\">
-          <div className=\"h-8 bg-muted animate-pulse rounded\" />
-          <div className=\"aspect-video bg-muted animate-pulse rounded-lg\" />
-          <div className=\"grid grid-cols-1 lg:grid-cols-3 gap-6\">
-            <div className=\"lg:col-span-2 space-y-4\">
-              <div className=\"h-6 bg-muted animate-pulse rounded\" />
-              <div className=\"h-4 bg-muted animate-pulse rounded w-3/4\" />
-              <div className=\"h-20 bg-muted animate-pulse rounded\" />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="h-8 bg-muted animate-pulse rounded" />
+          <div className="aspect-video bg-muted animate-pulse rounded-lg" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              <div className="h-6 bg-muted animate-pulse rounded" />
+              <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+              <div className="h-20 bg-muted animate-pulse rounded" />
             </div>
-            <div className=\"space-y-4\">
-              <div className=\"h-40 bg-muted animate-pulse rounded\" />
+            <div className="space-y-4">
+              <div className="h-40 bg-muted animate-pulse rounded" />
             </div>
           </div>
         </div>
@@ -154,9 +154,9 @@ const VODPurchasePage = () => {
 
   if (!vodClass) {
     return (
-      <div className=\"container mx-auto px-4 py-8\">
-        <div className=\"text-center\">
-          <h1 className=\"text-2xl font-bold mb-4\">VOD Class Not Found</h1>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">VOD Class Not Found</h1>
           <Button onClick={() => navigate('/vod')}>
             Browse VOD Classes
           </Button>
@@ -169,66 +169,66 @@ const VODPurchasePage = () => {
   const rentalPrice = vodClass.price * 0.4; // 40% of lifetime price for 30-day rental
 
   return (
-    <div className=\"container mx-auto px-4 py-8\">
-      <div className=\"max-w-4xl mx-auto\">
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <Button 
-          variant=\"ghost\" 
+          variant="ghost" 
           onClick={() => navigate(-1)}
-          className=\"mb-6\"
+          className="mb-6"
         >
-          <ArrowLeft className=\"h-4 w-4 mr-2\" />
+          <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
 
         {/* Video Preview */}
-        <div className=\"relative aspect-video bg-black rounded-lg overflow-hidden mb-8\">
+        <div className="relative aspect-video bg-black rounded-lg overflow-hidden mb-8">
           <img 
             src={vodClass.thumbnail_url} 
             alt={vodClass.title}
-            className=\"w-full h-full object-cover\"
+            className="w-full h-full object-cover"
           />
-          <div className=\"absolute inset-0 bg-black/50 flex items-center justify-center\">
-            <div className=\"text-center text-white\">
-              <div className=\"w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4\">
-                <Play className=\"h-8 w-8 ml-1\" fill=\"white\" />
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="text-center text-white">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Play className="h-8 w-8 ml-1" fill="white" />
               </div>
-              <p className=\"text-lg font-medium\">Preview</p>
-              <p className=\"text-sm opacity-90\">Watch the first 5 minutes free</p>
+              <p className="text-lg font-medium">Preview</p>
+              <p className="text-sm opacity-90">Watch the first 5 minutes free</p>
             </div>
           </div>
         </div>
 
-        <div className=\"grid grid-cols-1 lg:grid-cols-3 gap-8\">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className=\"lg:col-span-2 space-y-6\">
+          <div className="lg:col-span-2 space-y-6">
             {/* Class Info */}
             <div>
-              <div className=\"flex items-center gap-2 mb-2\">
+              <div className="flex items-center gap-2 mb-2">
                 <Badge variant={vodClass.level === 'beginner' ? 'secondary' : vodClass.level === 'intermediate' ? 'default' : 'destructive'}>
                   {vodClass.level}
                 </Badge>
-                <Badge variant=\"outline\">{vodClass.category}</Badge>
+                <Badge variant="outline">{vodClass.category}</Badge>
               </div>
               
-              <h1 className=\"text-3xl font-bold mb-4\">{vodClass.title}</h1>
+              <h1 className="text-3xl font-bold mb-4">{vodClass.title}</h1>
               
-              <div className=\"flex items-center gap-6 text-muted-foreground mb-4\">
-                <div className=\"flex items-center gap-1\">
-                  <Clock className=\"h-4 w-4\" />
+              <div className="flex items-center gap-6 text-muted-foreground mb-4">
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
                   <span>{formatDuration(vodClass.video_duration_seconds)}</span>
                 </div>
-                <div className=\"flex items-center gap-1\">
-                  <Star className=\"h-4 w-4 fill-yellow-400 text-yellow-400\" />
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   <span>{vodClass.rating?.toFixed(1)} ({vodClass.review_count} reviews)</span>
                 </div>
-                <div className=\"flex items-center gap-1\">
-                  <Users className=\"h-4 w-4\" />
+                <div className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
                   <span>{vodClass.total_purchases} students</span>
                 </div>
               </div>
 
-              <p className=\"text-lg leading-relaxed\">{vodClass.description}</p>
+              <p className="text-lg leading-relaxed">{vodClass.description}</p>
             </div>
 
             {/* What You'll Learn */}
@@ -238,10 +238,10 @@ const VODPurchasePage = () => {
                   <CardTitle>What You'll Learn</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ul className=\"space-y-2\">
+                  <ul className="space-y-2">
                     {vodClass.what_youll_learn.map((item, index) => (
-                      <li key={index} className=\"flex items-start gap-2\">
-                        <Check className=\"h-5 w-5 text-green-500 mt-0.5 flex-shrink-0\" />
+                      <li key={index} className="flex items-start gap-2">
+                        <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -256,49 +256,49 @@ const VODPurchasePage = () => {
                 <CardTitle>About Your Instructor</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className=\"flex items-center gap-4 mb-4\">
-                  <div className=\"w-16 h-16 bg-muted rounded-full flex items-center justify-center\">
-                    <span className=\"text-xl font-semibold\">{vodClass.instructor_name.charAt(0)}</span>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                    <span className="text-xl font-semibold">{vodClass.instructor_name.charAt(0)}</span>
                   </div>
                   <div>
-                    <h3 className=\"font-semibold text-lg\">{vodClass.instructor_name}</h3>
-                    <p className=\"text-muted-foreground\">Professional Stepping Instructor</p>
+                    <h3 className="font-semibold text-lg">{vodClass.instructor_name}</h3>
+                    <p className="text-muted-foreground">Professional Stepping Instructor</p>
                   </div>
                 </div>
                 {vodClass.instructor_bio && (
-                  <p className=\"text-sm leading-relaxed\">{vodClass.instructor_bio}</p>
+                  <p className="text-sm leading-relaxed">{vodClass.instructor_bio}</p>
                 )}
               </CardContent>
             </Card>
           </div>
 
           {/* Purchase Panel */}
-          <div className=\"space-y-6\">
+          <div className="space-y-6">
             {hasAccess ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className=\"text-green-600\">You Own This Class</CardTitle>
+                  <CardTitle className="text-green-600">You Own This Class</CardTitle>
                   <CardDescription>
                     You have lifetime access to this VOD class
                   </CardDescription>
                 </CardHeader>
-                <CardContent className=\"space-y-4\">
-                  <Button onClick={watchVOD} className=\"w-full\" size=\"lg\">
-                    <Play className=\"h-5 w-5 mr-2\" />
+                <CardContent className="space-y-4">
+                  <Button onClick={watchVOD} className="w-full" size="lg">
+                    <Play className="h-5 w-5 mr-2" />
                     Watch Now
                   </Button>
                   
-                  <div className=\"text-sm text-muted-foreground space-y-2\">
-                    <div className=\"flex items-center gap-2\">
-                      <Infinity className=\"h-4 w-4\" />
+                  <div className="text-sm text-muted-foreground space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Infinity className="h-4 w-4" />
                       <span>Lifetime access</span>
                     </div>
-                    <div className=\"flex items-center gap-2\">
-                      <Download className=\"h-4 w-4\" />
+                    <div className="flex items-center gap-2">
+                      <Download className="h-4 w-4" />
                       <span>Download available</span>
                     </div>
-                    <div className=\"flex items-center gap-2\">
-                      <Shield className=\"h-4 w-4\" />
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
                       <span>HD quality</span>
                     </div>
                   </div>
@@ -312,9 +312,9 @@ const VODPurchasePage = () => {
                     Choose how you'd like to access this class
                   </CardDescription>
                 </CardHeader>
-                <CardContent className=\"space-y-6\">
+                <CardContent className="space-y-6">
                   {/* Purchase Type Selection */}
-                  <div className=\"space-y-3\">
+                  <div className="space-y-3">
                     <button
                       onClick={() => setSelectedPurchaseType('lifetime')}
                       className={`w-full p-4 border rounded-lg text-left transition-colors ${
@@ -323,28 +323,28 @@ const VODPurchasePage = () => {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className=\"flex justify-between items-start mb-2\">
-                        <div className=\"flex items-center gap-2\">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
                           <div className={`w-4 h-4 rounded-full border-2 ${
                             selectedPurchaseType === 'lifetime' 
                               ? 'border-blue-500 bg-blue-500' 
                               : 'border-gray-300'
                           }`} />
-                          <span className=\"font-semibold\">Lifetime Access</span>
+                          <span className="font-semibold">Lifetime Access</span>
                         </div>
-                        <span className=\"font-bold text-lg\">${lifetimePrice}</span>
+                        <span className="font-bold text-lg">${lifetimePrice}</span>
                       </div>
-                      <div className=\"text-sm text-muted-foreground space-y-1\">
-                        <div className=\"flex items-center gap-2\">
-                          <Infinity className=\"h-3 w-3\" />
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Infinity className="h-3 w-3" />
                           <span>Watch forever</span>
                         </div>
-                        <div className=\"flex items-center gap-2\">
-                          <Download className=\"h-3 w-3\" />
+                        <div className="flex items-center gap-2">
+                          <Download className="h-3 w-3" />
                           <span>Download for offline viewing</span>
                         </div>
-                        <div className=\"flex items-center gap-2\">
-                          <Monitor className=\"h-3 w-3\" />
+                        <div className="flex items-center gap-2">
+                          <Monitor className="h-3 w-3" />
                           <span>HD quality</span>
                         </div>
                       </div>
@@ -358,28 +358,28 @@ const VODPurchasePage = () => {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className=\"flex justify-between items-start mb-2\">
-                        <div className=\"flex items-center gap-2\">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
                           <div className={`w-4 h-4 rounded-full border-2 ${
                             selectedPurchaseType === 'rental' 
                               ? 'border-blue-500 bg-blue-500' 
                               : 'border-gray-300'
                           }`} />
-                          <span className=\"font-semibold\">30-Day Rental</span>
+                          <span className="font-semibold">30-Day Rental</span>
                         </div>
-                        <span className=\"font-bold text-lg\">${rentalPrice.toFixed(2)}</span>
+                        <span className="font-bold text-lg">${rentalPrice.toFixed(2)}</span>
                       </div>
-                      <div className=\"text-sm text-muted-foreground space-y-1\">
-                        <div className=\"flex items-center gap-2\">
-                          <Calendar className=\"h-3 w-3\" />
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3 w-3" />
                           <span>Access for 30 days</span>
                         </div>
-                        <div className=\"flex items-center gap-2\">
-                          <Smartphone className=\"h-3 w-3\" />
+                        <div className="flex items-center gap-2">
+                          <Smartphone className="h-3 w-3" />
                           <span>Stream on any device</span>
                         </div>
-                        <div className=\"flex items-center gap-2\">
-                          <Tv className=\"h-3 w-3\" />
+                        <div className="flex items-center gap-2">
+                          <Tv className="h-3 w-3" />
                           <span>Standard quality</span>
                         </div>
                       </div>
@@ -389,19 +389,19 @@ const VODPurchasePage = () => {
                   <Separator />
 
                   {/* Purchase Summary */}
-                  <div className=\"space-y-3\">
-                    <div className=\"flex justify-between\">
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
                       <span>Price</span>
-                      <span className=\"font-semibold\">
+                      <span className="font-semibold">
                         ${selectedPurchaseType === 'lifetime' ? lifetimePrice : rentalPrice.toFixed(2)}
                       </span>
                     </div>
-                    <div className=\"flex justify-between text-sm text-muted-foreground\">
+                    <div className="flex justify-between text-sm text-muted-foreground">
                       <span>Processing fee</span>
                       <span>$0.30</span>
                     </div>
                     <Separator />
-                    <div className=\"flex justify-between font-semibold\">
+                    <div className="flex justify-between font-semibold">
                       <span>Total</span>
                       <span>
                         ${(selectedPurchaseType === 'lifetime' ? lifetimePrice : rentalPrice + 0.30).toFixed(2)}
@@ -412,26 +412,26 @@ const VODPurchasePage = () => {
                   <Button 
                     onClick={handlePurchase}
                     disabled={purchasing}
-                    className=\"w-full\"
-                    size=\"lg\"
+                    className="w-full"
+                    size="lg"
                   >
                     {purchasing ? (
                       <>Processing...</>
                     ) : (
                       <>
-                        <CreditCard className=\"h-5 w-5 mr-2\" />
+                        <CreditCard className="h-5 w-5 mr-2" />
                         Purchase Now
                       </>
                     )}
                   </Button>
 
-                  <div className=\"text-xs text-muted-foreground text-center\">
-                    <div className=\"flex items-center justify-center gap-1 mb-1\">
-                      <Shield className=\"h-3 w-3\" />
+                  <div className="text-xs text-muted-foreground text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Shield className="h-3 w-3" />
                       <span>Secure payment with Stripe</span>
                     </div>
-                    <div className=\"flex items-center justify-center gap-1\">
-                      <DollarSign className=\"h-3 w-3\" />
+                    <div className="flex items-center justify-center gap-1">
+                      <DollarSign className="h-3 w-3" />
                       <span>70% goes directly to the instructor</span>
                     </div>
                   </div>
@@ -444,25 +444,25 @@ const VODPurchasePage = () => {
               <CardHeader>
                 <CardTitle>Why Choose SteppersLife VOD?</CardTitle>
               </CardHeader>
-              <CardContent className=\"space-y-3 text-sm\">
-                <div className=\"flex items-center gap-2\">
-                  <Check className=\"h-4 w-4 text-green-500\" />
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
                   <span>Learn from certified instructors</span>
                 </div>
-                <div className=\"flex items-center gap-2\">
-                  <Check className=\"h-4 w-4 text-green-500\" />
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
                   <span>Watch at your own pace</span>
                 </div>
-                <div className=\"flex items-center gap-2\">
-                  <Check className=\"h-4 w-4 text-green-500\" />
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
                   <span>Access on all devices</span>
                 </div>
-                <div className=\"flex items-center gap-2\">
-                  <Check className=\"h-4 w-4 text-green-500\" />
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
                   <span>Community support</span>
                 </div>
-                <div className=\"flex items-center gap-2\">
-                  <Check className=\"h-4 w-4 text-green-500\" />
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
                   <span>30-day money-back guarantee</span>
                 </div>
               </CardContent>

@@ -105,35 +105,35 @@ const EarningsPage = () => {
 
   if (loading) {
     return (
-      <div className=\"container mx-auto px-4 py-8\">
-        <div className=\"space-y-6\">
-          <div className=\"h-8 bg-muted animate-pulse rounded\" />
-          <div className=\"grid grid-cols-1 md:grid-cols-3 gap-6\">
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-6">
+          <div className="h-8 bg-muted animate-pulse rounded" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className=\"h-32 bg-muted animate-pulse rounded\" />
+              <div key={i} className="h-32 bg-muted animate-pulse rounded" />
             ))}
           </div>
-          <div className=\"h-96 bg-muted animate-pulse rounded\" />
+          <div className="h-96 bg-muted animate-pulse rounded" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className=\"container mx-auto px-4 py-8\">
-      <div className=\"space-y-8\">
+    <div className="container mx-auto px-4 py-8">
+      <div className="space-y-8">
         {/* Header */}
-        <div className=\"flex items-center justify-between\">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className=\"text-3xl font-bold\">Earnings & Payouts</h1>
-            <p className=\"text-muted-foreground\">
+            <h1 className="text-3xl font-bold">Earnings & Payouts</h1>
+            <p className="text-muted-foreground">
               Track your VOD sales and manage payout preferences
             </p>
           </div>
           
-          <div className=\"flex items-center gap-4\">
+          <div className="flex items-center gap-4">
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className=\"w-48\">
+              <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -145,70 +145,70 @@ const EarningsPage = () => {
               </SelectContent>
             </Select>
             
-            <Button variant=\"outline\">
-              <Download className=\"h-4 w-4 mr-2\" />
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>
           </div>
         </div>
 
         {/* Earnings Overview */}
-        <div className=\"grid grid-cols-1 md:grid-cols-4 gap-6\">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
-            <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">
-              <CardTitle className=\"text-sm font-medium\">Available Balance</CardTitle>
-              <DollarSign className=\"h-4 w-4 text-muted-foreground\" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className=\"text-2xl font-bold text-green-600\">
+              <div className="text-2xl font-bold text-green-600">
                 {formatCurrency(earnings?.total_available_amount || 0)}
               </div>
-              <p className=\"text-xs text-muted-foreground\">
+              <p className="text-xs text-muted-foreground">
                 Ready for payout
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">
-              <CardTitle className=\"text-sm font-medium\">Pending Earnings</CardTitle>
-              <Clock className=\"h-4 w-4 text-muted-foreground\" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Earnings</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className=\"text-2xl font-bold text-blue-600\">
+              <div className="text-2xl font-bold text-blue-600">
                 {formatCurrency(earnings?.total_pending_amount || 0)}
               </div>
-              <p className=\"text-xs text-muted-foreground\">
+              <p className="text-xs text-muted-foreground">
                 Processing period
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">
-              <CardTitle className=\"text-sm font-medium\">This Month</CardTitle>
-              <TrendingUp className=\"h-4 w-4 text-muted-foreground\" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">This Month</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className=\"text-2xl font-bold\">
+              <div className="text-2xl font-bold">
                 {formatCurrency(earnings?.current_period_earnings || 0)}
               </div>
-              <p className=\"text-xs text-muted-foreground\">
+              <p className="text-xs text-muted-foreground">
                 {earnings?.current_period_purchases || 0} sales
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">
-              <CardTitle className=\"text-sm font-medium\">Lifetime Earnings</CardTitle>
-              <BarChart3 className=\"h-4 w-4 text-muted-foreground\" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Lifetime Earnings</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className=\"text-2xl font-bold\">
+              <div className="text-2xl font-bold">
                 {formatCurrency(earnings?.lifetime_earnings || 0)}
               </div>
-              <p className=\"text-xs text-muted-foreground\">
+              <p className="text-xs text-muted-foreground">
                 {earnings?.lifetime_purchases || 0} total sales
               </p>
             </CardContent>
@@ -219,15 +219,15 @@ const EarningsPage = () => {
         {earnings?.next_payout_date && (
           <Card>
             <CardHeader>
-              <CardTitle className=\"flex items-center gap-2\">
-                <Calendar className=\"h-5 w-5\" />
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
                 Next Automatic Payout
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className=\"flex items-center justify-between\">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className=\"font-semibold\">
+                  <p className="font-semibold">
                     {new Date(earnings.next_payout_date).toLocaleDateString('en-US', {
                       weekday: 'long',
                       year: 'numeric',
@@ -235,12 +235,12 @@ const EarningsPage = () => {
                       day: 'numeric'
                     })}
                   </p>
-                  <p className=\"text-sm text-muted-foreground\">
+                  <p className="text-sm text-muted-foreground">
                     Estimated payout amount: {formatCurrency(earnings.total_available_amount)}
                   </p>
                 </div>
-                <Button variant=\"outline\">
-                  <Settings className=\"h-4 w-4 mr-2\" />
+                <Button variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
                   Manage Payout Settings
                 </Button>
               </div>
@@ -248,15 +248,15 @@ const EarningsPage = () => {
           </Card>
         )}
 
-        <Tabs defaultValue=\"overview\" className=\"space-y-6\">
+        <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
-            <TabsTrigger value=\"overview\">Overview</TabsTrigger>
-            <TabsTrigger value=\"transactions\">Transactions</TabsTrigger>
-            <TabsTrigger value=\"payouts\">Payouts</TabsTrigger>
-            <TabsTrigger value=\"analytics\">Analytics</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="payouts">Payouts</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value=\"overview\" className=\"space-y-6\">
+          <TabsContent value="overview" className="space-y-6">
             {revenueReport && (
               <>
                 {/* Revenue Breakdown */}
@@ -265,22 +265,22 @@ const EarningsPage = () => {
                     <CardTitle>Revenue Breakdown - {new Date(selectedPeriod).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4\">
-                      <div className=\"space-y-2\">
-                        <p className=\"text-sm font-medium text-muted-foreground\">Gross Revenue</p>
-                        <p className=\"text-2xl font-bold\">{formatCurrency(revenueReport.total_revenue)}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-muted-foreground">Gross Revenue</p>
+                        <p className="text-2xl font-bold">{formatCurrency(revenueReport.total_revenue)}</p>
                       </div>
-                      <div className=\"space-y-2\">
-                        <p className=\"text-sm font-medium text-muted-foreground\">Your Commission (70%)</p>
-                        <p className=\"text-2xl font-bold text-green-600\">{formatCurrency(revenueReport.total_commission)}</p>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-muted-foreground">Your Commission (70%)</p>
+                        <p className="text-2xl font-bold text-green-600">{formatCurrency(revenueReport.total_commission)}</p>
                       </div>
-                      <div className=\"space-y-2\">
-                        <p className=\"text-sm font-medium text-muted-foreground\">Platform Fee (30%)</p>
-                        <p className=\"text-2xl font-bold text-gray-600\">{formatCurrency(revenueReport.platform_fees)}</p>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-muted-foreground">Platform Fee (30%)</p>
+                        <p className="text-2xl font-bold text-gray-600">{formatCurrency(revenueReport.platform_fees)}</p>
                       </div>
-                      <div className=\"space-y-2\">
-                        <p className=\"text-sm font-medium text-muted-foreground\">Processing Fees</p>
-                        <p className=\"text-2xl font-bold text-gray-600\">{formatCurrency(revenueReport.processing_fees)}</p>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-muted-foreground">Processing Fees</p>
+                        <p className="text-2xl font-bold text-gray-600">{formatCurrency(revenueReport.processing_fees)}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -293,21 +293,21 @@ const EarningsPage = () => {
                       <CardTitle>Top Selling Classes This Month</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className=\"space-y-4\">
+                      <div className="space-y-4">
                         {revenueReport.top_selling_classes.map((classData, index) => (
-                          <div key={classData.vod_class_id} className=\"flex items-center justify-between p-4 border rounded-lg\">
-                            <div className=\"flex items-center gap-4\">
-                              <div className=\"w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold\">
+                          <div key={classData.vod_class_id} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center gap-4">
+                              <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
                                 {index + 1}
                               </div>
                               <div>
-                                <h3 className=\"font-semibold\">{classData.title}</h3>
-                                <p className=\"text-sm text-muted-foreground\">{classData.purchases} sales</p>
+                                <h3 className="font-semibold">{classData.title}</h3>
+                                <p className="text-sm text-muted-foreground">{classData.purchases} sales</p>
                               </div>
                             </div>
-                            <div className=\"text-right\">
-                              <p className=\"font-semibold\">{formatCurrency(classData.revenue)}</p>
-                              <p className=\"text-sm text-muted-foreground\">
+                            <div className="text-right">
+                              <p className="font-semibold">{formatCurrency(classData.revenue)}</p>
+                              <p className="text-sm text-muted-foreground">
                                 {formatCurrency(classData.revenue * 0.7)} commission
                               </p>
                             </div>
@@ -321,7 +321,7 @@ const EarningsPage = () => {
             )}
           </TabsContent>
 
-          <TabsContent value=\"transactions\">
+          <TabsContent value="transactions">
             <Card>
               <CardHeader>
                 <CardTitle>Recent Transactions</CardTitle>
@@ -330,26 +330,26 @@ const EarningsPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className=\"space-y-4\">
+                <div className="space-y-4">
                   {mockTransactions.map((transaction) => (
-                    <div key={transaction.id} className=\"flex items-center justify-between p-4 border rounded-lg\">
-                      <div className=\"flex items-center gap-4\">
-                        <div className=\"w-10 h-10 bg-green-100 rounded-full flex items-center justify-center\">
-                          <CreditCard className=\"h-5 w-5 text-green-600\" />
+                    <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                          <CreditCard className="h-5 w-5 text-green-600" />
                         </div>
                         <div>
-                          <h3 className=\"font-semibold\">{transaction.vod_title}</h3>
-                          <p className=\"text-sm text-muted-foreground\">
+                          <h3 className="font-semibold">{transaction.vod_title}</h3>
+                          <p className="text-sm text-muted-foreground">
                             Purchased by {transaction.customer_name}
                           </p>
-                          <p className=\"text-xs text-muted-foreground\">
+                          <p className="text-xs text-muted-foreground">
                             {new Date(transaction.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <div className=\"text-right\">
-                        <p className=\"font-semibold\">{formatCurrency(transaction.sale_price)}</p>
-                        <p className=\"text-sm text-green-600\">
+                      <div className="text-right">
+                        <p className="font-semibold">{formatCurrency(transaction.sale_price)}</p>
+                        <p className="text-sm text-green-600">
                           +{formatCurrency(transaction.commission)} commission
                         </p>
                         <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'}>
@@ -363,7 +363,7 @@ const EarningsPage = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value=\"payouts\">
+          <TabsContent value="payouts">
             <Card>
               <CardHeader>
                 <CardTitle>Payout History</CardTitle>
@@ -372,28 +372,28 @@ const EarningsPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className=\"space-y-4\">
+                <div className="space-y-4">
                   {payouts.map((payout) => (
-                    <div key={payout.id} className=\"flex items-center justify-between p-4 border rounded-lg\">
-                      <div className=\"flex items-center gap-4\">
+                    <div key={payout.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
                         <div className={`w-3 h-3 rounded-full ${getPayoutStatusColor(payout.payout_status)}`} />
                         <div>
-                          <h3 className=\"font-semibold\">
+                          <h3 className="font-semibold">
                             {payout.payout_method === 'bank_transfer' ? 'Bank Transfer' : 
                              payout.payout_method === 'paypal' ? 'PayPal' : 'Stripe Express'}
                           </h3>
-                          <p className=\"text-sm text-muted-foreground\">
+                          <p className="text-sm text-muted-foreground">
                             {new Date(payout.period_start_date).toLocaleDateString()} - {new Date(payout.period_end_date).toLocaleDateString()}
                           </p>
                           {payout.processed_at && (
-                            <p className=\"text-xs text-muted-foreground\">
+                            <p className="text-xs text-muted-foreground">
                               Processed on {new Date(payout.processed_at).toLocaleDateString()}
                             </p>
                           )}
                         </div>
                       </div>
-                      <div className=\"text-right\">
-                        <p className=\"font-semibold\">{formatCurrency(payout.net_payout_amount)}</p>
+                      <div className="text-right">
+                        <p className="font-semibold">{formatCurrency(payout.net_payout_amount)}</p>
                         <Badge variant={payout.payout_status === 'completed' ? 'default' : 
                                       payout.payout_status === 'processing' ? 'secondary' :
                                       payout.payout_status === 'failed' ? 'destructive' : 'outline'}>
@@ -407,17 +407,17 @@ const EarningsPage = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value=\"analytics\">
-            <div className=\"grid grid-cols-1 lg:grid-cols-2 gap-6\">
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className=\"flex items-center gap-2\">
-                    <BarChart3 className=\"h-5 w-5\" />
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
                     Monthly Revenue Trend
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className=\"h-64 flex items-center justify-center text-muted-foreground\">
+                  <div className="h-64 flex items-center justify-center text-muted-foreground">
                     Revenue chart would be displayed here
                   </div>
                 </CardContent>
@@ -425,13 +425,13 @@ const EarningsPage = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className=\"flex items-center gap-2\">
-                    <PieChart className=\"h-5 w-5\" />
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5" />
                     Revenue Sources
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className=\"h-64 flex items-center justify-center text-muted-foreground\">
+                  <div className="h-64 flex items-center justify-center text-muted-foreground">
                     Revenue breakdown chart would be displayed here
                   </div>
                 </CardContent>
