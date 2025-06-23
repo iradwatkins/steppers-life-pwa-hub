@@ -101,7 +101,7 @@ export class OrderService {
 
       if (orderError) throw orderError;
 
-      // Create order items (using a simplified approach for now)
+      // Create order items
       const orderItems = (data.items || []).map(item => ({
         order_id: order.id,
         ticket_type_id: item.ticketTypeId,
@@ -111,9 +111,53 @@ export class OrderService {
         special_requests: item.specialRequests
       }));
 
-      // Note: order_items table may need to be added to Supabase schema
-      // For now, we'll store order items as part of the order billing_details
-      console.log('Order items to be processed:', orderItems);
+      // Insert order items into database
+      if (orderItems.length > 0) {
+        const { data: insertedItems, error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems)
+          .select();
+
+        if (itemsError) {
+          console.error('Error inserting order items:', itemsError);
+          throw itemsError;
+        }
+
+        console.log('Order items created successfully:', insertedItems);
+
+        // Generate individual tickets for each order item
+        for (const orderItem of insertedItems) {
+          // Create individual tickets based on quantity (if quantity field exists)
+          // For now, create one ticket per order item
+          const ticketData = {
+            ticket_type_id: orderItem.ticket_type_id,
+            status: 'active' as const
+          };
+
+          const { data: ticket, error: ticketError } = await supabase
+            .from('tickets')
+            .insert(ticketData)
+            .select()
+            .single();
+
+          if (ticketError) {
+            console.error('Error creating ticket for order item:', orderItem.id, ticketError);
+            // Don't throw here to avoid rolling back the order, just log the error
+          } else {
+            // Update the order item with the ticket ID
+            const { error: updateError } = await supabase
+              .from('order_items')
+              .update({ ticket_id: ticket.id })
+              .eq('id', orderItem.id);
+
+            if (updateError) {
+              console.error('Error linking ticket to order item:', updateError);
+            } else {
+              console.log('Ticket created and linked successfully:', ticket.id);
+            }
+          }
+        }
+      }
 
       // Process inventory for each item
       for (const item of (data.items || [])) {

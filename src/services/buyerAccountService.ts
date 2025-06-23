@@ -76,38 +76,59 @@ class BuyerAccountService {
   ): Promise<{ data: TicketData[] | null; error: Error | null }> {
     try {
       let query = supabase
-        .from('orders')
+        .from('order_items')
         .select(`
           *,
-          events (
-            title,
-            event_date,
-            event_time,
-            venue_name
+          orders!inner (
+            id,
+            user_id,
+            order_number,
+            status,
+            total_amount,
+            billing_details,
+            created_at,
+            events (
+              id,
+              title,
+              start_date,
+              end_date,
+              venue_id,
+              venues (
+                name
+              )
+            )
+          ),
+          tickets (
+            id,
+            status
+          ),
+          ticket_types (
+            name,
+            price
           )
         `)
-        .eq('user_id', userId);
+        .eq('orders.user_id', userId);
 
       // Apply status filter
       if (options.status && options.status !== 'all') {
         if (options.status === 'upcoming') {
-          query = query.gte('events.start_date', new Date().toISOString().split('T')[0]);
+          query = query.gte('orders.events.start_date', new Date().toISOString().split('T')[0]);
         } else if (options.status === 'past') {
-          query = query.lt('events.start_date', new Date().toISOString().split('T')[0]);
+          query = query.lt('orders.events.start_date', new Date().toISOString().split('T')[0]);
         } else {
-          query = query.eq('status', options.status);
+          query = query.eq('orders.status', options.status);
         }
       }
 
       // Apply search filter
       if (options.search) {
-        query = query.or(`events.title.ilike.%${options.search}%,events.venue_name.ilike.%${options.search}%`);
+        query = query.or(`orders.events.title.ilike.%${options.search}%,orders.events.venues.name.ilike.%${options.search}%`);
       }
 
       // Apply sorting
       const sortBy = options.sortBy || 'event_date';
       const sortOrder = options.sortOrder || 'desc';
-      query = query.order(sortBy === 'event_date' ? 'events.start_date' : sortBy, { ascending: sortOrder === 'asc' });
+      query = query.order(sortBy === 'event_date' ? 'orders.events.start_date' : sortBy, { ascending: sortOrder === 'asc' });
 
       // Apply pagination
       if (options.limit) {
@@ -117,33 +138,33 @@ class BuyerAccountService {
         query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
       }
 
-      const { data: orders, error } = await query;
+      const { data: orderItems, error } = await query;
 
       if (error) throw error;
 
       // Transform data to match TicketData interface
-      const tickets: TicketData[] = orders?.map(order => ({
-        id: order.id,
-        order_number: order.id, // Using order ID as order number for now
-        event_id: order.event_id,
-        event_title: order.events?.title || 'Unknown Event',
-        event_date: order.events?.event_date || '',
-        event_time: order.events?.event_time || '',
-        venue: order.events?.venue_name || 'TBA',
-        ticket_type: order.ticket_type || 'General Admission',
-        seat_info: order.seat_selection || 'General Admission',
-        price: order.total_amount,
-        qr_code: order.status === 'completed' ? `QR_${order.id}` : undefined,
-        status: this.determineTicketStatus(order.events?.event_date, order.status),
-        purchase_date: order.created_at,
-        attendee_name: order.attendee_name,
-        attendee_email: order.attendee_email,
-        attendee_phone: order.attendee_phone,
-        special_requests: order.special_requests,
-        payment_status: order.status,
-        verification_code: order.verification_code,
-        quantity: order.quantity || 1,
-        total_amount: order.total_amount
+      const tickets: TicketData[] = orderItems?.map(orderItem => ({
+        id: orderItem.tickets?.id || orderItem.id,
+        order_number: orderItem.orders?.order_number || orderItem.orders?.id,
+        event_id: orderItem.orders?.events?.id,
+        event_title: orderItem.orders?.events?.title || 'Unknown Event',
+        event_date: orderItem.orders?.events?.start_date || '',
+        event_time: orderItem.orders?.events?.start_date ? new Date(orderItem.orders.events.start_date).toLocaleTimeString() : '',
+        venue: orderItem.orders?.events?.venues?.name || 'TBA',
+        ticket_type: orderItem.ticket_types?.name || 'General Admission',
+        seat_info: 'General Admission', // Could be enhanced with seating info later
+        price: orderItem.price,
+        qr_code: orderItem.orders?.status === 'confirmed' && orderItem.tickets ? `QR_${orderItem.tickets.id}` : undefined,
+        status: this.determineTicketStatus(orderItem.orders?.events?.start_date, orderItem.orders?.status),
+        purchase_date: orderItem.orders?.created_at,
+        attendee_name: orderItem.attendee_name || 'Unknown',
+        attendee_email: orderItem.attendee_email || '',
+        attendee_phone: orderItem.orders?.billing_details?.phone,
+        special_requests: orderItem.special_requests,
+        payment_status: orderItem.orders?.status,
+        verification_code: `TICKET_${orderItem.tickets?.id || orderItem.id}`,
+        quantity: 1, // Each order item represents one ticket
+        total_amount: orderItem.price
       })) || [];
 
       return { data: tickets, error: null };
@@ -162,7 +183,7 @@ class BuyerAccountService {
         .from('orders')
         .select(`
           *,
-          events (event_date)
+          events (start_date)
         `)
         .eq('user_id', userId);
 
@@ -174,7 +195,7 @@ class BuyerAccountService {
       const summary: AccountSummary = {
         total_tickets: orders?.length || 0,
         upcoming_events: orders?.filter(order => 
-          order.events?.event_date >= today && order.status === 'completed'
+          order.events?.start_date >= today && order.status === 'completed'
         ).length || 0,
         pending_payments: orders?.filter(order => 
           order.status === 'pending'
@@ -183,7 +204,7 @@ class BuyerAccountService {
           order.status === 'completed' ? sum + order.total_amount : sum, 0
         ) || 0,
         events_attended: orders?.filter(order => 
-          order.events?.event_date < today && order.status === 'completed'
+          order.events?.start_date < today && order.status === 'completed'
         ).length || 0
       };
 
