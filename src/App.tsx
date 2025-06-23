@@ -97,6 +97,8 @@ import CommunityManagementPage from "./pages/admin/CommunityManagementPage";
 import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
 import CreatePhysicalClassPage from "./pages/classes/CreatePhysicalClassPage";
 import InstructorDashboard from "./pages/instructor/InstructorDashboard";
+import ComparativeAnalyticsPage from "./pages/ComparativeAnalyticsPage";
+import AutomatedReportsPage from "./pages/AutomatedReportsPage";
 import EarningsPage from "./pages/instructor/EarningsPage";
 import VODPurchasePage from "./pages/vod/VODPurchasePage";
 import PromotionalStorePage from "./pages/store/PromotionalStorePage";
@@ -232,6 +234,16 @@ const RouterWrapper = () => {
         <Route path="/organizer/multi-event-analytics" element={
           <OrganizerRoute>
             <MultiEventAnalyticsPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/comparative-analytics" element={
+          <OrganizerRoute>
+            <ComparativeAnalyticsPage />
+          </OrganizerRoute>
+        } />
+        <Route path="/organizer/automated-reports" element={
+          <OrganizerRoute>
+            <AutomatedReportsPage />
           </OrganizerRoute>
         } />
         <Route path="/organizer/team" element={
