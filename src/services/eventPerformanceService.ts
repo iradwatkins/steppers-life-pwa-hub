@@ -141,7 +141,7 @@ export class EventPerformanceService {
       return {
         eventId,
         eventName: event.title,
-        eventDate: event.start_time,
+        eventDate: event.start_date,
         totalCapacity: event.capacity || 0,
         totalSold,
         totalRevenue,

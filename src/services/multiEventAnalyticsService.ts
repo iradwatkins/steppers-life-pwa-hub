@@ -84,7 +84,7 @@ export class MultiEventAnalyticsService {
       .from('events')
       .select('*')
       .eq('organizer_id', organizerId)
-      .order('start_time', { ascending: false });
+      .order('start_date', { ascending: false });
 
     if (error) throw error;
     return events || [];
@@ -160,7 +160,7 @@ export class MultiEventAnalyticsService {
           comparisons.push({
             eventId: event.id,
             eventName: event.title,
-            date: event.start_time,
+            date: event.start_date,
             revenue: performance.totalRevenue,
             attendees: performance.totalSold,
             capacity: event.capacity || 0,
@@ -188,7 +188,7 @@ export class MultiEventAnalyticsService {
       for (const event of events) {
         try {
           const performance = await EventPerformanceService.getEventPerformance(event.id);
-          const date = new Date(event.start_time);
+          const date = new Date(event.start_date);
           
           let periodKey: string;
           if (period === 'month') {
