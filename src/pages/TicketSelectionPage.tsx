@@ -289,11 +289,11 @@ const TicketSelectionPage = () => {
                   <div className="flex flex-wrap gap-4 text-muted-foreground mb-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      {new Date(event.event_date).toLocaleDateString()}
+                      {new Date(event.start_date).toLocaleDateString()}
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      {event.start_time || 'Time TBA'}
+                      {event.start_date ? new Date(event.start_date).toLocaleTimeString() : 'Time TBA'}
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />

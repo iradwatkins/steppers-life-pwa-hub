@@ -91,9 +91,9 @@ class BuyerAccountService {
       // Apply status filter
       if (options.status && options.status !== 'all') {
         if (options.status === 'upcoming') {
-          query = query.gte('events.event_date', new Date().toISOString().split('T')[0]);
+          query = query.gte('events.start_date', new Date().toISOString().split('T')[0]);
         } else if (options.status === 'past') {
-          query = query.lt('events.event_date', new Date().toISOString().split('T')[0]);
+          query = query.lt('events.start_date', new Date().toISOString().split('T')[0]);
         } else {
           query = query.eq('status', options.status);
         }
@@ -107,7 +107,7 @@ class BuyerAccountService {
       // Apply sorting
       const sortBy = options.sortBy || 'event_date';
       const sortOrder = options.sortOrder || 'desc';
-      query = query.order(sortBy === 'event_date' ? 'events.event_date' : sortBy, { ascending: sortOrder === 'asc' });
+      query = query.order(sortBy === 'event_date' ? 'events.start_date' : sortBy, { ascending: sortOrder === 'asc' });
 
       // Apply pagination
       if (options.limit) {
