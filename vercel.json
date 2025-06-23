@@ -6,5 +6,15 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "SQUARE_ACCESS_TOKEN": "EAAAEGfR6YHwJC-YnPV6iMsNRfJfevbvOzw0KdHqMcwBBLIZJfVp8-vGD5VKQ2Q3",
+    "SQUARE_APPLICATION_ID": "sq0idp-XG8irNWHf98C62-iqOwH6Q",
+    "SQUARE_LOCATION_ID": "L0Q2YC1SPBGD8",
+    "SQUARE_ENVIRONMENT": "production",
+    "PAYPAL_CLIENT_ID": "AWcmEjsKDeNUzvVQJyvc3lq5n4NXsh7-sHPgGT4ZiPFo8X6csYZcElZg2wsu_xsZE22DUoXOtF3MolVK",
+    "PAYPAL_CLIENT_SECRET": "EAN3YkBLsv8LBmNX_VNZd5Qd5Y-LnxsBmXt7CwC6PGxTLbnzJCLw7EzP5tG3lH8GtDAh4lkn1P_nWJRs",
+    "PAYPAL_ENVIRONMENT": "live",
+    "VITE_APP_URL": "https://stepperslife.com"
+  }
 }

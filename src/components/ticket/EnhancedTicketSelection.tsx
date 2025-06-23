@@ -213,16 +213,7 @@ export const EnhancedTicketSelection: React.FC<EnhancedTicketSelectionProps> = (
                   </Button>
                   
                   <div className="flex items-center gap-2">
-                    <Input
-                      id="quantity"
-                      type="number"
-                      min={1}
-                      max={Math.min(selectedTicketType.available, selectedTicketType.max_per_order || selectedTicketType.available)}
-                      value={quantity}
-                      onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-                      className="w-20 text-center"
-                      {...register('quantity', { valueAsNumber: true })}
-                    />
+                    <span className="w-20 text-center font-medium text-lg">{quantity}</span>
                     <span className="text-sm text-muted-foreground">
                       of {selectedTicketType.available} available
                     </span>

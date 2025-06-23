@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { InventoryService } from './inventoryService';
+import { PurchaseChannel } from '@/types/inventory';
 
 type Order = Database['public']['Tables']['orders']['Row'];
 type OrderInsert = Database['public']['Tables']['orders']['Insert'];
@@ -68,7 +69,8 @@ export class CashPaymentService {
           item.ticketTypeId,
           item.quantity,
           sessionId,
-          request.userId
+          request.userId,
+          PurchaseChannel.CASH
         )
       );
 

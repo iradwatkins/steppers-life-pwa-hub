@@ -350,7 +350,7 @@ const TicketSelectionPage = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-center">
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
@@ -375,29 +375,6 @@ const TicketSelectionPage = () => {
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                      <Select
-                        value={getQuantity(ticketType.id).toString()}
-                        onValueChange={(value) => handleQuantityChange(ticketType, parseInt(value))}
-                        disabled={(() => {
-                          const inventoryStatus = getInventoryStatus(ticketType.id);
-                          return !inventoryStatus?.isAvailable;
-                        })()}
-                      >
-                        <SelectTrigger className="w-24">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(() => {
-                            const inventoryStatus = getInventoryStatus(ticketType.id);
-                            const maxQuantity = Math.min(inventoryStatus?.available || 0, 10);
-                            return Array.from({ length: maxQuantity + 1 }, (_, i) => (
-                              <SelectItem key={i} value={i.toString()}>
-                                {i}
-                              </SelectItem>
-                            ));
-                          })()}
-                        </SelectContent>
-                      </Select>
                     </div>
                   </CardContent>
                 </Card>

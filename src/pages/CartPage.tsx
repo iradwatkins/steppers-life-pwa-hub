@@ -127,17 +127,7 @@ const CartPage = () => {
                         <Minus className="h-4 w-4" />
                       </Button>
                       
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value) || 0;
-                          handleQuantityChange(item.ticketType.id, value);
-                        }}
-                        className="w-16 text-center"
-                        min="0"
-                        max={item.ticketType.availableQuantity || 10}
-                      />
+                      <span className="w-8 text-center font-medium">{item.quantity}</span>
                       
                       <Button
                         variant="outline"

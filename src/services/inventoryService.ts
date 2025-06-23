@@ -12,10 +12,12 @@ import type {
   PurchaseResult,
   InventoryStatusSummary,
   InventoryUpdateEvent,
+  InventoryConfig
+} from '@/types/inventory';
+import {
   PurchaseChannel,
   HoldStatus,
   InventoryStatus,
-  InventoryConfig,
   InventoryUpdateType
 } from '@/types/inventory';
 import {
@@ -450,10 +452,11 @@ export class InventoryService {
     ticketTypeId: string,
     quantity: number,
     sessionId: string,
-    userId?: string
+    userId?: string,
+    channel: PurchaseChannel = PurchaseChannel.ONLINE
   ) {
     const service = InventoryService.getInstance();
-    const result = await service.createHold(ticketTypeId, quantity, PurchaseChannel.ONLINE, sessionId, userId);
+    const result = await service.createHold(ticketTypeId, quantity, channel, sessionId, userId);
     return result.success ? result.hold : null;
   }
 
