@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import InteractiveSeatingChart from '@/components/seating/InteractiveSeatingChart';
 import { 
   ArrowLeft,
   ArrowRight,
@@ -265,6 +266,44 @@ const EventSeatingChartPage: React.FC = () => {
   };
 
   const stats = calculateStats();
+
+  // Convert mapped seats to InteractiveSeatingChart format
+  const convertToInteractiveFormat = useMemo(() => {
+    if (!uploadedImage || !imageSize.width || !imageSize.height) return { seats: [], priceCategories: [] };
+
+    const seats = mappedSeats.map(seat => ({
+      id: seat.id,
+      seatNumber: seat.seatNumber,
+      row: seat.row,
+      section: seat.section,
+      x: (seat.x / imageSize.width) * 100, // Convert to percentage
+      y: (seat.y / imageSize.height) * 100, // Convert to percentage
+      price: seat.price,
+      category: seat.type,
+      categoryColor: seatTypeColors[seat.type],
+      isADA: seat.isADA,
+      status: seat.isBlocked ? 'sold' : 'available' as const
+    }));
+
+    const priceCategories = Object.entries(seatTypeColors).map(([type, color]) => ({
+      id: type,
+      name: type.charAt(0).toUpperCase() + type.slice(1),
+      price: seatTypePrices[type as SeatType],
+      color,
+      description: `${type.charAt(0).toUpperCase() + type.slice(1)} seating area`
+    }));
+
+    return { seats, priceCategories };
+  }, [mappedSeats, uploadedImage, imageSize]);
+
+  const handleSeatSelection = (selectedSeats: any[]) => {
+    console.log('Selected seats:', selectedSeats);
+  };
+
+  const handlePurchaseClick = (selectedSeats: any[]) => {
+    console.log('Purchase clicked for seats:', selectedSeats);
+    toast.info('This is a preview - purchase functionality is disabled');
+  };
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
@@ -541,102 +580,81 @@ const EventSeatingChartPage: React.FC = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {uploadedImage && (
+                    {uploadedImage && mappedSeats.length > 0 ? (
                       <div className="space-y-4">
-                        <div className="border rounded-lg overflow-hidden">
-                          <canvas
-                            width={800}
-                            height={600}
-                            className="w-full"
-                            ref={(canvas) => {
-                              if (canvas && uploadedImage) {
-                                const ctx = canvas.getContext('2d');
-                                if (ctx) {
-                                  const img = new Image();
-                                  img.onload = () => {
-                                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                                    // Draw all seats
-                                    mappedSeats.forEach((seat) => {
-                                      const scaleX = canvas.width / imageSize.width;
-                                      const scaleY = canvas.height / imageSize.height;
-                                      
-                                      const canvasX = seat.x * scaleX;
-                                      const canvasY = seat.y * scaleY;
-                                      
-                                      ctx.beginPath();
-                                      ctx.arc(canvasX, canvasY, 8, 0, 2 * Math.PI);
-                                      ctx.fillStyle = seat.isBlocked ? '#ef4444' : '#22c55e';
-                                      ctx.fill();
-                                      ctx.strokeStyle = '#ffffff';
-                                      ctx.lineWidth = 2;
-                                      ctx.stroke();
-                                    });
-                                  };
-                                  img.src = uploadedImage;
-                                }
-                              }
-                            }}
-                          />
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                          <div className="flex items-center gap-2 text-yellow-800">
+                            <Eye className="h-4 w-4" />
+                            <span className="text-sm font-medium">
+                              Preview Mode - Seat selection is disabled for testing
+                            </span>
+                          </div>
                         </div>
+
+                        <InteractiveSeatingChart
+                          venueImageUrl={uploadedImage}
+                          seats={convertToInteractiveFormat.seats}
+                          priceCategories={convertToInteractiveFormat.priceCategories}
+                          maxSeatsPerSelection={8}
+                          onSeatSelection={handleSeatSelection}
+                          onPurchaseClick={handlePurchaseClick}
+                          showPricing={true}
+                          className="border rounded-lg"
+                        />
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-lg">Seat Legend</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2">
-                                {Object.entries(seatTypeColors).map(([type, color]) => (
-                                  <div key={type} className="flex items-center gap-2">
-                                    <div 
-                                      className="w-4 h-4 rounded-full border border-white"
-                                      style={{ backgroundColor: color }}
-                                    />
-                                    <span className="text-sm">
-                                      {type.charAt(0).toUpperCase() + type.slice(1)} - ${seatTypePrices[type as SeatType]}
-                                    </span>
-                                  </div>
-                                ))}
-                                <div className="flex items-center gap-2">
-                                  <div className="w-4 h-4 rounded-full bg-red-500 border border-white" />
-                                  <span className="text-sm">Unavailable</span>
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg">Chart Summary</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                              <div className="text-center">
+                                <div className="text-2xl font-bold">{stats.totalSeats}</div>
+                                <div className="text-muted-foreground">Total Seats</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-green-600">
+                                  ${stats.totalRevenue.toLocaleString()}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-4 h-4 rounded-full bg-green-500 border border-white" />
-                                  <span className="text-sm">Available</span>
+                                <div className="text-muted-foreground">Revenue Potential</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold">
+                                  ${stats.totalSeats > 0 ? (stats.totalRevenue / stats.totalSeats).toFixed(2) : '0'}
+                                </div>
+                                <div className="text-muted-foreground">Avg. Price</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold">{Object.keys(stats.seatsByType).length}</div>
+                                <div className="text-muted-foreground">Seat Types</div>
+                              </div>
+                            </div>
+                            
+                            {Object.keys(stats.seatsByType).length > 0 && (
+                              <div className="mt-4 pt-4 border-t">
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  {Object.entries(stats.seatsByType).map(([type, count]) => (
+                                    <div key={type} className="flex justify-between">
+                                      <span className="flex items-center gap-2">
+                                        <div 
+                                          className="w-3 h-3 rounded-full border border-white"
+                                          style={{ backgroundColor: seatTypeColors[type as SeatType] }}
+                                        />
+                                        {type.charAt(0).toUpperCase() + type.slice(1)}:
+                                      </span>
+                                      <span className="font-medium">{count} seats</span>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
-                            </CardContent>
-                          </Card>
-                          
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-lg">Chart Summary</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                  <span>Total Seats:</span>
-                                  <span>{stats.totalSeats}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Revenue Potential:</span>
-                                  <span>${stats.totalRevenue.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Average Price:</span>
-                                  <span>${stats.totalSeats > 0 ? (stats.totalRevenue / stats.totalSeats).toFixed(2) : '0'}</span>
-                                </div>
-                                {Object.entries(stats.seatsByType).map(([type, count]) => (
-                                  <div key={type} className="flex justify-between">
-                                    <span>{type.charAt(0).toUpperCase() + type.slice(1)}:</span>
-                                    <span>{count} seats</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Grid3X3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>Upload a chart and map some seats to see the preview</p>
                       </div>
                     )}
                   </CardContent>
