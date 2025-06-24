@@ -14,6 +14,7 @@ import { US_STATES, normalizeStateName } from '@/data/usStates';
 import { Calendar, MapPin, Clock, Search, Filter, Users, DollarSign, Star, Navigation, RefreshCw, Grid3X3, List, Map, ChevronDown, ChevronUp, Sliders, Bookmark, BookmarkPlus, Trash2 } from 'lucide-react';
 import FollowButton from '@/components/following/FollowButton';
 import EventCard from '@/components/events/EventCard';
+import EventsMasonryGrid from '@/components/events/EventsMasonryGrid';
 import type { Database } from '@/integrations/supabase/types';
 
 type Event = Database['public']['Tables']['events']['Row'] & {
@@ -42,7 +43,7 @@ const Events = () => {
   const [userLocation, setUserLocation] = useState<LocationData | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const [sortByDistance, setSortByDistance] = useState(true);
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map' | 'masonry'>('masonry');
   const [sortBy, setSortBy] = useState<'date' | 'price-low' | 'price-high' | 'popularity' | 'rating' | 'distance'>('date');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [skillLevel, setSkillLevel] = useState('all');
@@ -642,17 +643,14 @@ const Events = () => {
               <Star className="h-6 w-6 text-yellow-500" />
               Featured Events
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {Array.isArray(featuredEvents) ? featuredEvents.map((event) => (
-                <EventCard 
-                  key={event.id} 
-                  event={event} 
-                  variant="featured"
-                  showRating={true}
-                  showSoldOutStatus={true}
-                />
-              )) : null}
-            </div>
+            <EventsMasonryGrid
+              events={featuredEvents}
+              variant="featured"
+              showRating={true}
+              showSoldOutStatus={true}
+              showSocialShare={true}
+              className="mb-8"
+            />
           </div>
         )}
 
@@ -696,6 +694,15 @@ const Events = () => {
                   Grid
                 </Button>
                 <Button
+                  variant={viewMode === 'masonry' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('masonry')}
+                  className="gap-2"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                  Masonry
+                </Button>
+                <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
@@ -718,9 +725,9 @@ const Events = () => {
           </div>
           
           {isLoading ? (
-            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+            <div className={viewMode === 'grid' || viewMode === 'masonry' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
               {[...Array(6)].map((_, i) => (
-                viewMode === 'grid' ? (
+                viewMode === 'grid' || viewMode === 'masonry' ? (
                   <Card key={i}>
                     <CardHeader>
                       <Skeleton className="aspect-video w-full mb-4" />
@@ -802,6 +809,13 @@ const Events = () => {
                 </p>
               </div>
             </div>
+          ) : viewMode === 'masonry' ? (
+            <EventsMasonryGrid
+              events={events}
+              showRating={true}
+              showSoldOutStatus={true}
+              showSocialShare={true}
+            />
           ) : (
             <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
               {Array.isArray(events) ? events.map((event) => (

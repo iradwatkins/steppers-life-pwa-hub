@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Users, BookOpen, MapPin, Clock, Star } from 'lucide-react';
 import { EventService } from '@/services/eventService';
+import EventsMasonryGrid from '@/components/events/EventsMasonryGrid';
 
 const Index = () => {
   // Real featured events from Supabase
@@ -73,49 +74,25 @@ const Index = () => {
             <p className="text-xl text-muted-foreground">Don't miss these upcoming stepping events</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {Array.isArray(featuredEvents) && featuredEvents.length > 0 ? featuredEvents.map((event) => (
-              <Card key={event.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="aspect-video bg-muted rounded-md mb-4"></div>
-                  <CardTitle className="text-lg">{event.title}</CardTitle>
-                  <CardDescription className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {event.start_date ? new Date(event.start_date).toLocaleDateString() : 'TBD'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      {event.start_date ? new Date(event.start_date).toLocaleTimeString() : 'TBD'}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      {event.venue?.name || 'Online Event'}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold text-stepping-purple">
-                      {event.ticket_types?.[0]?.price ? `$${event.ticket_types[0].price}` : 'Free'}
-                    </span>
-                    <Button size="sm" asChild>
-                      <Link to={`/events/${event.id}/tickets`}>Buy Tickets</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )) : (
-              <div className="col-span-full text-center py-12">
-                <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mb-2">No Events Yet</h3>
-                <p className="text-muted-foreground mb-4">Check back soon for upcoming stepping events!</p>
-                <Button asChild>
-                  <Link to="/events/create">Create an Event</Link>
-                </Button>
-              </div>
-            )}
-          </div>
+          {Array.isArray(featuredEvents) && featuredEvents.length > 0 ? (
+            <EventsMasonryGrid
+              events={featuredEvents}
+              variant="featured"
+              showRating={true}
+              showSoldOutStatus={true}
+              showSocialShare={true}
+              className="mb-8"
+            />
+          ) : (
+            <div className="text-center py-12">
+              <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2">No Events Yet</h3>
+              <p className="text-muted-foreground mb-4">Check back soon for upcoming stepping events!</p>
+              <Button asChild>
+                <Link to="/events/create">Create an Event</Link>
+              </Button>
+            </div>
+          )}
 
           <div className="text-center">
             <Button variant="outline" size="lg" asChild>
