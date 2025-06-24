@@ -10,13 +10,13 @@
     "lint": "eslint . || true",
     "preview": "vite preview",
     "supabase:link:dev": "supabase link --project-ref nwoteszpvvefbopbbvrl",
-    "supabase:link:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn",
+    "supabase:link:prod": "supabase link --project-ref voaxyetbqhmgbvcxsttf",
     "migrate:dev": "supabase db push --linked",
-    "migrate:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && supabase db push --linked",
+    "migrate:prod": "supabase link --project-ref voaxyetbqhmgbvcxsttf && supabase db push --linked",
     "schema:diff": "supabase db diff --linked",
-    "deploy:schema:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && psql $SUPABASE_DB_URL -f COMPLETE-PRODUCTION-SCHEMA-DEPLOYMENT.sql",
-    "reset:prod:clean": "supabase link --project-ref nvryyufpbcruyqqndyjn && psql $SUPABASE_DB_URL -f PRODUCTION-DATABASE-RESET-CLEAN.sql",
-    "check:prod": "supabase link --project-ref nvryyufpbcruyqqndyjn && psql $SUPABASE_DB_URL -f PRODUCTION-DATABASE-CHECK.sql",
+    "deploy:schema:prod": "supabase link --project-ref voaxyetbqhmgbvcxsttf && psql $SUPABASE_DB_URL -f COMPLETE-PRODUCTION-SCHEMA-DEPLOYMENT.sql",
+    "reset:prod:clean": "supabase link --project-ref voaxyetbqhmgbvcxsttf && psql $SUPABASE_DB_URL -f PRODUCTION-DATABASE-RESET-CLEAN.sql",
+    "check:prod": "supabase link --project-ref voaxyetbqhmgbvcxsttf && psql $SUPABASE_DB_URL -f PRODUCTION-DATABASE-CHECK.sql",
     "deploy:production": "npm run build && npm run migrate:prod"
   },
   "dependencies": {

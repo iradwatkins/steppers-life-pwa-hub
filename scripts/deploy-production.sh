@@ -15,7 +15,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Production configuration
-PROD_PROJECT_REF="nvryyufpbcruyqqndyjn"
+PROD_PROJECT_REF="voaxyetbqhmgbvcxsttf"
 DEV_PROJECT_REF="nwoteszpvvefbopbbvrl"
 
 echo -e "${BLUE}📋 Production Configuration:${NC}"
