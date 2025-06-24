@@ -43,7 +43,7 @@ export class AdminService {
       if (!success) {
         allSuccess = false;
       }
-    }
+    } 
 
     return allSuccess;
   }
