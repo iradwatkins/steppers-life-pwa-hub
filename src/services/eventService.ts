@@ -441,7 +441,6 @@ export class EventService {
           website_url: organizationData.websiteUrl,
           contact_email: organizationData.contactEmail,
           contact_phone: organizationData.contactPhone,
-          profile_picture_url: organizationData.profilePicturePath,
         })
         .select()
         .single();

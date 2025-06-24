@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ImageUpload } from '@/components/ui/image-upload';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { EventService } from '@/services/eventService';
@@ -27,11 +26,10 @@ import {
 
 const organizerSetupSchema = z.object({
   organizationName: z.string().min(2, 'Organization name must be at least 2 characters'),
-  description: z.string().min(20, 'Description must be at least 20 characters'),
+  description: z.string().optional().or(z.literal('')),
   websiteUrl: z.string().url('Please enter a valid website URL').optional().or(z.literal('')),
   contactEmail: z.string().email('Please enter a valid email address'),
   contactPhone: z.string().min(10, 'Please enter a valid phone number'),
-  profilePicturePath: z.string().optional(),
 });
 
 type OrganizerSetupData = z.infer<typeof organizerSetupSchema>;
@@ -53,7 +51,6 @@ const OrganizerSetupPage = () => {
       websiteUrl: '',
       contactEmail: user?.email || '',
       contactPhone: '',
-      profilePicturePath: '',
     }
   });
 
@@ -157,7 +154,7 @@ const OrganizerSetupPage = () => {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>About Your Organization *</FormLabel>
+                      <FormLabel>About Your Organization</FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Describe your organization, experience with stepping events, what makes your events special, etc."
@@ -246,30 +243,6 @@ const OrganizerSetupPage = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="profilePicturePath"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        Profile Picture (Optional)
-                      </FormLabel>
-                      <FormControl>
-                        <ImageUpload
-                          value={field.value}
-                          onChange={field.onChange}
-                          variant="avatar"
-                          placeholder="Upload your profile picture to build trust with attendees"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                      <p className="text-sm text-muted-foreground">
-                        This will be displayed on your event listings and helps build trust with potential attendees.
-                      </p>
-                    </FormItem>
-                  )}
-                />
               </CardContent>
             </Card>
 
