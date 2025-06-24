@@ -1,13 +1,14 @@
 /**
- * Blog Hook - Epic I.001: Blog Management System
+ * Blog Hook - Epic I.001: Magazine Management System
  * 
- * React hook for managing blog state and operations with automatic
+ * React hook for managing blog/magazine state and operations with automatic
  * loading states, error handling, and optimistic updates.
+ * Now uses magazine service for backwards compatibility.
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { magazineService as blogService } from '@/services/magazineService';
 import { 
-  blogService, 
   BlogPost, 
   BlogCategory, 
   BlogTag, 
@@ -15,7 +16,7 @@ import {
   CreateBlogPostData, 
   UpdateBlogPostData, 
   BlogListFilters 
-} from '@/services/blogService';
+} from '@/types/blog';
 import { useToast } from '@/components/ui/use-toast';
 
 export interface UseBlogOptions {
@@ -109,8 +110,8 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
     setLoading(true);
     setError(null);
     try {
-      const response = await blogService.getPosts(filters);
-      setPosts(response.posts);
+      const response = await blogService.getArticles(filters);
+      setPosts(response.articles);
       setCategories(response.categories);
       setTags(response.tags);
       setTotal(response.total);
@@ -126,7 +127,7 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
     setLoading(true);
     setError(null);
     try {
-      const post = await blogService.getPostBySlug(slug);
+      const post = await blogService.getArticleBySlug(slug);
       return post;
     } catch (error) {
       handleError(error, 'fetch post');
@@ -141,7 +142,7 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
     setLoading(true);
     setError(null);
     try {
-      const post = await blogService.getPostById(id);
+      const post = await blogService.getArticleById(id);
       return post;
     } catch (error) {
       handleError(error, 'fetch post');
@@ -156,13 +157,13 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
     setLoading(true);
     setError(null);
     try {
-      const newPost = await blogService.createPost(postData);
+      const newPost = await blogService.createArticle(postData);
       
       // Optimistic update
       setPosts(current => [newPost, ...current]);
       setTotal(current => current + 1);
       
-      handleSuccess('Blog post created successfully');
+      handleSuccess('Article created successfully');
       return newPost;
     } catch (error) {
       handleError(error, 'create post');
@@ -177,7 +178,7 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
     setLoading(true);
     setError(null);
     try {
-      const updatedPost = await blogService.updatePost(postData);
+      const updatedPost = await blogService.updateArticle(postData);
       
       // Optimistic update
       setPosts(current => 
@@ -186,7 +187,7 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
         )
       );
       
-      handleSuccess('Blog post updated successfully');
+      handleSuccess('Article updated successfully');
       return updatedPost;
     } catch (error) {
       handleError(error, 'update post');
@@ -201,13 +202,13 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
     setLoading(true);
     setError(null);
     try {
-      await blogService.deletePost(id);
+      await blogService.deleteArticle(id);
       
       // Optimistic update
       setPosts(current => current.filter(post => post.id !== id));
       setTotal(current => current - 1);
       
-      handleSuccess('Blog post deleted successfully');
+      handleSuccess('Article deleted successfully');
       return true;
     } catch (error) {
       handleError(error, 'delete post');
@@ -222,7 +223,7 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
     setLoading(true);
     setError(null);
     try {
-      const publishedPost = await blogService.publishPost(id);
+      const publishedPost = await blogService.publishArticle(id);
       
       // Optimistic update
       setPosts(current => 
@@ -231,7 +232,7 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
         )
       );
       
-      handleSuccess('Blog post published successfully');
+      handleSuccess('Article published successfully');
       return publishedPost;
     } catch (error) {
       handleError(error, 'publish post');
@@ -241,29 +242,11 @@ export const useBlog = (options: UseBlogOptions = {}): UseBlogReturn => {
     }
   }, [handleError, handleSuccess]);
 
-  // Schedule post
+  // Schedule post (deprecated - removed in magazine service)
   const schedulePost = useCallback(async (id: string, scheduledAt: string): Promise<BlogPost | null> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const scheduledPost = await blogService.schedulePost(id, scheduledAt);
-      
-      // Optimistic update
-      setPosts(current => 
-        current.map(post => 
-          post.id === scheduledPost.id ? scheduledPost : post
-        )
-      );
-      
-      handleSuccess('Blog post scheduled successfully');
-      return scheduledPost;
-    } catch (error) {
-      handleError(error, 'schedule post');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [handleError, handleSuccess]);
+    console.warn('schedulePost is deprecated in magazine service');
+    return null;
+  }, []);
 
   // Fetch categories
   const fetchCategories = useCallback(async () => {

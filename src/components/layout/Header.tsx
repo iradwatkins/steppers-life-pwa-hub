@@ -64,12 +64,6 @@ const Header = () => {
               Magazine
             </button>
             <button 
-              onClick={() => handleNavigation('/blog')} 
-              className="text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
-            >
-              Blog
-            </button>
-            <button 
               onClick={() => handleNavigation('/events')} 
               className="text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
             >
@@ -162,8 +156,8 @@ const Header = () => {
                       <DropdownMenuItem onClick={() => handleDropdownNavigation('/admin/dashboard')}>
                         Admin Dashboard
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDropdownNavigation('/admin/blog')}>
-                        Blog Management
+                      <DropdownMenuItem onClick={() => handleDropdownNavigation('/admin/magazine')}>
+                        Magazine Management
                       </DropdownMenuItem>
                     </>
                   )}
@@ -209,15 +203,6 @@ const Header = () => {
                 className="text-foreground/80 hover:text-foreground transition-colors text-left"
               >
                 Magazine
-              </button>
-              <button 
-                onClick={() => {
-                  handleNavigation('/blog');
-                  setIsMenuOpen(false);
-                }}
-                className="text-foreground/80 hover:text-foreground transition-colors text-left"
-              >
-                Blog
               </button>
               <button 
                 onClick={() => {

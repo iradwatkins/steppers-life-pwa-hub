@@ -94,10 +94,9 @@ import TicketTransferPage from "./pages/TicketTransferPage";
 import TransferClaimPage from "./pages/TransferClaimPage";
 import GroupBookingPage from "./pages/GroupBookingPage";
 import TicketResalePage from "./pages/TicketResalePage";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import BlogManagementPage from "./pages/admin/BlogManagementPage";
-import BlogEditorPage from "./pages/admin/BlogEditorPage";
+import MagazineArticle from "./pages/MagazineArticle";
+import MagazineManagementPage from "./pages/admin/MagazineManagementPage";
+import MagazineEditorPage from "./pages/admin/MagazineEditorPage";
 import CommunityManagementPage from "./pages/admin/CommunityManagementPage";
 import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
 import CreatePhysicalClassPage from "./pages/classes/CreatePhysicalClassPage";
@@ -382,9 +381,8 @@ const RouterWrapper = () => {
         <Route path="/community/services/:id" element={<ServiceDetailPage />} />
         <Route path="/about" element={<About />} />
         
-        {/* Blog routes */}
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/:slug" element={<BlogPost />} />
+        {/* Magazine routes */}
+        <Route path="/magazine/:slug" element={<MagazineArticle />} />
         
         {/* Protected user routes */}
         <Route path="/profile" element={
@@ -541,20 +539,20 @@ const RouterWrapper = () => {
           </AdminRoute>
         } />
         
-        {/* Admin Blog routes */}
-        <Route path="/admin/blog" element={
+        {/* Admin Magazine routes */}
+        <Route path="/admin/magazine" element={
           <AdminRoute>
-            <BlogManagementPage />
+            <MagazineManagementPage />
           </AdminRoute>
         } />
-        <Route path="/admin/blog/create" element={
+        <Route path="/admin/magazine/create" element={
           <AdminRoute>
-            <BlogEditorPage />
+            <MagazineEditorPage />
           </AdminRoute>
         } />
-        <Route path="/admin/blog/edit/:postId" element={
+        <Route path="/admin/magazine/edit/:articleId" element={
           <AdminRoute>
-            <BlogEditorPage />
+            <MagazineEditorPage />
           </AdminRoute>
         } />
         <Route path="/admin/community" element={
