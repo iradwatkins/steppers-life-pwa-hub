@@ -98,6 +98,7 @@ import MagazineArticle from "./pages/MagazineArticle";
 import MagazineManagementPage from "./pages/admin/MagazineManagementPage";
 import MagazineEditorPage from "./pages/admin/MagazineEditorPage";
 import CommunityManagementPage from "./pages/admin/CommunityManagementPage";
+import StoreManagementPage from "./pages/admin/StoreManagementPage";
 import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
 import CreatePhysicalClassPage from "./pages/classes/CreatePhysicalClassPage";
 import InstructorDashboard from "./pages/instructor/InstructorDashboard";
@@ -558,6 +559,11 @@ const RouterWrapper = () => {
         <Route path="/admin/community" element={
           <AdminRoute>
             <CommunityManagementPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/stores" element={
+          <AdminRoute>
+            <StoreManagementPage />
           </AdminRoute>
         } />
         <Route path="/login" element={<Login />} />

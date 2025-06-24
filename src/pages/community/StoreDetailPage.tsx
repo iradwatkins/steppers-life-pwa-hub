@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { communityService } from '@/services/communityService';
+import { storeService } from '@/services/storeService';
+import type { Store, StoreReview, StoreComment } from '@/types/store';
 import FollowButton from '@/components/following/FollowButton';
 import { 
   Store as StoreIcon, 

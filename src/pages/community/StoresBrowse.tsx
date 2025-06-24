@@ -5,11 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, MapPin, Phone, Globe, Star, Clock, SlidersHorizontal, Store as StoreIcon, Plus } from 'lucide-react';
-import { communityService } from '@/services/communityService';
+import { Search, Filter, MapPin, Phone, Globe, Star, Clock, SlidersHorizontal, Store as StoreIcon, Plus, Target } from 'lucide-react';
+import { storeService } from '@/services/storeService';
 import { useAuth } from '@/hooks/useAuth';
-import FollowButton from '@/components/following/FollowButton';
-import type { Store, StoreCategory, CommunityListFilters } from '@/types/community';
+import { toast } from 'sonner';
+import type { Store, StoreCategory, StoreFilters } from '@/types/store';
 
 const StoresBrowse = () => {
   const navigate = useNavigate();
@@ -19,8 +19,10 @@ const StoresBrowse = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedLocation, setSelectedLocation] = useState(searchParams.get('location') || 'all');
-  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'created_at'>('rating');
+  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'created_at' | 'distance'>('rating');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [useLocation, setUseLocation] = useState(false);
+  const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
   
   const [stores, setStores] = useState<Store[]>([]);
   const [categories, setCategories] = useState<StoreCategory[]>([]);
@@ -39,10 +41,8 @@ const StoresBrowse = () => {
 
   const loadCategories = async () => {
     try {
-      const result = await communityService.getStoreCategories();
-      if (result.success) {
-        setCategories(result.data || []);
-      }
+      const categoriesData = await storeService.getCategories();
+      setCategories(categoriesData);
     } catch (error) {
       console.error('Failed to load categories:', error);
     }
@@ -51,22 +51,27 @@ const StoresBrowse = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const filters: CommunityListFilters = {
-        search: searchQuery || undefined,
+      const filters: StoreFilters = {
+        keyword: searchQuery || undefined,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
-        location: selectedLocation !== 'all' ? selectedLocation : undefined,
+        city: selectedLocation !== 'all' ? selectedLocation : undefined,
         sort_by: sortBy,
         sort_order: sortOrder,
         limit,
-        offset: (currentPage - 1) * limit
+        offset: (currentPage - 1) * limit,
+        status: 'approved'
       };
 
-      const result = await communityService.getStores(filters);
-
-      if (result.success) {
-        setStores(result.data || []);
-        setTotalCount(result.data?.length || 0);
+      // Add location-based filtering if enabled
+      if (useLocation && userLocation) {
+        filters.latitude = userLocation.latitude;
+        filters.longitude = userLocation.longitude;
+        filters.radius = 25; // 25 mile radius
       }
+
+      const result = await storeService.getStores(filters);
+      setStores(result.stores);
+      setTotalCount(result.total);
     } catch (error) {
       console.error('Failed to load stores:', error);
     } finally {
@@ -84,6 +89,26 @@ const StoresBrowse = () => {
     if (selectedCategory !== 'all') params.set('category', selectedCategory);
     if (selectedLocation !== 'all') params.set('location', selectedLocation);
     setSearchParams(params);
+  };
+
+  const handleUseLocation = async () => {
+    if (!useLocation) {
+      try {
+        const location = await storeService.getCurrentLocation();
+        setUserLocation(location);
+        setUseLocation(true);
+        setSortBy('distance');
+        toast.success('Location enabled! Showing stores near you.');
+        loadData();
+      } catch (error) {
+        toast.error('Unable to access your location. Please check permissions.');
+      }
+    } else {
+      setUseLocation(false);
+      setUserLocation(null);
+      setSortBy('rating');
+      loadData();
+    }
   };
 
   const getCategoryBadgeColor = (slug: string) => {
@@ -185,7 +210,7 @@ const StoresBrowse = () => {
               <span className="text-sm font-medium">Sort by:</span>
             </div>
             
-            <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'name' | 'rating' | 'created_at')}>
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'name' | 'rating' | 'created_at' | 'distance')}>
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -193,8 +218,19 @@ const StoresBrowse = () => {
                 <SelectItem value="rating">Rating</SelectItem>
                 <SelectItem value="name">Name</SelectItem>
                 <SelectItem value="created_at">Newest</SelectItem>
+                {useLocation && <SelectItem value="distance">Distance</SelectItem>}
               </SelectContent>
             </Select>
+
+            <Button
+              variant={useLocation ? "default" : "outline"}
+              size="sm"
+              onClick={handleUseLocation}
+              className="flex items-center gap-2"
+            >
+              <Target className="h-4 w-4" />
+              {useLocation ? 'Near Me' : 'Use Location'}
+            </Button>
 
             <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
               <SelectTrigger className="w-24">
@@ -244,13 +280,13 @@ const StoresBrowse = () => {
                     )}
                     
                     <div className="flex items-center justify-between mb-2">
-                      <Badge className={`text-white ${getCategoryBadgeColor(store.category.slug)}`}>
-                        {store.category.name}
+                      <Badge className={`text-white ${getCategoryBadgeColor(store.category?.slug || '')}`}>
+                        {store.category?.name || 'Uncategorized'}
                       </Badge>
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{store.rating_average.toFixed(1)}</span>
-                        <span className="text-sm text-muted-foreground">({store.rating_count})</span>
+                        <span className="text-sm font-medium">{store.rating.toFixed(1)}</span>
+                        <span className="text-sm text-muted-foreground">({store.review_count})</span>
                       </div>
                     </div>
                     
@@ -260,40 +296,43 @@ const StoresBrowse = () => {
                           {store.name}
                         </Link>
                       </CardTitle>
-                      <FollowButton
-                        entityId={store.id}
-                        entityType="store"
-                        entityName={store.name}
-                        variant="icon"
-                        size="sm"
-                      />
+                      {useLocation && userLocation && store.latitude && store.longitude && (
+                        <span className="text-sm text-muted-foreground">
+                          {storeService.calculateDistance(
+                            userLocation.latitude,
+                            userLocation.longitude,
+                            store.latitude,
+                            store.longitude
+                          ).toFixed(1)} mi
+                        </span>
+                      )}
                     </div>
                     <CardDescription className="line-clamp-2">{store.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-1 mb-4">
-                      {!store.location.is_online_only && store.location.address && (
+                      {store.location_type !== 'online' && store.physical_address && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="h-4 w-4" />
-                          {store.location.address}
+                          {store.physical_address}
                         </div>
                       )}
-                      {store.location.is_online_only && (
+                      {store.location_type === 'online' && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Globe className="h-4 w-4" />
                           Online Store
                         </div>
                       )}
-                      {store.contact.phone && (
+                      {store.contact_phone && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Phone className="h-4 w-4" />
-                          {store.contact.phone}
+                          {store.contact_phone}
                         </div>
                       )}
-                      {store.operating_hours?.notes && (
+                      {store.operating_hours?.monday && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Clock className="h-4 w-4" />
-                          {store.operating_hours.notes}
+                          {store.operating_hours.monday}
                         </div>
                       )}
                     </div>
@@ -303,9 +342,9 @@ const StoresBrowse = () => {
                           View Store
                         </Link>
                       </Button>
-                      {store.contact.website && (
+                      {store.website && (
                         <Button size="sm" variant="outline" asChild>
-                          <a href={store.contact.website} target="_blank" rel="noopener noreferrer">
+                          <a href={store.website} target="_blank" rel="noopener noreferrer">
                             <Globe className="h-4 w-4" />
                           </a>
                         </Button>
@@ -318,13 +357,14 @@ const StoresBrowse = () => {
 
             {stores.length === 0 && (
               <div className="text-center py-12">
-                <Store className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <StoreIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground mb-4">No stores found matching your criteria.</p>
                 <div className="space-x-2">
                   <Button variant="outline" onClick={() => {
                     setSearchQuery('');
                     setSelectedCategory('all');
                     setSelectedLocation('all');
+                    handleSearch();
                   }}>
                     Clear Filters
                   </Button>

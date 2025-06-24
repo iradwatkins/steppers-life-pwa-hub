@@ -5,11 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, MapPin, Phone, Globe, Star, Clock, SlidersHorizontal, Briefcase, Plus, CheckCircle, Award } from 'lucide-react';
-import { communityService } from '@/services/communityService';
+import { Search, Filter, MapPin, Phone, Globe, Star, Clock, SlidersHorizontal, Briefcase, Plus, CheckCircle, Award, Target, Heart } from 'lucide-react';
+import { serviceService } from '@/services/serviceService';
 import { useAuth } from '@/hooks/useAuth';
-import FollowButton from '@/components/following/FollowButton';
-import type { Service, ServiceCategory, CommunityListFilters } from '@/types/community';
+import { toast } from 'sonner';
+import type { Service, ServiceCategory, ServiceFilters } from '@/types/service';
 
 const ServicesBrowse = () => {
   const navigate = useNavigate();
@@ -19,9 +19,13 @@ const ServicesBrowse = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedLocation, setSelectedLocation] = useState(searchParams.get('location') || 'all');
-  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'created_at'>('rating');
+  const [sortBy, setSortBy] = useState<'business_name' | 'rating' | 'created_at' | 'distance' | 'experience_years'>('rating');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
+  const [showEmergencyOnly, setShowEmergencyOnly] = useState(false);
+  const [recoveryFilter, setRecoveryFilter] = useState('all');
+  const [useLocation, setUseLocation] = useState(false);
+  const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
   
   const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
@@ -32,7 +36,7 @@ const ServicesBrowse = () => {
 
   useEffect(() => {
     loadData();
-  }, [selectedCategory, selectedLocation, sortBy, sortOrder, currentPage, showVerifiedOnly]);
+  }, [selectedCategory, selectedLocation, sortBy, sortOrder, currentPage, showVerifiedOnly, showEmergencyOnly, recoveryFilter, useLocation]);
 
   useEffect(() => {
     loadCategories();
@@ -40,10 +44,8 @@ const ServicesBrowse = () => {
 
   const loadCategories = async () => {
     try {
-      const result = await communityService.getServiceCategories();
-      if (result.success) {
-        setCategories(result.data || []);
-      }
+      const categoriesData = await serviceService.getCategories();
+      setCategories(categoriesData);
     } catch (error) {
       console.error('Failed to load categories:', error);
     }
@@ -52,23 +54,38 @@ const ServicesBrowse = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const filters: CommunityListFilters = {
-        search: searchQuery || undefined,
+      const filters: ServiceFilters = {
+        keyword: searchQuery || undefined,
         category: selectedCategory !== 'all' ? selectedCategory : undefined,
-        location: selectedLocation !== 'all' ? selectedLocation : undefined,
-        is_verified: showVerifiedOnly ? true : undefined,
+        city: selectedLocation !== 'all' ? selectedLocation : undefined,
+        verified_only: showVerifiedOnly,
+        emergency_available: showEmergencyOnly,
         sort_by: sortBy,
         sort_order: sortOrder,
         limit,
-        offset: (currentPage - 1) * limit
+        offset: (currentPage - 1) * limit,
+        status: 'approved'
       };
 
-      const result = await communityService.getServices(filters);
-
-      if (result.success) {
-        setServices(result.data || []);
-        setTotalCount(result.data?.length || 0);
+      // Add location-based filtering if enabled
+      if (useLocation && userLocation) {
+        filters.latitude = userLocation.latitude;
+        filters.longitude = userLocation.longitude;
+        filters.radius = 25; // 25 mile radius
       }
+
+      // Filter by recovery focus if specified
+      if (recoveryFilter === 'recovery') {
+        // This would need to be handled by filtering categories on the backend
+        const recoveryCategories = categories.filter(cat => cat.is_recovery_focused).map(cat => cat.id);
+        if (recoveryCategories.length > 0 && filters.category === undefined) {
+          // For now, we'll handle this in the frontend filtering
+        }
+      }
+
+      const result = await serviceService.getServices(filters);
+      setServices(result.services);
+      setTotalCount(result.total);
     } catch (error) {
       console.error('Failed to load services:', error);
     } finally {
