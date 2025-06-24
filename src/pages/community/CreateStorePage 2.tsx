@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import { communityService } from '@/services/communityService';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { 
-  Store, 
+  Store as StoreIcon, 
   ArrowLeft, 
   MapPin, 
   Phone, 
@@ -218,7 +218,7 @@ const CreateStorePage = () => {
           </Button>
           
           <div className="flex items-center gap-3 mb-4">
-            <Store className="h-8 w-8 text-blue-500" />
+            <StoreIcon className="h-8 w-8 text-blue-500" />
             <div>
               <h1 className="text-3xl font-bold">List Your Store</h1>
               <p className="text-muted-foreground">
@@ -234,7 +234,7 @@ const CreateStorePage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Store className="h-5 w-5" />
+                  <StoreIcon className="h-5 w-5" />
                   Basic Information
                 </CardTitle>
                 <CardDescription>

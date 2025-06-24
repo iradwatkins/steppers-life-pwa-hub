@@ -272,7 +272,7 @@ const StoresBrowse = () => {
                       </div>
                     ) : (
                       <div className="aspect-video bg-muted rounded-md mb-4 relative flex items-center justify-center">
-                        <Store className="h-12 w-12 text-muted-foreground" />
+                        <StoreIcon className="h-12 w-12 text-muted-foreground" />
                         {store.is_featured && (
                           <Badge className="absolute top-2 left-2 bg-stepping-gradient">Featured</Badge>
                         )}
