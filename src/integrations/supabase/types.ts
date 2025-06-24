@@ -859,6 +859,115 @@ export type Database = {
           }
         ]
       }
+      tickets: {
+        Row: {
+          id: string
+          ticket_type_id: string
+          order_item_id: string | null
+          status: 'active' | 'used' | 'cancelled' | 'refunded'
+          qr_code: string | null
+          check_in_time: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          ticket_type_id: string
+          order_item_id?: string | null
+          status?: 'active' | 'used' | 'cancelled' | 'refunded'
+          qr_code?: string | null
+          check_in_time?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          ticket_type_id?: string
+          order_item_id?: string | null
+          status?: 'active' | 'used' | 'cancelled' | 'refunded'
+          qr_code?: string | null
+          check_in_time?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_ticket_type_id_fkey"
+            columns: ["ticket_type_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          ticket_type_id: string
+          ticket_id: string | null
+          price: number
+          attendee_name: string
+          attendee_email: string
+          special_requests: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          ticket_type_id: string
+          ticket_id?: string | null
+          price: number
+          attendee_name: string
+          attendee_email: string
+          special_requests?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          ticket_type_id?: string
+          ticket_id?: string | null
+          price?: number
+          attendee_name?: string
+          attendee_email?: string
+          special_requests?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_ticket_type_id_fkey"
+            columns: ["ticket_type_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
