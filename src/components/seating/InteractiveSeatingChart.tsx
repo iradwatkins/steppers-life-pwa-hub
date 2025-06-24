@@ -67,6 +67,7 @@ const InteractiveSeatingChart: React.FC<InteractiveSeatingChartProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [showHoldTimers, setShowHoldTimers] = useState(true);
+  const [dragThreshold] = useState(5); // Minimum distance to start dragging
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleSeatClick = useCallback((seat: SeatData, event: React.MouseEvent) => {
@@ -101,6 +102,69 @@ const InteractiveSeatingChart: React.FC<InteractiveSeatingChartProps> = ({
     }
   }, [selectedSeats, maxSeatsPerSelection, onSeatSelection]);
 
+  // Add container click handler for coordinate-based seat selection (supports both mouse and touch)
+  const handleContainerClick = useCallback((event: React.MouseEvent | React.TouchEvent) => {
+    if (!containerRef.current || isDragging) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const containerHeight = rect.height;
+    
+    // Get click/touch position relative to container
+    let clientX, clientY;
+    if ('touches' in event && event.touches.length > 0) {
+      // Touch event
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    } else if ('changedTouches' in event && event.changedTouches.length > 0) {
+      // Touch end event
+      clientX = event.changedTouches[0].clientX;
+      clientY = event.changedTouches[0].clientY;
+    } else {
+      // Mouse event
+      clientX = (event as React.MouseEvent).clientX;
+      clientY = (event as React.MouseEvent).clientY;
+    }
+    
+    const clickX = clientX - rect.left;
+    const clickY = clientY - rect.top;
+    
+    // Adjust for pan and zoom transformations
+    const adjustedX = (clickX - pan.x) / zoom;
+    const adjustedY = (clickY - pan.y) / zoom;
+    
+    // Find the closest seat within click tolerance
+    const tolerance = Math.max(20 / zoom, 15); // Minimum 15px tolerance for touch
+    let closestSeat: SeatData | null = null;
+    let closestDistance = Infinity;
+    
+    seats.forEach(seat => {
+      const seatCenterX = (seat.x / 100) * containerWidth;
+      const seatCenterY = (seat.y / 100) * containerHeight;
+      
+      const distance = Math.sqrt(
+        Math.pow(adjustedX - seatCenterX, 2) + 
+        Math.pow(adjustedY - seatCenterY, 2)
+      );
+      
+      if (distance < tolerance && distance < closestDistance) {
+        closestSeat = seat;
+        closestDistance = distance;
+      }
+    });
+    
+    if (closestSeat) {
+      // Create a synthetic mouse event for consistency
+      const syntheticEvent = {
+        ...event,
+        stopPropagation: () => event.stopPropagation?.(),
+        clientX,
+        clientY
+      } as React.MouseEvent;
+      handleSeatClick(closestSeat, syntheticEvent);
+    }
+  }, [containerRef, isDragging, pan, zoom, seats, handleSeatClick]);
+
   const handleZoomIn = () => {
     setZoom(prev => Math.min(prev * 1.2, 3));
   };
@@ -115,6 +179,7 @@ const InteractiveSeatingChart: React.FC<InteractiveSeatingChartProps> = ({
   };
 
   const handleMouseDown = (event: React.MouseEvent) => {
+    // Only start dragging if clicking on the container itself (not on seats)
     if (event.target === event.currentTarget) {
       setIsDragging(true);
       setDragStart({ x: event.clientX - pan.x, y: event.clientY - pan.y });
@@ -123,10 +188,16 @@ const InteractiveSeatingChart: React.FC<InteractiveSeatingChartProps> = ({
 
   const handleMouseMove = (event: React.MouseEvent) => {
     if (isDragging) {
-      setPan({
-        x: event.clientX - dragStart.x,
-        y: event.clientY - dragStart.y
-      });
+      const deltaX = event.clientX - dragStart.x;
+      const deltaY = event.clientY - dragStart.y;
+      
+      // Only start panning if movement exceeds threshold
+      if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) > dragThreshold) {
+        setPan({
+          x: deltaX,
+          y: deltaY
+        });
+      }
     }
   };
 
@@ -206,7 +277,8 @@ const InteractiveSeatingChart: React.FC<InteractiveSeatingChartProps> = ({
           backgroundColor,
           borderColor,
           opacity,
-          transform: `translate(-50%, -50%) ${isSelected ? 'scale(1.1)' : 'scale(1)'}`
+          transform: `translate(-50%, -50%) ${isSelected ? 'scale(1.1)' : 'scale(1)'}`,
+          transformOrigin: 'center center'
         }}
         onClick={(e) => handleSeatClick(seat, e)}
         title={`${seat.seatNumber}${seat.row ? ` Row ${seat.row}` : ''}${seat.section ? ` Section ${seat.section}` : ''} - $${seat.price}${seat.isADA ? ' (ADA)' : ''} - ${seat.status}`}
@@ -256,12 +328,14 @@ const InteractiveSeatingChart: React.FC<InteractiveSeatingChartProps> = ({
           <CardContent>
             <div 
               ref={containerRef}
-              className="relative border rounded-lg overflow-hidden bg-gray-50 cursor-grab active:cursor-grabbing"
+              className="relative border rounded-lg overflow-hidden bg-gray-50 cursor-grab active:cursor-grabbing touch-none"
               style={{ height: '500px' }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
+              onClick={handleContainerClick}
+              onTouchEnd={handleContainerClick}
             >
               <div
                 className="relative w-full h-full"
