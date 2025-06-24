@@ -82,9 +82,9 @@ const CommunityHome = () => {
     return colors[category as keyof typeof colors] || 'bg-gray-500';
   };
 
-  const currentCategories = activeTab === 'stores' ? storeCategories : 
-                           activeTab === 'services' ? serviceCategories : 
-                           [...storeCategories, ...serviceCategories];
+  const currentCategories = activeTab === 'stores' ? (storeCategories || []) : 
+                           activeTab === 'services' ? (serviceCategories || []) : 
+                           [...(storeCategories || []), ...(serviceCategories || [])];
 
   const locations = [
     { value: 'all', label: 'All Areas' },
@@ -163,7 +163,7 @@ const CommunityHome = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {currentCategories.map((category) => (
+                {(currentCategories || []).map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>
@@ -201,7 +201,7 @@ const CommunityHome = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...stores, ...services].slice(0, 6).map((listing) => {
+            {[...(stores || []), ...(services || [])].slice(0, 6).map((listing) => {
               const isStore = 'name' in listing;
               const title = isStore ? (listing as Store).name : (listing as Service).business_name;
               const linkPath = isStore ? `/community/stores/${listing.id}` : `/community/services/${listing.id}`;
@@ -324,7 +324,7 @@ const CommunityHome = () => {
         <div>
           <h2 className="text-2xl font-bold mb-6">Popular Categories</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[...storeCategories, ...serviceCategories]
+            {[...(storeCategories || []), ...(serviceCategories || [])]
               .sort((a, b) => b.sort_order - a.sort_order)
               .slice(0, 12)
               .map((category) => (
