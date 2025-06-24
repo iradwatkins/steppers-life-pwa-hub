@@ -55,7 +55,27 @@ const eventFormSchema = z.object({
   isOnlineEvent: z.boolean().default(false),
   onlineEventLink: z.string().optional(),
   capacity: z.string().optional(),
-  ticketPrice: z.string().min(1, 'Ticket price is required'),
+  // Ticket configuration fields
+  requiresTickets: z.boolean().default(true),
+  ticketPrice: z.string().optional(),
+  // RSVP configuration fields
+  rsvpEnabled: z.boolean().default(false),
+  maxRSVPs: z.string().optional(),
+  rsvpDeadline: z.string().optional(),
+  allowWaitlist: z.boolean().default(false),
+}).refine((data) => {
+  // If tickets are required, price must be provided
+  if (data.requiresTickets && !data.ticketPrice) {
+    return false;
+  }
+  // Either tickets or RSVP must be enabled
+  if (!data.requiresTickets && !data.rsvpEnabled) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Either ticket sales or RSVP must be enabled",
+  path: ["requiresTickets"]
 });
 
 type EventFormData = z.infer<typeof eventFormSchema>;
@@ -90,12 +110,21 @@ const CreateEventPage = () => {
       isOnlineEvent: false,
       onlineEventLink: '',
       capacity: '',
+      // Ticket configuration
+      requiresTickets: true,
       ticketPrice: '',
+      // RSVP configuration
+      rsvpEnabled: false,
+      maxRSVPs: '',
+      rsvpDeadline: '',
+      allowWaitlist: false,
     }
   });
 
   const isMultiDay = form.watch('isMultiDay');
   const isOnlineEvent = form.watch('isOnlineEvent');
+  const requiresTickets = form.watch('requiresTickets');
+  const rsvpEnabled = form.watch('rsvpEnabled');
 
   // Helper function to format date for display
   const formatDateDisplay = (dateString: string) => {
@@ -161,7 +190,7 @@ const CreateEventPage = () => {
       const eventData: CreateEventData = {
         title: data.title,
         description: data.description,
-        shortDescription: data.description.substring(0, 150),
+        shortDescription: data.description ? data.description.substring(0, 150) : '',
         category: data.categories.join(', '), // Store categories as comma-separated string for now
         startDate: startDateTime,
         endDate: endDateTime,
@@ -169,16 +198,27 @@ const CreateEventPage = () => {
         isOnline: data.isOnlineEvent,
         onlineLink: data.onlineEventLink,
         maxAttendees: data.capacity ? parseInt(data.capacity) : 100,
-        ticketTypes: [
+        // Ticket configuration
+        requiresTickets: data.requiresTickets,
+        // RSVP configuration
+        rsvpEnabled: data.rsvpEnabled,
+        maxRSVPs: data.maxRSVPs ? parseInt(data.maxRSVPs) : undefined,
+        rsvpDeadline: data.rsvpDeadline ? `${data.rsvpDeadline}T23:59:59` : undefined,
+        allowWaitlist: data.allowWaitlist,
+      };
+
+      // Only add ticket types if tickets are required
+      if (data.requiresTickets && data.ticketPrice) {
+        eventData.ticketTypes = [
           {
             name: 'General Admission',
             description: 'Standard event ticket',
-            price: data.ticketPrice ? parseFloat(data.ticketPrice) : 0,
+            price: parseFloat(data.ticketPrice),
             quantityAvailable: data.capacity ? parseInt(data.capacity) : 100,
             maxPerOrder: 10,
           }
-        ],
-      };
+        ];
+      }
 
       // Add venue data if it's not an online event
       if (!data.isOnlineEvent) {
@@ -755,45 +795,196 @@ const CreateEventPage = () => {
               </CardContent>
             </Card>
 
-            {/* Event Details Section */}
+            {/* Attendance Configuration Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Event Details
+                  Attendance Configuration
                 </CardTitle>
                 <CardDescription>
-                  Capacity and pricing information
+                  Configure how people can attend your event
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                {/* Event Capacity */}
+                <FormField
+                  control={form.control}
+                  name="capacity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Event Capacity</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="150" {...field} />
+                      </FormControl>
+                      <div className="text-sm text-muted-foreground">
+                        Maximum number of attendees (leave empty for unlimited)
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Ticket Configuration Toggle */}
+                <div className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="capacity"
+                    name="requiresTickets"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Event Capacity</FormLabel>
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Paid Tickets Required</FormLabel>
+                          <div className="text-sm text-muted-foreground">
+                            Attendees must purchase tickets to attend this event
+                          </div>
+                        </div>
                         <FormControl>
-                          <Input type="number" placeholder="150" {...field} />
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked);
+                              // Auto-enable RSVP if tickets are disabled
+                              if (!checked) {
+                                form.setValue('rsvpEnabled', true);
+                              }
+                            }}
+                          />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* Ticket Price - only show if tickets are required */}
+                  {requiresTickets && (
+                    <FormField
+                      control={form.control}
+                      name="ticketPrice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ticket Price *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="45.00" {...field} />
+                          </FormControl>
+                          <div className="text-sm text-muted-foreground">
+                            Price per ticket in USD
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* RSVP Configuration Toggle */}
                   <FormField
                     control={form.control}
-                    name="ticketPrice"
+                    name="rsvpEnabled"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ticket Price *</FormLabel>
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Enable RSVP</FormLabel>
+                          <div className="text-sm text-muted-foreground">
+                            {requiresTickets 
+                              ? "Allow free RSVPs in addition to paid tickets" 
+                              : "Allow free RSVPs for this event"
+                            }
+                          </div>
+                        </div>
                         <FormControl>
-                          <Input placeholder="45.00" {...field} />
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={!requiresTickets} // Always enabled for free events
+                          />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* RSVP Configuration - only show if RSVP is enabled */}
+                  {rsvpEnabled && (
+                    <div className="space-y-4 pl-4 border-l-2 border-blue-200">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="maxRSVPs"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Max RSVPs</FormLabel>
+                              <FormControl>
+                                <Input type="number" placeholder="100" {...field} />
+                              </FormControl>
+                              <div className="text-sm text-muted-foreground">
+                                Leave empty for unlimited
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="rsvpDeadline"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>RSVP Deadline</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <div className="text-sm text-muted-foreground">
+                                Last date to RSVP
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="allowWaitlist"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-sm">Enable Waitlist</FormLabel>
+                              <div className="text-xs text-muted-foreground">
+                                Allow people to join waitlist when RSVPs are full
+                              </div>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info about configuration */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start gap-2">
+                    <Users className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-medium text-blue-900">
+                        {requiresTickets && rsvpEnabled
+                          ? "Hybrid Event"
+                          : requiresTickets
+                          ? "Ticketed Event"
+                          : "Free Event"
+                        }
+                      </p>
+                      <p className="text-blue-700">
+                        {requiresTickets && rsvpEnabled
+                          ? "This event will have both paid tickets and free RSVP options."
+                          : requiresTickets
+                          ? "Attendees must purchase tickets to attend this event."
+                          : "This is a free event with RSVP-based attendance tracking."
+                        }
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

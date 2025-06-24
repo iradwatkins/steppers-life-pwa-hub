@@ -20,6 +20,9 @@ type Event = Database['public']['Tables']['events']['Row'] & {
   ticket_types?: any[];
   distance?: number;
   isFavorited?: boolean;
+  requires_tickets?: boolean;
+  rsvp_enabled?: boolean;
+  max_rsvps?: number;
 };
 
 interface ShareableEventCardProps {
@@ -84,24 +87,57 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
     return `${start.toLocaleTimeString('en-US', timeOptions)} - ${end.toLocaleTimeString('en-US', timeOptions)}`;
   };
 
-  const getEventPrice = (ticketTypes: any[]) => {
-    if (!ticketTypes || ticketTypes.length === 0) return 'Free';
+  const getEventPrice = (event: Event) => {
+    // Check if this is a free event (no tickets required)
+    if (event.requires_tickets === false) {
+      return event.rsvp_enabled ? 'Free - RSVP Required' : 'Free';
+    }
+    
+    // For ticketed events, check ticket types
+    const ticketTypes = event.ticket_types || [];
+    if (ticketTypes.length === 0) {
+      return 'Free';
+    }
     
     const prices = ticketTypes.map(tt => tt.price).filter(p => p > 0);
-    if (prices.length === 0) return 'Free';
+    if (prices.length === 0) {
+      return 'Free';
+    }
     
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     
+    let priceText = '';
     if (minPrice === maxPrice) {
-      return `$${minPrice}`;
+      priceText = `$${minPrice}`;
     } else {
-      return `$${minPrice} - $${maxPrice}`;
+      priceText = `$${minPrice} - $${maxPrice}`;
     }
+    
+    // If both tickets and RSVP are enabled, show hybrid status
+    if (event.requires_tickets && event.rsvp_enabled) {
+      priceText += ' + Free RSVP';
+    }
+    
+    return priceText;
   };
 
-  const getAttendanceInfo = (ticketTypes: any[]) => {
-    if (!ticketTypes || ticketTypes.length === 0) return { sold: 0, capacity: 0, isSoldOut: false };
+  const getAttendanceInfo = (event: Event) => {
+    // For free events with RSVP, use RSVP data
+    if (event.requires_tickets === false && event.rsvp_enabled) {
+      // TODO: Get actual RSVP data from database
+      const rsvpCount = 0; // Placeholder
+      const maxRsvps = event.max_rsvps || 0;
+      return { 
+        sold: rsvpCount, 
+        capacity: maxRsvps || 100, 
+        isSoldOut: maxRsvps > 0 && rsvpCount >= maxRsvps 
+      };
+    }
+    
+    // For ticketed events, use ticket data
+    const ticketTypes = event.ticket_types || [];
+    if (ticketTypes.length === 0) return { sold: 0, capacity: 0, isSoldOut: false };
     
     const sold = ticketTypes.reduce((sum, tt) => sum + (tt.quantity_sold || 0), 0);
     const capacity = ticketTypes.reduce((sum, tt) => sum + (tt.quantity_available || 0), 0);
@@ -109,6 +145,18 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
     const isSoldOut = capacity === 0 && sold > 0;
     
     return { sold, capacity: totalCapacity, isSoldOut };
+  };
+
+  const getActionButtonText = (event: Event, isSoldOut: boolean) => {
+    if (isSoldOut) {
+      return event.requires_tickets === false ? 'Waitlist Full' : 'Sold Out';
+    }
+    
+    if (event.requires_tickets === false) {
+      return event.rsvp_enabled ? 'RSVP Now' : 'View Details';
+    }
+    
+    return 'Get Tickets';
   };
 
   const formatDistance = (distance: number) => {
@@ -129,7 +177,7 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
     }
   };
 
-  const attendanceInfo = getAttendanceInfo(event.ticket_types || []);
+  const attendanceInfo = getAttendanceInfo(event);
   const eventRating = getEventRating();
   const shareOptions = SocialSharingService.generateEventShareOptions(event);
 
@@ -202,14 +250,14 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
                 <div className="flex items-center gap-1">
                   <DollarSign className="h-3 w-3 text-stepping-purple" />
                   <span className="font-semibold text-stepping-purple">
-                    {getEventPrice(event.ticket_types || [])}
+                    {getEventPrice(event)}
                   </span>
                 </div>
               </div>
               
               <Button size="sm" asChild className="w-full bg-stepping-gradient text-xs h-7">
                 <Link to={`/events/${event.id}`}>
-                  {attendanceInfo.isSoldOut ? 'Sold Out' : 'View Details'}
+                  {getActionButtonText(event, attendanceInfo.isSoldOut)}
                 </Link>
               </Button>
             </div>
@@ -262,7 +310,7 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
                 <div className="flex items-center gap-1">
                   <DollarSign className="h-4 w-4 text-stepping-purple" />
                   <span className="text-lg font-semibold text-stepping-purple">
-                    {getEventPrice(event.ticket_types || [])}
+                    {getEventPrice(event)}
                   </span>
                 </div>
                 {onToggleFavorite && (
@@ -330,7 +378,7 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
                 disabled={showSoldOutStatus && attendanceInfo.isSoldOut}
               >
                 <Link to={`/events/${event.id}`}>
-                  {attendanceInfo.isSoldOut ? 'Sold Out' : 'View Details'}
+                  {getActionButtonText(event, attendanceInfo.isSoldOut)}
                 </Link>
               </Button>
             </div>
@@ -451,7 +499,7 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
           <div className="flex items-center gap-1">
             <DollarSign className="h-4 w-4 text-stepping-purple" />
             <span className="text-lg font-semibold text-stepping-purple">
-              {getEventPrice(event.ticket_types || [])}
+              {getEventPrice(event)}
             </span>
           </div>
           <Button 
@@ -461,7 +509,7 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
             disabled={showSoldOutStatus && attendanceInfo.isSoldOut}
           >
             <Link to={`/events/${event.id}`}>
-              {attendanceInfo.isSoldOut ? 'Sold Out' : 'View Details'}
+              {getActionButtonText(event, attendanceInfo.isSoldOut)}
             </Link>
           </Button>
         </div>

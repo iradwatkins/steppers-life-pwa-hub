@@ -32,13 +32,20 @@ export interface CreateEventData {
   maxAttendees?: number;
   featuredImageUrl?: string;
   galleryImages?: string[];
-  ticketTypes: {
+  // Ticket configuration
+  requiresTickets?: boolean;
+  ticketTypes?: {
     name: string;
     description?: string;
     price: number;
     quantityAvailable: number;
     maxPerOrder?: number;
   }[];
+  // RSVP configuration
+  rsvpEnabled?: boolean;
+  maxRSVPs?: number;
+  rsvpDeadline?: string;
+  allowWaitlist?: boolean;
   additionalInfo?: Record<string, any>;
 }
 
@@ -149,6 +156,12 @@ export class EventService {
         featured_image_url: eventData.featuredImageUrl,
         gallery_images: eventData.galleryImages,
         max_attendees: eventData.maxAttendees,
+        // Optional ticket and RSVP configuration
+        requires_tickets: eventData.requiresTickets ?? true,
+        rsvp_enabled: eventData.rsvpEnabled ?? false,
+        max_rsvps: eventData.maxRSVPs,
+        rsvp_deadline: eventData.rsvpDeadline,
+        allow_waitlist: eventData.allowWaitlist ?? false,
         additional_info: eventData.additionalInfo,
       };
       console.log('📅 Event insert data:', eventInsertData);
@@ -166,64 +179,69 @@ export class EventService {
       
       console.log('✅ Event created successfully:', event);
 
-      // Create ticket types - CRITICAL: This must succeed or we rollback
-      if (eventData.ticketTypes && eventData.ticketTypes.length > 0) {
-        console.log('🎫 Creating ticket types...');
-        const ticketTypesData = eventData.ticketTypes.map(ticket => ({
-          event_id: event.id,
-          name: ticket.name,
-          description: ticket.description,
-          price: ticket.price,
-          quantity_available: ticket.quantityAvailable,
-          max_per_order: ticket.maxPerOrder || 10,
-        }));
-        console.log('🎫 Ticket types data:', ticketTypesData);
+      // Create ticket types only if tickets are required
+      const requiresTickets = eventData.requiresTickets ?? true;
+      if (requiresTickets) {
+        if (eventData.ticketTypes && eventData.ticketTypes.length > 0) {
+          console.log('🎫 Creating ticket types...');
+          const ticketTypesData = eventData.ticketTypes.map(ticket => ({
+            event_id: event.id,
+            name: ticket.name,
+            description: ticket.description,
+            price: ticket.price,
+            quantity_available: ticket.quantityAvailable,
+            max_per_order: ticket.maxPerOrder || 10,
+          }));
+          console.log('🎫 Ticket types data:', ticketTypesData);
 
-        const { error: ticketError } = await supabase
-          .from('ticket_types')
-          .insert(ticketTypesData);
+          const { error: ticketError } = await supabase
+            .from('ticket_types')
+            .insert(ticketTypesData);
 
-        if (ticketError) {
-          console.error('❌ Ticket types creation error:', ticketError);
-          // CRITICAL: Delete the event if ticket creation fails
-          console.log('🔄 Rolling back event creation due to ticket type failure...');
-          await supabase.from('events').delete().eq('id', event.id);
-          if (venueId) {
-            await supabase.from('venues').delete().eq('id', venueId);
+          if (ticketError) {
+            console.error('❌ Ticket types creation error:', ticketError);
+            // CRITICAL: Delete the event if ticket creation fails
+            console.log('🔄 Rolling back event creation due to ticket type failure...');
+            await supabase.from('events').delete().eq('id', event.id);
+            if (venueId) {
+              await supabase.from('venues').delete().eq('id', venueId);
+            }
+            throw new Error(`Ticket type creation failed: ${ticketError.message}`);
           }
-          throw new Error(`Ticket type creation failed: ${ticketError.message}`);
+          
+          console.log('✅ Ticket types created successfully');
+        } else {
+          console.log('ℹ️ No ticket types provided for ticketed event, creating default...');
+          // If no ticket types provided for a ticketed event, create a default one
+          console.log('🎫 Creating default ticket type...');
+          const defaultTicketType = {
+            event_id: event.id,
+            name: 'General Admission',
+            description: 'Standard event ticket',
+            price: 0,
+            quantity_available: eventData.maxAttendees || 100,
+            max_per_order: 10,
+          };
+
+          const { error: defaultTicketError } = await supabase
+            .from('ticket_types')
+            .insert([defaultTicketType]);
+
+          if (defaultTicketError) {
+            console.error('❌ Default ticket type creation error:', defaultTicketError);
+            // CRITICAL: Delete the event if default ticket creation fails
+            console.log('🔄 Rolling back event creation due to default ticket type failure...');
+            await supabase.from('events').delete().eq('id', event.id);
+            if (venueId) {
+              await supabase.from('venues').delete().eq('id', venueId);
+            }
+            throw new Error(`Default ticket type creation failed: ${defaultTicketError.message}`);
+          }
+          
+          console.log('✅ Default ticket type created successfully');
         }
-        
-        console.log('✅ Ticket types created successfully');
       } else {
-        console.log('ℹ️ No ticket types to create');
-        // If no ticket types provided, create a default one
-        console.log('🎫 Creating default ticket type...');
-        const defaultTicketType = {
-          event_id: event.id,
-          name: 'General Admission',
-          description: 'Standard event ticket',
-          price: 0,
-          quantity_available: eventData.maxAttendees || 100,
-          max_per_order: 10,
-        };
-
-        const { error: defaultTicketError } = await supabase
-          .from('ticket_types')
-          .insert([defaultTicketType]);
-
-        if (defaultTicketError) {
-          console.error('❌ Default ticket type creation error:', defaultTicketError);
-          // CRITICAL: Delete the event if default ticket creation fails
-          console.log('🔄 Rolling back event creation due to default ticket type failure...');
-          await supabase.from('events').delete().eq('id', event.id);
-          if (venueId) {
-            await supabase.from('venues').delete().eq('id', venueId);
-          }
-          throw new Error(`Default ticket type creation failed: ${defaultTicketError.message}`);
-        }
-        
-        console.log('✅ Default ticket type created successfully');
+        console.log('🆓 Free event - no ticket types needed');
       }
 
       console.log('🎉 Event creation completed successfully:', event);
