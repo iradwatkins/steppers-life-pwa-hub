@@ -6,6 +6,8 @@
  */
 
 import { apiClient } from './apiClient';
+import { bMADValidationService } from './bMADValidationService';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Service,
   ServiceCategory,
@@ -160,43 +162,98 @@ class ServiceDirectoryService {
   }
 
   /**
-   * Create a new service listing
+   * Create a new service listing (BMAD METHOD: Epic-gated access)
    */
   async createService(serviceData: CreateServiceData): Promise<Service> {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required to create service');
+      }
+
+      // BMAD VALIDATION: Check epic requirements for service creation
+      const validation = await bMADValidationService.validateFeatureAccess(
+        user.id,
+        'create_service'
+      );
+
+      if (!validation.isValid) {
+        const errorMessage = validation.errors.join(', ');
+        console.error('BMAD: Service creation denied:', errorMessage);
+        
+        // Provide helpful guidance on required epics
+        const missingEpics = validation.missingEpics.join(', ');
+        throw new Error(
+          `Service creation requires completing these BMAD epics: ${missingEpics}. ` +
+          `Current status: ${errorMessage}`
+        );
+      }
+
+      console.log('BMAD: Service creation authorized for user:', user.id, 'Completed epics:', validation.completedEpics);
+
       const response = await apiClient.post(this.baseUrl, {
         ...serviceData,
-        slug: this.generateSlug(serviceData.business_name)
+        slug: this.generateSlug(serviceData.business_name),
+        owner_id: user.id,
+        bmad_validation: {
+          validated_at: new Date().toISOString(),
+          completed_epics: validation.completedEpics,
+          user_status: validation.userStatus?.extendedStatuses
+        }
       });
 
-      console.log('Service created:', response.data.id);
+      console.log('BMAD: Service created successfully:', response.data.id);
 
       return response.data;
     } catch (error) {
       console.error('Error creating service:', error);
-      throw new Error('Failed to create service listing');
+      throw error;
     }
   }
 
   /**
-   * Update an existing service
+   * Update an existing service (BMAD METHOD: Owner verification)
    */
   async updateService(serviceData: UpdateServiceData): Promise<Service> {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required to update service');
+      }
+
+      // BMAD VALIDATION: Verify user can manage service listings
+      const validation = await bMADValidationService.validateFeatureAccess(
+        user.id,
+        'create_service' // Using same permissions as creation
+      );
+
+      if (!validation.isValid) {
+        throw new Error(`Service update denied: ${validation.errors.join(', ')}`);
+      }
+
       const updateData = { ...serviceData };
       
       if (serviceData.business_name) {
         updateData.slug = this.generateSlug(serviceData.business_name);
       }
 
+      // Add BMAD tracking
+      updateData.bmad_last_updated = {
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+        user_status: validation.userStatus?.extendedStatuses
+      };
+
       const response = await apiClient.patch(`${this.baseUrl}/${serviceData.id}`, updateData);
 
-      console.log('Service updated:', serviceData.id);
+      console.log('BMAD: Service updated:', serviceData.id);
 
       return response.data;
     } catch (error) {
       console.error('Error updating service:', error);
-      throw new Error('Failed to update service');
+      throw error;
     }
   }
 
@@ -249,20 +306,47 @@ class ServiceDirectoryService {
   }
 
   /**
-   * Set service as featured (admin)
+   * Set service as featured (BMAD METHOD: Business promotion validation)
    */
   async setFeaturedService(id: string, featured: boolean): Promise<Service> {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required to feature services');
+      }
+
+      // BMAD VALIDATION: Check business promotion permissions
+      const validation = await bMADValidationService.validateFeatureAccess(
+        user.id,
+        'promote_business_in_community'
+      );
+
+      if (!validation.isValid) {
+        throw new Error(
+          `Service promotion denied: ${validation.errors.join(', ')}. ` +
+          `Required epics: ${validation.missingEpics.join(', ')}`
+        );
+      }
+
+      console.log('BMAD: Service promotion authorized:', id, 'User:', user.id, 'Featured:', featured);
+
       const response = await apiClient.patch(`${this.baseUrl}/${id}/featured`, {
-        is_featured: featured
+        is_featured: featured,
+        bmad_promotion: {
+          promoted_by: user.id,
+          promoted_at: new Date().toISOString(),
+          user_status: validation.userStatus?.extendedStatuses,
+          completed_epics: validation.completedEpics
+        }
       });
 
-      console.log('Service featured status updated:', id, featured);
+      console.log('BMAD: Service featured status updated:', id, featured);
 
       return response.data;
     } catch (error) {
       console.error('Error updating featured status:', error);
-      throw new Error('Failed to update featured status');
+      throw error;
     }
   }
 
@@ -417,15 +501,35 @@ class ServiceDirectoryService {
   }
 
   /**
-   * Upload service image
+   * Upload service image (BMAD METHOD: Image permissions validation)
    */
   async uploadImage(serviceId: string, file: File, caption?: string): Promise<{ url: string; alt?: string }> {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required to upload service images');
+      }
+
+      // BMAD VALIDATION: Check service permissions for image uploads
+      const validation = await bMADValidationService.validateFeatureAccess(
+        user.id,
+        'create_service'
+      );
+
+      if (!validation.isValid) {
+        throw new Error(`Service image upload denied: ${validation.errors.join(', ')}`);
+      }
+
       const formData = new FormData();
       formData.append('image', file);
       if (caption) {
         formData.append('caption', caption);
       }
+
+      // Add BMAD metadata
+      formData.append('bmad_user_id', user.id);
+      formData.append('bmad_user_status', JSON.stringify(validation.userStatus?.extendedStatuses));
 
       const response = await apiClient.post(`${this.baseUrl}/${serviceId}/images`, formData, {
         headers: {
@@ -433,15 +537,17 @@ class ServiceDirectoryService {
         },
       });
 
+      console.log('BMAD: Service image uploaded successfully for service:', serviceId);
+
       return response.data;
     } catch (error) {
       console.error('Error uploading service image:', error);
-      throw new Error('Failed to upload image');
+      throw error;
     }
   }
 
   /**
-   * Upload portfolio item
+   * Upload portfolio item (BMAD METHOD: Portfolio permissions validation)
    */
   async uploadPortfolioItem(serviceId: string, data: {
     file: File;
@@ -450,11 +556,31 @@ class ServiceDirectoryService {
     project_date?: string;
   }): Promise<{ url: string; title: string }> {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required to upload portfolio items');
+      }
+
+      // BMAD VALIDATION: Check service permissions for portfolio uploads
+      const validation = await bMADValidationService.validateFeatureAccess(
+        user.id,
+        'create_service'
+      );
+
+      if (!validation.isValid) {
+        throw new Error(`Portfolio upload denied: ${validation.errors.join(', ')}`);
+      }
+
       const formData = new FormData();
       formData.append('image', data.file);
       formData.append('title', data.title);
       if (data.description) formData.append('description', data.description);
       if (data.project_date) formData.append('project_date', data.project_date);
+
+      // Add BMAD metadata
+      formData.append('bmad_user_id', user.id);
+      formData.append('bmad_user_status', JSON.stringify(validation.userStatus?.extendedStatuses));
 
       const response = await apiClient.post(`${this.baseUrl}/${serviceId}/portfolio`, formData, {
         headers: {
@@ -462,10 +588,12 @@ class ServiceDirectoryService {
         },
       });
 
+      console.log('BMAD: Portfolio item uploaded successfully for service:', serviceId);
+
       return response.data;
     } catch (error) {
       console.error('Error uploading portfolio item:', error);
-      throw new Error('Failed to upload portfolio item');
+      throw error;
     }
   }
 

@@ -6,6 +6,8 @@
  */
 
 import { apiClient } from './apiClient';
+import { bMADValidationService } from './bMADValidationService';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Store,
   StoreCategory,
@@ -132,43 +134,98 @@ class StoreService {
   }
 
   /**
-   * Create a new store listing
+   * Create a new store listing (BMAD METHOD: Epic-gated access)
    */
   async createStore(storeData: CreateStoreData): Promise<Store> {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required to create store');
+      }
+
+      // BMAD VALIDATION: Check epic requirements for store creation
+      const validation = await bMADValidationService.validateFeatureAccess(
+        user.id,
+        'create_store'
+      );
+
+      if (!validation.isValid) {
+        const errorMessage = validation.errors.join(', ');
+        console.error('BMAD: Store creation denied:', errorMessage);
+        
+        // Provide helpful guidance on required epics
+        const missingEpics = validation.missingEpics.join(', ');
+        throw new Error(
+          `Store creation requires completing these BMAD epics: ${missingEpics}. ` +
+          `Current status: ${errorMessage}`
+        );
+      }
+
+      console.log('BMAD: Store creation authorized for user:', user.id, 'Completed epics:', validation.completedEpics);
+
       const response = await apiClient.post(this.baseUrl, {
         ...storeData,
-        slug: this.generateSlug(storeData.name)
+        slug: this.generateSlug(storeData.name),
+        owner_id: user.id,
+        bmad_validation: {
+          validated_at: new Date().toISOString(),
+          completed_epics: validation.completedEpics,
+          user_status: validation.userStatus?.extendedStatuses
+        }
       });
 
-      console.log('Store created:', response.data.id);
+      console.log('BMAD: Store created successfully:', response.data.id);
 
       return response.data;
     } catch (error) {
       console.error('Error creating store:', error);
-      throw new Error('Failed to create store listing');
+      throw error;
     }
   }
 
   /**
-   * Update an existing store
+   * Update an existing store (BMAD METHOD: Owner verification)
    */
   async updateStore(storeData: UpdateStoreData): Promise<Store> {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required to update store');
+      }
+
+      // BMAD VALIDATION: Verify user can manage business listings
+      const validation = await bMADValidationService.validateFeatureAccess(
+        user.id,
+        'create_store' // Using same permissions as creation
+      );
+
+      if (!validation.isValid) {
+        throw new Error(`Store update denied: ${validation.errors.join(', ')}`);
+      }
+
       const updateData = { ...storeData };
       
       if (storeData.name) {
         updateData.slug = this.generateSlug(storeData.name);
       }
 
+      // Add BMAD tracking
+      updateData.bmad_last_updated = {
+        updated_at: new Date().toISOString(),
+        updated_by: user.id,
+        user_status: validation.userStatus?.extendedStatuses
+      };
+
       const response = await apiClient.patch(`${this.baseUrl}/${storeData.id}`, updateData);
 
-      console.log('Store updated:', storeData.id);
+      console.log('BMAD: Store updated:', storeData.id);
 
       return response.data;
     } catch (error) {
       console.error('Error updating store:', error);
-      throw new Error('Failed to update store');
+      throw error;
     }
   }
 
@@ -221,20 +278,47 @@ class StoreService {
   }
 
   /**
-   * Set store as featured (admin)
+   * Set store as featured (BMAD METHOD: Business promotion validation)
    */
   async setFeaturedStore(id: string, featured: boolean): Promise<Store> {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required to feature stores');
+      }
+
+      // BMAD VALIDATION: Check business promotion permissions
+      const validation = await bMADValidationService.validateFeatureAccess(
+        user.id,
+        'promote_business_in_community'
+      );
+
+      if (!validation.isValid) {
+        throw new Error(
+          `Store promotion denied: ${validation.errors.join(', ')}. ` +
+          `Required epics: ${validation.missingEpics.join(', ')}`
+        );
+      }
+
+      console.log('BMAD: Store promotion authorized:', id, 'User:', user.id, 'Featured:', featured);
+
       const response = await apiClient.patch(`${this.baseUrl}/${id}/featured`, {
-        is_featured: featured
+        is_featured: featured,
+        bmad_promotion: {
+          promoted_by: user.id,
+          promoted_at: new Date().toISOString(),
+          user_status: validation.userStatus?.extendedStatuses,
+          completed_epics: validation.completedEpics
+        }
       });
 
-      console.log('Store featured status updated:', id, featured);
+      console.log('BMAD: Store featured status updated:', id, featured);
 
       return response.data;
     } catch (error) {
       console.error('Error updating featured status:', error);
-      throw new Error('Failed to update featured status');
+      throw error;
     }
   }
 
@@ -329,15 +413,35 @@ class StoreService {
   }
 
   /**
-   * Upload store image
+   * Upload store image (BMAD METHOD: Image permissions validation)
    */
   async uploadImage(storeId: string, file: File, caption?: string): Promise<{ url: string; alt?: string }> {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Authentication required to upload store images');
+      }
+
+      // BMAD VALIDATION: Check business permissions for image uploads
+      const validation = await bMADValidationService.validateFeatureAccess(
+        user.id,
+        'create_store'
+      );
+
+      if (!validation.isValid) {
+        throw new Error(`Store image upload denied: ${validation.errors.join(', ')}`);
+      }
+
       const formData = new FormData();
       formData.append('image', file);
       if (caption) {
         formData.append('caption', caption);
       }
+
+      // Add BMAD metadata
+      formData.append('bmad_user_id', user.id);
+      formData.append('bmad_user_status', JSON.stringify(validation.userStatus?.extendedStatuses));
 
       const response = await apiClient.post(`${this.baseUrl}/${storeId}/images`, formData, {
         headers: {
@@ -345,10 +449,12 @@ class StoreService {
         },
       });
 
+      console.log('BMAD: Store image uploaded successfully for store:', storeId);
+
       return response.data;
     } catch (error) {
       console.error('Error uploading store image:', error);
-      throw new Error('Failed to upload image');
+      throw error;
     }
   }
 

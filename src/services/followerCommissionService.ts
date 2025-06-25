@@ -1,7 +1,9 @@
 // BMAD METHOD: Follower Commission Tracking and Attribution Service
 // Handles commission calculations, payments, and sales attribution
+// Enhanced with BMAD epic-gated commission validation
 
 import { supabase } from '@/integrations/supabase/client';
+import { bMADValidationService } from './bMADValidationService';
 
 export interface CommissionCalculation {
   base_amount: number;
@@ -61,7 +63,7 @@ export interface FollowerPerformanceMetrics {
 
 class FollowerCommissionService {
   
-  // Calculate commission for a sale
+  // Calculate commission for a sale (BMAD METHOD: Epic-gated commission validation)
   async calculateCommission(
     followerPermissionId: string,
     saleAmount: number,
@@ -78,6 +80,22 @@ class FollowerCommissionService {
       if (error || !permission) {
         throw new Error('Follower permission not found');
       }
+
+      // BMAD VALIDATION: Ensure follower has completed required epics for commission earning
+      const validation = await bMADValidationService.validateFeatureAccess(
+        permission.follower_id,
+        'earn_commissions'
+      );
+
+      if (!validation.isValid) {
+        console.error('BMAD: Commission calculation denied for follower:', permission.follower_id, validation.errors);
+        throw new Error(
+          `Commission not authorized: ${validation.errors.join(', ')}. ` +
+          `Required epics: ${validation.missingEpics.join(', ')}`
+        );
+      }
+
+      console.log('BMAD: Commission calculation authorized for follower:', permission.follower_id, 'Completed epics:', validation.completedEpics);
 
       let commissionAmount = 0;
       let tierDetails;
@@ -251,7 +269,7 @@ class FollowerCommissionService {
     }
   }
 
-  // Create sales attribution record
+  // Create sales attribution record (BMAD METHOD: Enhanced with validation tracking)
   async createSalesAttribution(
     orderId: string,
     followerPermissionId: string,
@@ -264,10 +282,32 @@ class FollowerCommissionService {
     }
   ): Promise<SalesAttribution | null> {
     try {
-      // Calculate commission
+      // Get follower ID for validation
+      const { data: permission } = await supabase
+        .from('follower_sales_permissions')
+        .select('follower_id')
+        .eq('id', followerPermissionId)
+        .single();
+
+      if (!permission) {
+        throw new Error('Follower permission not found for attribution');
+      }
+
+      // BMAD VALIDATION: Double-check commission eligibility before attribution
+      const validation = await bMADValidationService.validateFeatureAccess(
+        permission.follower_id,
+        'earn_commissions'
+      );
+
+      if (!validation.isValid) {
+        console.error('BMAD: Sales attribution denied - commission not authorized:', validation.errors);
+        return null;
+      }
+
+      // Calculate commission (includes BMAD validation)
       const commission = await this.calculateCommission(followerPermissionId, saleAmount);
 
-      // Create attribution record
+      // Create attribution record with BMAD tracking
       const { data, error } = await supabase
         .from('follower_sales_attribution')
         .insert({
@@ -279,7 +319,12 @@ class FollowerCommissionService {
           referrer_data: attributionData.referrer_data || {},
           sale_amount: saleAmount,
           commission_amount: commission.commission_amount,
-          commission_rate_used: commission.commission_rate
+          commission_rate_used: commission.commission_rate,
+          bmad_validation: {
+            validated_at: new Date().toISOString(),
+            completed_epics: validation.completedEpics,
+            user_status: validation.userStatus?.extendedStatuses
+          }
         })
         .select()
         .single();
@@ -326,7 +371,7 @@ class FollowerCommissionService {
     }
   }
 
-  // Get commission summary for a follower
+  // Get commission summary for a follower (BMAD METHOD: With eligibility check)
   async getFollowerCommissionSummary(
     followerId: string,
     organizerId?: string,
@@ -340,8 +385,19 @@ class FollowerCommissionService {
     commission_count: number;
     average_commission: number;
     performance_metrics: FollowerPerformanceMetrics | null;
+    bmad_status: {
+      commission_eligible: boolean;
+      required_epics: string[];
+      completed_epics: string[];
+      missing_epics: string[];
+    };
   }> {
     try {
+      // BMAD VALIDATION: Check current commission eligibility
+      const validation = await bMADValidationService.validateFeatureAccess(
+        followerId,
+        'earn_commissions'
+      );
       let query = supabase
         .from('follower_commissions')
         .select('*')
@@ -387,7 +443,13 @@ class FollowerCommissionService {
         paid_amount: paidAmount,
         commission_count: commissionCount,
         average_commission: averageCommission,
-        performance_metrics: performanceMetrics
+        performance_metrics: performanceMetrics,
+        bmad_status: {
+          commission_eligible: validation.isValid,
+          required_epics: validation.requiredEpics,
+          completed_epics: validation.completedEpics,
+          missing_epics: validation.missingEpics
+        }
       };
     } catch (error) {
       console.error('Error getting follower commission summary:', error);
@@ -509,7 +571,7 @@ class FollowerCommissionService {
     return suggestions;
   }
 
-  // Create commission payout batch
+  // Create commission payout batch (BMAD METHOD: With eligibility validation)
   async createCommissionPayoutBatch(
     organizerId: string,
     followerIds: string[],
@@ -518,6 +580,33 @@ class FollowerCommissionService {
     paymentMethod: string
   ): Promise<CommissionPayoutBatch | null> {
     try {
+      // BMAD VALIDATION: Verify all followers are eligible for commission payouts
+      const eligibilityChecks = await Promise.all(
+        followerIds.map(async (followerId) => {
+          const validation = await bMADValidationService.validateFeatureAccess(
+            followerId,
+            'earn_commissions'
+          );
+          return {
+            followerId,
+            eligible: validation.isValid,
+            errors: validation.errors
+          };
+        })
+      );
+
+      const ineligibleFollowers = eligibilityChecks.filter(check => !check.eligible);
+      if (ineligibleFollowers.length > 0) {
+        console.warn('BMAD: Some followers are not eligible for commission payout:', ineligibleFollowers);
+        // Filter out ineligible followers
+        followerIds = eligibilityChecks
+          .filter(check => check.eligible)
+          .map(check => check.followerId);
+        
+        if (followerIds.length === 0) {
+          throw new Error('No eligible followers for commission payout');
+        }
+      }
       // Get pending commissions for the specified followers and period
       const { data: commissions, error } = await supabase
         .from('follower_commissions')
@@ -534,7 +623,7 @@ class FollowerCommissionService {
 
       const totalAmount = commissions.reduce((sum, c) => sum + c.commission_amount, 0);
 
-      // Create payout batch record
+      // Create payout batch record with BMAD validation tracking
       const { data: batch, error: batchError } = await supabase
         .from('commission_payout_batches')
         .insert({
@@ -544,7 +633,12 @@ class FollowerCommissionService {
           total_amount: totalAmount,
           commission_count: commissions.length,
           status: 'pending',
-          payment_method: paymentMethod
+          payment_method: paymentMethod,
+          bmad_validation: {
+            validated_at: new Date().toISOString(),
+            eligible_followers: followerIds.length,
+            validation_passed: true
+          }
         })
         .select()
         .single();

@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AdminRoute } from '@/components/auth/ProtectedRoute';
 import { EventService } from '@/services/eventService';
+import { SuperAdminSetup } from '@/components/admin/SuperAdminSetup';
+import { BMADTestSuite } from '@/components/admin/BMADTestSuite';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Shield, 
@@ -383,6 +385,42 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Super Admin Setup - Only visible to super admins */}
+          {isSuperAdmin && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Super Admin Configuration
+                </CardTitle>
+                <CardDescription>
+                  Configure super administrator privileges and permissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SuperAdminSetup />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* BMAD Test Suite - Only visible to super admins */}
+          {isSuperAdmin && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  BMAD Method Test Suite
+                </CardTitle>
+                <CardDescription>
+                  Comprehensive testing for security and BMAD method compliance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BMADTestSuite />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
   );

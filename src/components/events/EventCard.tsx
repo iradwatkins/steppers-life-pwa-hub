@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { EventImage } from '@/components/ui/image-fallback';
 import { Calendar, MapPin, Clock, Users, DollarSign, Star, Share2 } from 'lucide-react';
 import FollowButton from '@/components/following/FollowButton';
 import SocialShareButtons from '@/components/SocialShareButtons';
@@ -185,13 +186,12 @@ const EventCard: React.FC<EventCardProps> = ({
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Event Image */}
           <div className="w-full sm:w-32 h-24 bg-muted rounded-md flex-shrink-0 relative">
-            {event.featured_image_url && (
-              <img 
-                src={event.featured_image_url} 
-                alt={event.title}
-                className="w-full h-full object-cover rounded-md"
-              />
-            )}
+            <EventImage
+              src={event.featured_image_url}
+              alt={event.title}
+              variant="thumbnail"
+              className="w-full h-full rounded-md"
+            />
             {showSoldOutStatus && attendanceInfo.isSoldOut && (
               <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center">
                 <Badge variant="destructive">Sold Out</Badge>
@@ -315,13 +315,12 @@ const EventCard: React.FC<EventCardProps> = ({
               />
             </div>
           )}
-          {event.featured_image_url && (
-            <img 
-              src={event.featured_image_url} 
-              alt={event.title}
-              className="w-full h-full object-cover rounded-md"
-            />
-          )}
+          <EventImage
+            src={event.featured_image_url}
+            alt={event.title}
+            variant="card"
+            className="w-full h-full rounded-md"
+          />
           {showSoldOutStatus && attendanceInfo.isSoldOut && (
             <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center">
               <Badge variant="destructive" className="text-lg">Sold Out</Badge>

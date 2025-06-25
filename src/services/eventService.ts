@@ -161,7 +161,6 @@ export class EventService {
         rsvp_enabled: eventData.rsvpEnabled ?? false,
         max_rsvps: eventData.maxRSVPs,
         rsvp_deadline: eventData.rsvpDeadline,
-        allow_waitlist: eventData.allowWaitlist ?? false,
         additional_info: eventData.additionalInfo,
       };
       console.log('📅 Event insert data:', eventInsertData);

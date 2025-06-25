@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { verifyAndCreateStorageBucket } from '@/utils/storage-setup';
 
 export interface UploadResult {
   url: string;
@@ -11,6 +12,8 @@ export class ImageUploadService {
    */
   static async uploadImage(file: File, bucket: string = 'images', folder?: string): Promise<UploadResult> {
     try {
+      console.log('📸 Starting image upload:', { fileName: file.name, fileSize: file.size, bucket, folder });
+      
       // Validate file type
       if (!file.type.startsWith('image/')) {
         throw new Error('File must be an image');
@@ -22,10 +25,19 @@ export class ImageUploadService {
         throw new Error('Image must be smaller than 5MB');
       }
 
+      // Ensure bucket exists
+      console.log('🗂️ Verifying storage bucket exists...');
+      const bucketExists = await verifyAndCreateStorageBucket();
+      if (!bucketExists) {
+        throw new Error('Failed to verify or create storage bucket');
+      }
+
       // Generate unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
+
+      console.log('📤 Uploading to path:', filePath);
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -36,20 +48,25 @@ export class ImageUploadService {
         });
 
       if (error) {
+        console.error('❌ Upload error details:', error);
         throw new Error(`Upload failed: ${error.message}`);
       }
+
+      console.log('✅ Upload successful:', data);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
         .getPublicUrl(filePath);
 
+      console.log('🔗 Generated public URL:', publicUrl);
+
       return {
         url: publicUrl,
         path: filePath
       };
     } catch (error) {
-      console.error('Image upload error:', error);
+      console.error('❌ Image upload error:', error);
       throw error;
     }
   }
