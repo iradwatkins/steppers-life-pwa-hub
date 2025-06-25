@@ -108,6 +108,7 @@ import EarningsPage from "./pages/instructor/EarningsPage";
 import VODPurchasePage from "./pages/vod/VODPurchasePage";
 import PromotionalStorePage from "./pages/store/PromotionalStorePage";
 import MerchandiseStorePage from "./pages/merchandise/MerchandiseStorePage";
+import NetworkGrowthPage from "./pages/NetworkGrowthPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -435,6 +436,11 @@ const RouterWrapper = () => {
         <Route path="/following" element={
           <AuthRoute>
             <FollowingPage />
+          </AuthRoute>
+        } />
+        <Route path="/network" element={
+          <AuthRoute>
+            <NetworkGrowthPage />
           </AuthRoute>
         } />
         <Route path="/claimable-events" element={
