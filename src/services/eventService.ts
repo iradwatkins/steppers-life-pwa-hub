@@ -254,6 +254,8 @@ export class EventService {
 
   static async getEventById(eventId: string): Promise<Event | null> {
     try {
+      console.log('🔍 EventService.getEventById called with ID:', eventId);
+      
       const { data, error } = await supabase
         .from('events')
         .select(`
@@ -289,10 +291,28 @@ export class EventService {
         .eq('id', eventId)
         .single();
 
-      if (error) throw error;
+      console.log('📊 Supabase query result:', { data, error });
+      
+      if (error) {
+        console.error('❌ Supabase error in getEventById:', error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.warn('⚠️ No event data returned for ID:', eventId);
+        return null;
+      }
+      
+      console.log('✅ Event successfully fetched:', data);
       return data;
     } catch (error) {
-      console.error('Error fetching event:', error);
+      console.error('❌ Error fetching event:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       return null;
     }
   }

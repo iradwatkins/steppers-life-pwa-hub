@@ -133,22 +133,42 @@ const CreateEventPage = () => {
       setIsLoading(true);
       try {
         console.log('🔄 Loading event for editing:', editEventId);
+        console.log('👤 Current user:', user?.id);
+        console.log('🏢 Current organizer ID:', organizerId);
+        
         const eventData = await EventService.getEventById(editEventId);
+        console.log('📋 Raw event data from API:', eventData);
         
         if (!eventData) {
+          console.error('❌ Event data is null or undefined');
           toast.error('Event not found');
           navigate('/events');
           return;
         }
 
         console.log('✅ Event loaded for editing:', eventData);
+        console.log('🏢 Event venue data:', eventData.venues);
+        console.log('🎫 Event ticket types:', eventData.ticket_types);
         
         // Parse date/time
+        console.log('📅 Raw start_date:', eventData.start_date);
+        console.log('📅 Raw end_date:', eventData.end_date);
+        
         const startDateTime = new Date(eventData.start_date);
         const endDateTime = new Date(eventData.end_date);
         
-        // Populate form with event data
-        form.reset({
+        console.log('📅 Parsed start date:', startDateTime);
+        console.log('📅 Parsed end date:', endDateTime);
+        
+        // Get first ticket type price if available
+        const firstTicketType = eventData.ticket_types?.[0];
+        const ticketPrice = firstTicketType?.price?.toString() || '';
+        
+        console.log('🎫 First ticket type:', firstTicketType);
+        console.log('💰 Ticket price for form:', ticketPrice);
+        
+        // Prepare form data
+        const formData = {
           title: eventData.title || '',
           description: eventData.description || '',
           categories: eventData.category ? eventData.category.split(', ') : [],
@@ -166,12 +186,17 @@ const CreateEventPage = () => {
           onlineEventLink: eventData.online_link || '',
           capacity: eventData.max_attendees?.toString() || '',
           requiresTickets: eventData.requires_tickets ?? true,
-          ticketPrice: '', // Will need to get from ticket_types
+          ticketPrice: ticketPrice,
           rsvpEnabled: eventData.rsvp_enabled ?? false,
           maxRSVPs: eventData.max_rsvps?.toString() || '',
           rsvpDeadline: eventData.rsvp_deadline ? new Date(eventData.rsvp_deadline).toISOString().split('T')[0] : '',
           allowWaitlist: eventData.allow_waitlist ?? false,
-        });
+        };
+        
+        console.log('📝 Form data to populate:', formData);
+        
+        // Populate form with event data
+        form.reset(formData);
 
         // Set images if available
         if (eventData.featured_image_url) {
