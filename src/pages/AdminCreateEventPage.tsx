@@ -48,7 +48,7 @@ import {
 
 const adminEventFormSchema = z.object({
   title: z.string().min(5, 'Event title must be at least 5 characters'),
-  description: z.string().min(20, 'Description must be at least 20 characters'),
+  description: z.string().optional(),
   categories: z.array(z.string()).min(1, 'Please select at least one category'),
   startDate: z.string().min(1, 'Start date is required'),
   startTime: z.string().min(1, 'Start time is required'),
@@ -63,7 +63,7 @@ const adminEventFormSchema = z.object({
   isOnlineEvent: z.boolean().default(false),
   onlineEventLink: z.string().optional(),
   capacity: z.string().min(1, 'Capacity is required'),
-  ticketPrice: z.string().min(1, 'Ticket price is required'),
+  ticketPrice: z.string().optional(),
   assignToPromoter: z.boolean().default(false),
   promoterId: z.string().optional(),
   adminNotes: z.string().optional(),

@@ -224,6 +224,7 @@ export type Database = {
         Row: {
           additional_info: Json | null
           age_restriction: string | null
+          allow_waitlist: boolean
           category: string | null
           created_at: string | null
           description: string | null
@@ -238,6 +239,9 @@ export type Database = {
           online_link: string | null
           organizer_id: string | null
           parking_info: string | null
+          requires_tickets: boolean
+          rsvp_deadline: string | null
+          rsvp_enabled: boolean
           short_description: string | null
           start_date: string
           status: Database["public"]["Enums"]["event_status"] | null
@@ -250,6 +254,7 @@ export type Database = {
         Insert: {
           additional_info?: Json | null
           age_restriction?: string | null
+          allow_waitlist?: boolean
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -264,6 +269,9 @@ export type Database = {
           online_link?: string | null
           organizer_id?: string | null
           parking_info?: string | null
+          requires_tickets?: boolean
+          rsvp_deadline?: string | null
+          rsvp_enabled?: boolean
           short_description?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["event_status"] | null
@@ -276,6 +284,7 @@ export type Database = {
         Update: {
           additional_info?: Json | null
           age_restriction?: string | null
+          allow_waitlist?: boolean
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -290,6 +299,9 @@ export type Database = {
           online_link?: string | null
           organizer_id?: string | null
           parking_info?: string | null
+          requires_tickets?: boolean
+          rsvp_deadline?: string | null
+          rsvp_enabled?: boolean
           short_description?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["event_status"] | null
@@ -1400,6 +1412,88 @@ export type Database = {
           type_name?: string
         }
         Relationships: []
+      }
+      ticket_purchases: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          metadata: Json | null
+          order_id: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string | null
+          purchase_date: string | null
+          purchaser_email: string | null
+          purchaser_name: string | null
+          quantity: number
+          ticket_type_id: string | null
+          total_price: number
+          unit_price: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          purchase_date?: string | null
+          purchaser_email?: string | null
+          purchaser_name?: string | null
+          quantity?: number
+          ticket_type_id?: string | null
+          total_price: number
+          unit_price: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          purchase_date?: string | null
+          purchaser_email?: string | null
+          purchaser_name?: string | null
+          quantity?: number
+          ticket_type_id?: string | null
+          total_price?: number
+          unit_price?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_purchases_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_purchases_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_purchases_ticket_type_id_fkey"
+            columns: ["ticket_type_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ticket_types: {
         Row: {

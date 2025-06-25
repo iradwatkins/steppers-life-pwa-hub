@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -84,7 +84,11 @@ const CreateEventPage = () => {
   const { user } = useAuth();
   const { organizerId, hasOrganizer } = useRoles();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editEventId = searchParams.get('edit');
+  const isEditing = !!editEventId;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [eventImages, setEventImages] = useState<string[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string>('');
   const [additionalDates, setAdditionalDates] = useState<Array<{startDate: string; startTime: string; endDate?: string; endTime?: string}>>([]);
@@ -120,6 +124,73 @@ const CreateEventPage = () => {
       allowWaitlist: false,
     }
   });
+
+  // Load event data for editing
+  useEffect(() => {
+    const loadEventForEditing = async () => {
+      if (!isEditing || !editEventId) return;
+      
+      setIsLoading(true);
+      try {
+        console.log('🔄 Loading event for editing:', editEventId);
+        const eventData = await EventService.getEventById(editEventId);
+        
+        if (!eventData) {
+          toast.error('Event not found');
+          navigate('/events');
+          return;
+        }
+
+        console.log('✅ Event loaded for editing:', eventData);
+        
+        // Parse date/time
+        const startDateTime = new Date(eventData.start_date);
+        const endDateTime = new Date(eventData.end_date);
+        
+        // Populate form with event data
+        form.reset({
+          title: eventData.title || '',
+          description: eventData.description || '',
+          categories: eventData.category ? eventData.category.split(', ') : [],
+          startDate: startDateTime.toISOString().split('T')[0],
+          startTime: startDateTime.toTimeString().slice(0, 5),
+          endDate: endDateTime.toISOString().split('T')[0],
+          endTime: endDateTime.toTimeString().slice(0, 5),
+          isMultiDay: false, // Calculate based on dates
+          venue: eventData.venues?.name || '',
+          address: eventData.venues?.address || '',
+          city: eventData.venues?.city || '',
+          state: eventData.venues?.state || '',
+          zipCode: eventData.venues?.zip_code || '',
+          isOnlineEvent: eventData.is_online || false,
+          onlineEventLink: eventData.online_link || '',
+          capacity: eventData.max_attendees?.toString() || '',
+          requiresTickets: eventData.requires_tickets ?? true,
+          ticketPrice: '', // Will need to get from ticket_types
+          rsvpEnabled: eventData.rsvp_enabled ?? false,
+          maxRSVPs: eventData.max_rsvps?.toString() || '',
+          rsvpDeadline: eventData.rsvp_deadline ? new Date(eventData.rsvp_deadline).toISOString().split('T')[0] : '',
+          allowWaitlist: eventData.allow_waitlist ?? false,
+        });
+
+        // Set images if available
+        if (eventData.featured_image_url) {
+          setFeaturedImage(eventData.featured_image_url);
+        }
+        if (eventData.gallery_images) {
+          setEventImages(eventData.gallery_images);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error loading event for editing:', error);
+        toast.error('Failed to load event data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEventForEditing();
+  }, [isEditing, editEventId, form, navigate]);
 
   const isMultiDay = form.watch('isMultiDay');
   const isOnlineEvent = form.watch('isOnlineEvent');
@@ -159,15 +230,16 @@ const CreateEventPage = () => {
   };
 
   const onSubmit = async (data: EventFormData) => {
-    console.log('🚀 Starting event creation process...');
+    console.log(`🚀 Starting event ${isEditing ? 'update' : 'creation'} process...`);
     console.log('📝 Form data:', data);
     console.log('👤 User:', user?.id);
     console.log('🏢 Organizer ID:', organizerId);
     console.log('🖼️ Featured image:', featuredImage);
     console.log('📸 Event images:', eventImages);
+    console.log('✏️ Is editing:', isEditing, 'Event ID:', editEventId);
 
     if (!user?.id) {
-      toast.error('You must be logged in to create events.');
+      toast.error(`You must be logged in to ${isEditing ? 'update' : 'create'} events.`);
       return;
     }
 
@@ -253,14 +325,22 @@ const CreateEventPage = () => {
       console.log('📋 Final event data being sent to service:', eventData);
 
       // Create the event
-      console.log('🔄 Calling EventService.createEvent...');
-      const createdEvent = await EventService.createEvent(eventData, organizerId);
-      console.log('✅ Event created successfully:', createdEvent);
+      let event;
+      if (isEditing && editEventId) {
+        console.log('🔄 Calling EventService.updateEvent...');
+        event = await EventService.updateEvent(editEventId, eventData, organizerId);
+        console.log('✅ Event updated successfully:', event);
+        toast.success('Event updated successfully!');
+      } else {
+        console.log('🔄 Calling EventService.createEvent...');
+        event = await EventService.createEvent(eventData, organizerId);
+        console.log('✅ Event created successfully:', event);
+        toast.success('Event created successfully! You can now manage all event settings.');
+      }
       
-      toast.success('Event created successfully! You can now manage all event settings.');
-      navigate(`/events/${createdEvent.id}`);
+      navigate(`/events/${event.id}`);
     } catch (error: any) {
-      console.error('❌ Error creating event:', error);
+      console.error(`❌ Error ${isEditing ? 'updating' : 'creating'} event:`, error);
       console.error('❌ Error details:', {
         message: error.message,
         code: error.code,
@@ -270,7 +350,7 @@ const CreateEventPage = () => {
       });
       
       // More specific error messages
-      let errorMessage = 'Failed to create event. Please try again.';
+      let errorMessage = `Failed to ${isEditing ? 'update' : 'create'} event. Please try again.`;
       if (error.message?.includes('organizer_id')) {
         errorMessage = 'Invalid organizer profile. Please set up your organizer profile first.';
       } else if (error.message?.includes('venue')) {
@@ -289,6 +369,22 @@ const CreateEventPage = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <OrganizerRoute>
+        <div className="min-h-screen py-8 px-4 bg-muted/30">
+          <div className="container mx-auto max-w-4xl">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stepping-purple mx-auto"></div>
+                <p className="mt-4 text-muted-foreground">Loading event data...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </OrganizerRoute>
+    );
+  }
 
   return (
     <OrganizerRoute>
@@ -307,8 +403,8 @@ const CreateEventPage = () => {
                 Back to Events
               </Button>
             </div>
-            <h1 className="text-3xl font-bold mb-2">Create New Event</h1>
-            <p className="text-muted-foreground">Set up your stepping event with all the essential details</p>
+            <h1 className="text-3xl font-bold mb-2">{isEditing ? 'Edit Event' : 'Create New Event'}</h1>
+            <p className="text-muted-foreground">{isEditing ? 'Update your stepping event details' : 'Set up your stepping event with all the essential details'}</p>
           </div>
 
         <Form {...form}>
@@ -994,13 +1090,13 @@ const CreateEventPage = () => {
               <Button type="button" variant="outline" onClick={() => navigate('/events')}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-stepping-gradient">
+              <Button type="submit" disabled={isSubmitting || isLoading} className="bg-stepping-gradient">
                 {isSubmitting ? (
-                  <>Creating Event...</>
+                  <>{isEditing ? 'Updating Event...' : 'Creating Event...'}</>
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Create Event
+                    {isEditing ? 'Update Event' : 'Create Event'}
                   </>
                 )}
               </Button>

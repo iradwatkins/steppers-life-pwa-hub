@@ -177,18 +177,20 @@ const ManageEventPage: React.FC = () => {
     if (!eventData.title || eventData.title.length < 5) {
       errors.push('Event title is required (min 5 characters)');
     }
-    if (!eventData.description || eventData.description.length < 20) {
-      errors.push('Event description is required (min 20 characters)');
-    }
+    // Description is optional
+    // if (!eventData.description || eventData.description.length < 20) {
+    //   errors.push('Event description is required (min 20 characters)');
+    // }
     if (!eventData.is_online && !eventData.venues) {
       errors.push('Venue is required for physical events');
     }
     if (!eventData.start_date) {
       errors.push('Start date is required');
     }
-    if (!eventData.ticket_types || eventData.ticket_types.length === 0) {
-      errors.push('At least one ticket type is required');
-    }
+    // Tickets are optional - events can be free/RSVP only
+    // if (!eventData.ticket_types || eventData.ticket_types.length === 0) {
+    //   errors.push('At least one ticket type is required');
+    // }
     
     return errors;
   };
