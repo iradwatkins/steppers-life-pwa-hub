@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
+import { useRoles } from '@/hooks/useRoles';
 import { EventService } from '@/services/eventService';
 import { toast } from 'sonner';
 import { 
@@ -32,7 +33,8 @@ import {
   Copy,
   Image,
   Palette,
-  CreditCard
+  CreditCard,
+  Trash2
 } from 'lucide-react';
 
 import type { Database } from '@/integrations/supabase/types';

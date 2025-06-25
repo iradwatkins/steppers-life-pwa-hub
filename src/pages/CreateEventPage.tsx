@@ -94,6 +94,7 @@ const CreateEventPage = () => {
   const [eventImages, setEventImages] = useState<string[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string>('');
   const [additionalDates, setAdditionalDates] = useState<Array<{startDate: string; startTime: string; endDate?: string; endTime?: string}>>([]);
+  const [isSimpleEvent, setIsSimpleEvent] = useState(false);
 
   const eventCategories = EventService.getEventCategories();
 
@@ -132,6 +133,12 @@ const CreateEventPage = () => {
     const loadEventForEditing = async () => {
       if (!isEditing || !editEventId) return;
       
+      // Wait for user and organizer data to be available
+      if (!user?.id || !hasOrganizer || !organizerId) {
+        console.log('⏳ Waiting for user/organizer data...', { user: user?.id, hasOrganizer, organizerId });
+        return;
+      }
+      
       setIsLoading(true);
       try {
         console.log('🔄 Loading event for editing:', editEventId);
@@ -144,6 +151,14 @@ const CreateEventPage = () => {
         if (!eventData) {
           console.error('❌ Event data is null or undefined');
           toast.error('Event not found');
+          navigate('/events');
+          return;
+        }
+
+        // Verify user has permission to edit this event
+        if (eventData.organizer_id !== organizerId) {
+          console.error('❌ User does not have permission to edit this event');
+          toast.error('You do not have permission to edit this event');
           navigate('/events');
           return;
         }
@@ -217,7 +232,7 @@ const CreateEventPage = () => {
     };
 
     loadEventForEditing();
-  }, [isEditing, editEventId, form, navigate]);
+  }, [isEditing, editEventId, user?.id, hasOrganizer, organizerId, form, navigate]);
 
   const isMultiDay = form.watch('isMultiDay');
   const isOnlineEvent = form.watch('isOnlineEvent');
@@ -436,6 +451,25 @@ const CreateEventPage = () => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Simple Event Mode Toggle */}
+            <Card className="border-2 border-stepping-purple/20">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Simple Event Mode</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Create a basic event listing with just the essentials - title, date, location, and admission price
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isSimpleEvent}
+                    onCheckedChange={setIsSimpleEvent}
+                    className="ml-4"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Event Details Section */}
             <Card>
               <CardHeader>
@@ -923,13 +957,64 @@ const CreateEventPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Attendance Configuration
+                  {isSimpleEvent ? 'Admission Price' : 'Attendance Configuration'}
                 </CardTitle>
                 <CardDescription>
-                  Configure how people can attend your event
+                  {isSimpleEvent 
+                    ? 'Set the admission price for your event'
+                    : 'Configure how people can attend your event'
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {isSimpleEvent ? (
+                  /* Simple Event Mode - Just Admission Price */
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="ticketPrice"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Admission Price *</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-3 top-3 text-muted-foreground">$</span>
+                              <Input 
+                                type="number" 
+                                step="0.01"
+                                placeholder="25.00" 
+                                className="pl-8"
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <div className="text-sm text-muted-foreground">
+                            Price per person (leave empty for free events)
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="capacity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Event Capacity (Optional)</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="150" {...field} />
+                          </FormControl>
+                          <div className="text-sm text-muted-foreground">
+                            Maximum number of attendees (leave empty for unlimited)
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ) : (
+                  /* Full Configuration Mode */
+                  <div>
                 {/* Event Capacity */}
                 <FormField
                   control={form.control}
