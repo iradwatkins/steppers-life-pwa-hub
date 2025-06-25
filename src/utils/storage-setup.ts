@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export async function verifyAndCreateStorageBucket(): Promise<boolean> {
   try {
-    console.log('🗂️ Checking if user-uploads bucket exists...');
+    console.log('🗂️ Checking if images bucket exists...');
     
     // List all buckets
     const { data: buckets, error: listError } = await supabase.storage.listBuckets();
@@ -12,14 +12,14 @@ export async function verifyAndCreateStorageBucket(): Promise<boolean> {
       return false;
     }
     
-    const userUploadsBucket = buckets?.find(bucket => bucket.name === 'user-uploads');
+    const imagesBucket = buckets?.find(bucket => bucket.name === 'images');
     
-    if (userUploadsBucket) {
-      console.log('✅ User-uploads bucket already exists:', userUploadsBucket);
+    if (imagesBucket) {
+      console.log('✅ Images bucket already exists:', imagesBucket);
       return true;
     }
     
-    console.error('❌ User-uploads bucket not found. This should be created via migration.');
+    console.error('❌ Images bucket not found. This should be created in production.');
     return false;
     
   } catch (error) {
@@ -58,7 +58,7 @@ export async function testImageUpload(): Promise<boolean> {
     
     // Upload test file
     const { data, error } = await supabase.storage
-      .from('user-uploads')
+      .from('images')
       .upload(testPath, testFile);
     
     if (error) {
@@ -69,7 +69,7 @@ export async function testImageUpload(): Promise<boolean> {
     console.log('✅ Test upload successful:', data);
     
     // Clean up test file
-    await supabase.storage.from('user-uploads').remove([testPath]);
+    await supabase.storage.from('images').remove([testPath]);
     console.log('🧹 Test file cleaned up');
     
     return true;

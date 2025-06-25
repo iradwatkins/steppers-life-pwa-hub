@@ -9,10 +9,8 @@ export class ImageUploadService {
   /**
    * Upload a single image file to Supabase Storage
    */
-  static async uploadImage(file: File, bucket: string = 'user-uploads', folder?: string): Promise<UploadResult> {
+  static async uploadImage(file: File, bucket: string = 'images', folder?: string): Promise<UploadResult> {
     try {
-      console.log('📸 Starting image upload:', { fileName: file.name, fileSize: file.size, bucket, folder });
-      
       // Validate file type
       if (!file.type.startsWith('image/')) {
         throw new Error('File must be an image');
@@ -24,14 +22,10 @@ export class ImageUploadService {
         throw new Error('Image must be smaller than 5MB');
       }
 
-      // Note: user-uploads bucket should exist via migration
-
       // Generate unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
-
-      console.log('📤 Uploading to path:', filePath);
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -42,25 +36,20 @@ export class ImageUploadService {
         });
 
       if (error) {
-        console.error('❌ Upload error details:', error);
         throw new Error(`Upload failed: ${error.message}`);
       }
-
-      console.log('✅ Upload successful:', data);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
         .getPublicUrl(filePath);
 
-      console.log('🔗 Generated public URL:', publicUrl);
-
       return {
         url: publicUrl,
         path: filePath
       };
     } catch (error) {
-      console.error('❌ Image upload error:', error);
+      console.error('Image upload error:', error);
       throw error;
     }
   }
@@ -68,7 +57,7 @@ export class ImageUploadService {
   /**
    * Upload multiple images
    */
-  static async uploadMultipleImages(files: File[], bucket: string = 'user-uploads', folder?: string): Promise<UploadResult[]> {
+  static async uploadMultipleImages(files: File[], bucket: string = 'images', folder?: string): Promise<UploadResult[]> {
     const uploads = files.map(file => this.uploadImage(file, bucket, folder));
     return Promise.all(uploads);
   }
@@ -76,7 +65,7 @@ export class ImageUploadService {
   /**
    * Delete an image from storage
    */
-  static async deleteImage(path: string, bucket: string = 'user-uploads'): Promise<void> {
+  static async deleteImage(path: string, bucket: string = 'images'): Promise<void> {
     try {
       const { error } = await supabase.storage
         .from(bucket)
@@ -95,14 +84,14 @@ export class ImageUploadService {
    * Upload profile picture specifically
    */
   static async uploadProfilePicture(file: File, userId: string): Promise<UploadResult> {
-    return this.uploadImage(file, 'user-uploads', `profiles/${userId}`);
+    return this.uploadImage(file, 'images', `profiles/${userId}`);
   }
 
   /**
    * Upload event images
    */
   static async uploadEventImages(files: File[], eventId: string): Promise<UploadResult[]> {
-    return this.uploadMultipleImages(files, 'user-uploads', `events/${eventId}`);
+    return this.uploadMultipleImages(files, 'images', `events/${eventId}`);
   }
 
   /**
