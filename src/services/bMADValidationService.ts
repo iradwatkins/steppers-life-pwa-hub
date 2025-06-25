@@ -221,7 +221,7 @@ class BMADValidationService {
       // Get user profile with role
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('user_role, full_name, email')
+        .select('role, full_name, email')
         .eq('id', userId)
         .single();
 
@@ -235,24 +235,24 @@ class BMADValidationService {
 
       // Get business permissions based on role and epics
       const businessPermissions = this.calculateBusinessPermissions(
-        profile.user_role as CoreUserRole,
+        profile.role as CoreUserRole,
         completedEpics
       );
 
       // Get commission permissions based on role and epics
       const commissionPermissions = this.calculateCommissionPermissions(
-        profile.user_role as CoreUserRole,
+        profile.role as CoreUserRole,
         completedEpics
       );
 
       // Determine extended statuses based on epic completion
       const extendedStatuses = this.determineExtendedStatuses(
-        profile.user_role as CoreUserRole,
+        profile.role as CoreUserRole,
         completedEpics
       );
 
       return {
-        coreRole: profile.user_role as CoreUserRole,
+        coreRole: profile.role as CoreUserRole,
         extendedStatuses,
         completedEpics,
         businessPermissions,
