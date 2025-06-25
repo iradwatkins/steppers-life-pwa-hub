@@ -312,21 +312,25 @@ const CreateEventPage = () => {
         isOnline: data.isOnlineEvent,
         onlineLink: data.onlineEventLink,
         maxAttendees: data.capacity ? parseInt(data.capacity) : 100,
-        // Ticket configuration
-        requiresTickets: data.requiresTickets,
+        // Simple event mode configuration
+        requiresTickets: isSimpleEvent ? !!data.ticketPrice : data.requiresTickets,
         // RSVP configuration
-        rsvpEnabled: data.rsvpEnabled,
+        rsvpEnabled: isSimpleEvent ? !data.ticketPrice : data.rsvpEnabled,
         maxRSVPs: data.maxRSVPs ? parseInt(data.maxRSVPs) : undefined,
         rsvpDeadline: data.rsvpDeadline ? `${data.rsvpDeadline}T23:59:59` : undefined,
         allowWaitlist: data.allowWaitlist,
+        additionalInfo: {
+          isSimpleEvent: isSimpleEvent,
+          simpleEventPrice: isSimpleEvent ? data.ticketPrice : undefined
+        }
       };
 
-      // Only add ticket types if tickets are required
-      if (data.requiresTickets && data.ticketPrice) {
+      // Handle ticket types for both simple and complex events
+      if ((isSimpleEvent && data.ticketPrice) || (!isSimpleEvent && data.requiresTickets && data.ticketPrice)) {
         eventData.ticketTypes = [
           {
-            name: 'General Admission',
-            description: 'Standard event ticket',
+            name: isSimpleEvent ? 'Admission' : 'General Admission',
+            description: isSimpleEvent ? 'Event admission' : 'Standard event ticket',
             price: parseFloat(data.ticketPrice),
             quantityAvailable: data.capacity ? parseInt(data.capacity) : 100,
             maxPerOrder: 10,
@@ -908,49 +912,53 @@ const CreateEventPage = () => {
               </CardContent>
             </Card>
 
-            {/* Featured Image Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5" />
-                  Featured Image
-                </CardTitle>
-                <CardDescription>
-                  Upload a main image for your event (recommended: 1200x630px)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ImageUpload
-                  value={featuredImage}
-                  onChange={setFeaturedImage}
-                  variant="featured"
-                  placeholder="Upload a high-quality image that represents your event"
-                />
-              </CardContent>
-            </Card>
+            {/* Featured Image Section - Optional for Simple Events */}
+            {!isSimpleEvent && (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5" />
+                      Featured Image
+                    </CardTitle>
+                    <CardDescription>
+                      Upload a main image for your event (recommended: 1200x630px)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ImageUpload
+                      value={featuredImage}
+                      onChange={setFeaturedImage}
+                      variant="featured"
+                      placeholder="Upload a high-quality image that represents your event"
+                    />
+                  </CardContent>
+                </Card>
 
-            {/* Gallery Images Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5" />
-                  Event Gallery (Optional)
-                </CardTitle>
-                <CardDescription>
-                  Upload additional images to showcase your event (up to 3 images)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ImageUpload
-                  value={eventImages}
-                  onChange={setEventImages}
-                  variant="gallery"
-                  multiple
-                  maxFiles={3}
-                  placeholder="Add more images to give attendees a better sense of your event"
-                />
-              </CardContent>
-            </Card>
+                {/* Gallery Images Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5" />
+                      Event Gallery (Optional)
+                    </CardTitle>
+                    <CardDescription>
+                      Upload additional images to showcase your event (up to 3 images)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ImageUpload
+                      value={eventImages}
+                      onChange={setEventImages}
+                      variant="gallery"
+                      multiple
+                      maxFiles={3}
+                      placeholder="Add more images to give attendees a better sense of your event"
+                    />
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
             {/* Attendance Configuration Section */}
             <Card>
@@ -1194,6 +1202,7 @@ const CreateEventPage = () => {
                     </div>
                   </div>
                 </div>
+                )}
               </CardContent>
             </Card>
 

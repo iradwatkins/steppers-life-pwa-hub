@@ -52,10 +52,13 @@ const ManageEventPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin, isSuperAdmin } = useRoles();
   const [event, setEvent] = useState<Event | null>(null);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load real event data from EventService
   useEffect(() => {
@@ -195,6 +198,45 @@ const ManageEventPage: React.FC = () => {
     // }
     
     return errors;
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!event || !eventId) return;
+
+    setIsDeleting(true);
+    try {
+      console.log('🗑️ Deleting event:', eventId);
+      
+      // Check if this is a simple event (no tickets sold) or admin action
+      const isSimpleEvent = event.additional_info?.isSimpleEvent || !event.ticket_types || event.ticket_types.length === 0;
+      const canDelete = isSimpleEvent || isAdmin || isSuperAdmin;
+      
+      if (!canDelete) {
+        toast.error('Cannot delete events with tickets sold. Please contact an administrator.');
+        return;
+      }
+
+      // Use admin delete if user is admin, otherwise regular delete
+      let success = false;
+      if (isAdmin || isSuperAdmin) {
+        success = await EventService.adminDeleteEvent(eventId);
+      } else {
+        success = await EventService.deleteEvent(eventId, event.organizer_id);
+      }
+      
+      if (success) {
+        toast.success('Event deleted successfully');
+        navigate('/organizer/events');
+      } else {
+        toast.error('Failed to delete event');
+      }
+    } catch (error: any) {
+      console.error('❌ Error deleting event:', error);
+      toast.error(error.message || 'Failed to delete event');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   const configurationSections = [
@@ -372,6 +414,39 @@ const ManageEventPage: React.FC = () => {
               <Copy className="h-4 w-4" />
               <span>Duplicate</span>
             </Button>
+            
+            {/* Delete Button - Show for simple events or admin users */}
+            {((event.additional_info?.isSimpleEvent || !event.ticket_types || event.ticket_types.length === 0) || isAdmin || isSuperAdmin) && (
+              <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" className="flex items-center space-x-2">
+                    <Trash2 className="h-4 w-4" />
+                    <span>Delete</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete Event</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to delete this event? This action cannot be undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      variant="destructive"
+                      onClick={handleDeleteEvent}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete Event'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+            
             <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
