@@ -177,10 +177,10 @@ const ManageEventPage: React.FC = () => {
     if (!eventData.title || eventData.title.length < 5) {
       errors.push('Event title is required (min 5 characters)');
     }
-    // Description is optional
-    // if (!eventData.description || eventData.description.length < 20) {
-    //   errors.push('Event description is required (min 20 characters)');
-    // }
+    
+    // BMAD Fix: Event description is completely optional - no validation required
+    // Cache-bust: 2025-01-03
+    
     if (!eventData.is_online && !eventData.venues) {
       errors.push('Venue is required for physical events');
     }

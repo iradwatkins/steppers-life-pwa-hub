@@ -38,9 +38,11 @@ import {
 } from 'lucide-react';
 import { US_STATES } from '@/data/usStates';
 
+// BMAD Fix: Event description is completely optional - no minimum characters required
+// Cache-bust: 2025-01-03
 const eventFormSchema = z.object({
   title: z.string().min(5, 'Event title must be at least 5 characters'),
-  description: z.string().optional(),
+  description: z.string().optional(), // No validation - completely optional
   categories: z.array(z.string()).min(1, 'Please select at least one category'),
   startDate: z.string().min(1, 'Start date is required'),
   startTime: z.string().min(1, 'Start time is required'),
