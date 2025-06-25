@@ -5,51 +5,134 @@ export interface UploadResult {
   path: string;
 }
 
+export interface StorageDiagnostic {
+  bucketsExist: string[];
+  imagesBucket: boolean;
+  canUpload: boolean;
+  error?: string;
+}
+
 export class ImageUploadService {
+  /**
+   * Diagnose storage configuration issues
+   */
+  static async diagnoseStorage(): Promise<StorageDiagnostic> {
+    try {
+      console.log('🔍 Diagnosing storage configuration...');
+      
+      // Check what buckets exist
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error('❌ Cannot list buckets:', listError);
+        return {
+          bucketsExist: [],
+          imagesBucket: false,
+          canUpload: false,
+          error: `Cannot list buckets: ${listError.message}`
+        };
+      }
+      
+      const bucketNames = buckets?.map(b => b.name) || [];
+      const hasImagesBucket = bucketNames.includes('images');
+      
+      console.log('📊 Storage diagnostic:', {
+        availableBuckets: bucketNames,
+        hasImagesBucket,
+        totalBuckets: bucketNames.length
+      });
+      
+      return {
+        bucketsExist: bucketNames,
+        imagesBucket: hasImagesBucket,
+        canUpload: hasImagesBucket,
+        error: hasImagesBucket ? undefined : 'Images bucket not found. Please run storage-diagnostic-and-fix.sql'
+      };
+    } catch (error) {
+      console.error('❌ Storage diagnostic failed:', error);
+      return {
+        bucketsExist: [],
+        imagesBucket: false,
+        canUpload: false,
+        error: `Diagnostic failed: ${error}`
+      };
+    }
+  }
+
   /**
    * Upload a single image file to Supabase Storage
    */
   static async uploadImage(file: File, bucket: string = 'images', folder?: string): Promise<UploadResult> {
     try {
-      // Validate file type
+      console.log('📸 Starting image upload:', { 
+        fileName: file.name, 
+        fileSize: file.size, 
+        bucket, 
+        folder,
+        environment: import.meta.env.VITE_APP_ENV 
+      });
+
+      // Step 1: Validate file
       if (!file.type.startsWith('image/')) {
         throw new Error('File must be an image');
       }
 
-      // Validate file size (5MB limit)
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
-        throw new Error('Image must be smaller than 5MB');
+        throw new Error('Image must be smaller than 10MB');
       }
 
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      // Step 2: Diagnose storage before attempting upload
+      const diagnostic = await this.diagnoseStorage();
+      if (!diagnostic.canUpload) {
+        console.error('❌ Storage diagnostic failed:', diagnostic);
+        throw new Error(`Storage not ready: ${diagnostic.error}`);
+      }
+
+      // Step 3: Generate unique filename
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2);
+      const fileName = `${timestamp}-${random}.${fileExt}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
 
-      // Upload to Supabase Storage
+      console.log('📤 Uploading to path:', filePath);
+
+      // Step 4: Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: file.type
         });
 
       if (error) {
+        console.error('❌ Upload error details:', error);
+        
+        // Provide specific error guidance
+        if (error.message.includes('Bucket not found')) {
+          throw new Error('Images bucket not found in production. Please run the storage-diagnostic-and-fix.sql script in your Supabase dashboard.');
+        }
+        
         throw new Error(`Upload failed: ${error.message}`);
       }
 
-      // Get public URL
+      console.log('✅ Upload successful:', data);
+
+      // Step 5: Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
         .getPublicUrl(filePath);
+
+      console.log('🔗 Generated public URL:', publicUrl);
 
       return {
         url: publicUrl,
         path: filePath
       };
     } catch (error) {
-      console.error('Image upload error:', error);
+      console.error('❌ Image upload error:', error);
       throw error;
     }
   }
@@ -58,8 +141,21 @@ export class ImageUploadService {
    * Upload multiple images
    */
   static async uploadMultipleImages(files: File[], bucket: string = 'images', folder?: string): Promise<UploadResult[]> {
-    const uploads = files.map(file => this.uploadImage(file, bucket, folder));
-    return Promise.all(uploads);
+    console.log(`📚 Uploading ${files.length} images...`);
+    
+    // Upload files sequentially to avoid overwhelming the server
+    const results: UploadResult[] = [];
+    for (const file of files) {
+      try {
+        const result = await this.uploadImage(file, bucket, folder);
+        results.push(result);
+      } catch (error) {
+        console.error(`❌ Failed to upload ${file.name}:`, error);
+        throw error; // Stop on first failure
+      }
+    }
+    
+    return results;
   }
 
   /**
@@ -67,6 +163,8 @@ export class ImageUploadService {
    */
   static async deleteImage(path: string, bucket: string = 'images'): Promise<void> {
     try {
+      console.log('🗑️ Deleting image:', path);
+      
       const { error } = await supabase.storage
         .from(bucket)
         .remove([path]);
@@ -74,8 +172,10 @@ export class ImageUploadService {
       if (error) {
         throw new Error(`Delete failed: ${error.message}`);
       }
+      
+      console.log('✅ Image deleted successfully');
     } catch (error) {
-      console.error('Image delete error:', error);
+      console.error('❌ Image delete error:', error);
       throw error;
     }
   }
@@ -95,69 +195,45 @@ export class ImageUploadService {
   }
 
   /**
-   * Resize image client-side before upload (optional optimization)
+   * Test storage connectivity
    */
-  static async resizeImage(file: File, maxWidth: number = 800, maxHeight: number = 600, quality: number = 0.8): Promise<File> {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-      const img = new Image();
-
-      img.onload = () => {
-        // Calculate new dimensions
-        let { width, height } = img;
-        if (width > height) {
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width = (width * maxHeight) / height;
-            height = maxHeight;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        // Draw resized image
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Convert to blob
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const resizedFile = new File([blob], file.name, {
-              type: file.type,
-              lastModified: Date.now()
-            });
-            resolve(resizedFile);
-          } else {
-            resolve(file); // Fallback to original file
-          }
-        }, file.type, quality);
-      };
-
-      img.src = URL.createObjectURL(file);
-    });
+  static async testStorageConnectivity(): Promise<boolean> {
+    try {
+      console.log('🧪 Testing storage connectivity...');
+      
+      const diagnostic = await this.diagnoseStorage();
+      
+      if (!diagnostic.canUpload) {
+        console.error('❌ Storage test failed:', diagnostic.error);
+        return false;
+      }
+      
+      console.log('✅ Storage connectivity test passed');
+      return true;
+    } catch (error) {
+      console.error('❌ Storage connectivity test failed:', error);
+      return false;
+    }
   }
 
   /**
    * Validate image file
    */
   static validateImageFile(file: File): { valid: boolean; error?: string } {
-    // Check file type
     if (!file.type.startsWith('image/')) {
       return { valid: false, error: 'File must be an image' };
     }
 
-    // Check file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      return { valid: false, error: 'Image must be smaller than 5MB' };
+      return { valid: false, error: 'Image must be smaller than 10MB' };
     }
 
-    // Check image dimensions (optional)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      return { valid: false, error: 'Image must be JPG, PNG, GIF, or WebP format' };
+    }
+
     return { valid: true };
   }
 }
