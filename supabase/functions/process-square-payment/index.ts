@@ -5,6 +5,8 @@ import { Client, Environment, ApiError } from 'https://esm.sh/squareup@14.0.0';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 interface PaymentRequest {
@@ -18,20 +20,52 @@ interface PaymentRequest {
 }
 
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {
-    // Initialize Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Check environment variables first
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const squareToken = Deno.env.get('SQUARE_ACCESS_TOKEN');
+    const squareEnv = Deno.env.get('SQUARE_ENVIRONMENT');
 
-    // Parse request body
-    const { amount, currency, sourceId, locationId, orderId, userId, idempotencyKey }: PaymentRequest = await req.json();
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase credentials');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!squareToken || !squareEnv) {
+      console.error('Missing Square credentials');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Payment gateway not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Initialize Supabase client
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    // Parse request body with error handling
+    let requestBody: PaymentRequest;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { amount, currency, sourceId, locationId, orderId, userId, idempotencyKey } = requestBody;
 
     // Validate required fields
     if (!amount || !currency || !sourceId || !orderId || !userId || !idempotencyKey) {
@@ -43,8 +77,8 @@ serve(async (req) => {
 
     // Initialize Square client
     const client = new Client({
-      accessToken: Deno.env.get('SQUARE_ACCESS_TOKEN'),
-      environment: Deno.env.get('SQUARE_ENVIRONMENT') === 'production' ? Environment.Production : Environment.Sandbox,
+      accessToken: squareToken,
+      environment: squareEnv === 'production' ? Environment.Production : Environment.Sandbox,
     });
 
     const paymentsApi = client.paymentsApi;
