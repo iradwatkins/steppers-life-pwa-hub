@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export async function verifyAndCreateStorageBucket(): Promise<boolean> {
   try {
-    console.log('🗂️ Checking if images bucket exists...');
+    console.log('🗂️ Checking if user-uploads bucket exists...');
     
     // List all buckets
     const { data: buckets, error: listError } = await supabase.storage.listBuckets();
@@ -12,29 +12,15 @@ export async function verifyAndCreateStorageBucket(): Promise<boolean> {
       return false;
     }
     
-    const imagesBucket = buckets?.find(bucket => bucket.name === 'images');
+    const userUploadsBucket = buckets?.find(bucket => bucket.name === 'user-uploads');
     
-    if (imagesBucket) {
-      console.log('✅ Images bucket already exists:', imagesBucket);
+    if (userUploadsBucket) {
+      console.log('✅ User-uploads bucket already exists:', userUploadsBucket);
       return true;
     }
     
-    console.log('📦 Creating images bucket...');
-    
-    // Create the images bucket with public access
-    const { data: newBucket, error: createError } = await supabase.storage.createBucket('images', {
-      public: true,
-      allowedMimeTypes: ['image/*'],
-      fileSizeLimit: 5242880 // 5MB
-    });
-    
-    if (createError) {
-      console.error('❌ Error creating bucket:', createError);
-      return false;
-    }
-    
-    console.log('✅ Images bucket created successfully:', newBucket);
-    return true;
+    console.error('❌ User-uploads bucket not found. This should be created via migration.');
+    return false;
     
   } catch (error) {
     console.error('❌ Unexpected error in bucket verification:', error);
@@ -72,7 +58,7 @@ export async function testImageUpload(): Promise<boolean> {
     
     // Upload test file
     const { data, error } = await supabase.storage
-      .from('images')
+      .from('user-uploads')
       .upload(testPath, testFile);
     
     if (error) {
@@ -83,7 +69,7 @@ export async function testImageUpload(): Promise<boolean> {
     console.log('✅ Test upload successful:', data);
     
     // Clean up test file
-    await supabase.storage.from('images').remove([testPath]);
+    await supabase.storage.from('user-uploads').remove([testPath]);
     console.log('🧹 Test file cleaned up');
     
     return true;
