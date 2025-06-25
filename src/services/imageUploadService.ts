@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { verifyAndCreateStorageBucket } from '@/utils/storage-setup';
 
 export interface UploadResult {
   url: string;
@@ -25,12 +24,7 @@ export class ImageUploadService {
         throw new Error('Image must be smaller than 5MB');
       }
 
-      // Ensure bucket exists
-      console.log('🗂️ Verifying storage bucket exists...');
-      const bucketExists = await verifyAndCreateStorageBucket();
-      if (!bucketExists) {
-        throw new Error('Failed to verify or create storage bucket');
-      }
+      // Note: user-uploads bucket should exist via migration
 
       // Generate unique filename
       const fileExt = file.name.split('.').pop();
