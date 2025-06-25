@@ -354,43 +354,28 @@ const TicketSelectionPage = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-center">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const currentQty = getQuantity(ticketType.id);
-                            if (currentQty > 0) {
-                              handleQuantityChange(ticketType, currentQty - 1);
-                            }
-                          }}
-                          disabled={getQuantity(ticketType.id) === 0 || inventoryLoading || isUpdatingQuantity}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="w-12 text-center font-medium">
-                          {getQuantity(ticketType.id)}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const currentQty = getQuantity(ticketType.id);
-                            const inventoryStatus = getInventoryStatus(ticketType.id);
-                            if (inventoryStatus?.isAvailable && currentQty < (inventoryStatus.available || 0)) {
-                              handleQuantityChange(ticketType, currentQty + 1);
-                            }
-                          }}
-                          disabled={(() => {
-                            const inventoryStatus = getInventoryStatus(ticketType.id);
-                            return inventoryLoading || isUpdatingQuantity || !inventoryStatus?.isAvailable || getQuantity(ticketType.id) >= (inventoryStatus?.available || 0);
-                          })()}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        className="w-full bg-stepping-gradient"
+                        onClick={() => {
+                          const inventoryStatus = getInventoryStatus(ticketType.id);
+                          if (inventoryStatus?.isAvailable) {
+                            handleQuantityChange(ticketType, 1);
+                          }
+                        }}
+                        disabled={(() => {
+                          const inventoryStatus = getInventoryStatus(ticketType.id);
+                          return inventoryLoading || isUpdatingQuantity || !inventoryStatus?.isAvailable;
+                        })()}
+                      >
+                        {(() => {
+                          const inventoryStatus = getInventoryStatus(ticketType.id);
+                          const quantity = getQuantity(ticketType.id);
+                          
+                          if (quantity > 0) return `Added to Cart (${quantity})`;
+                          if (!inventoryStatus?.isAvailable) return 'Sold Out';
+                          return 'Add to Cart';
+                        })()}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
