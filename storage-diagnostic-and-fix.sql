@@ -1,6 +1,17 @@
 -- COMPLETE STORAGE DIAGNOSTIC AND FIX SCRIPT
 -- This script will diagnose and fix all storage bucket issues
 
+-- Step 0: Check storage.objects table schema first
+SELECT 
+    'Storage objects table schema:' as info,
+    column_name,
+    data_type,
+    is_nullable
+FROM information_schema.columns 
+WHERE table_schema = 'storage' 
+AND table_name = 'objects'
+ORDER BY ordinal_position;
+
 -- Step 1: Check what buckets currently exist
 SELECT 
     'Current buckets:' as info,
@@ -47,13 +58,13 @@ FOR INSERT WITH CHECK (
 CREATE POLICY "Users can update images they own" ON storage.objects
 FOR UPDATE USING (
   bucket_id = 'images'
-  AND (auth.uid()::text = owner OR auth.uid()::text = created_by)
+  AND auth.uid() = owner::uuid
 );
 
 CREATE POLICY "Users can delete images they own" ON storage.objects
 FOR DELETE USING (
   bucket_id = 'images'
-  AND (auth.uid()::text = owner OR auth.uid()::text = created_by)
+  AND auth.uid() = owner::uuid
 );
 
 -- Step 5: Grant necessary permissions

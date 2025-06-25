@@ -60,7 +60,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
       // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('user-uploads')
+        .from('images')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -75,7 +75,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from('user-uploads')
+        .from('images')
         .getPublicUrl(filePath);
 
       const publicUrl = urlData.publicUrl;
@@ -138,7 +138,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       if (currentImageUrl.includes('profile-images/')) {
         const filePath = currentImageUrl.split('/').slice(-2).join('/');
         await supabase.storage
-          .from('user-uploads')
+          .from('images')
           .remove([filePath]);
       }
 
