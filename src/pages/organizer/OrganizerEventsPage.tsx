@@ -286,6 +286,17 @@ const OrganizerEventsPage = () => {
                       className="flex-1"
                       asChild
                     >
+                      <Link to={`/events/create?edit=${event.id}`}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Link>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      asChild
+                    >
                       <Link to={`/organizer/event/${event.id}`}>
                         <Settings className="h-4 w-4 mr-2" />
                         Manage
