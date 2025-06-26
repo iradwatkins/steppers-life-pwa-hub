@@ -31,6 +31,21 @@ export interface AttendeeInfo {
   specialRequests: string;
 }
 
+export interface EventInfo {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  venue?: {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+  };
+  is_online: boolean;
+  online_link?: string;
+}
+
 export interface CheckoutState {
   items: CartItem[];
   subtotal: number;
@@ -39,6 +54,7 @@ export interface CheckoutState {
   total: number;
   eventId: string | null;
   eventTitle: string | null;
+  eventInfo: EventInfo | null;
   attendeeInfo: AttendeeInfo | null;
   promoCode: string | null;
   promoCodeApplication: PromoCodeApplication | null;
@@ -50,6 +66,7 @@ type CartAction =
   | { type: 'REMOVE_ITEM'; payload: { ticketTypeId: string } }
   | { type: 'UPDATE_QUANTITY'; payload: { ticketTypeId: string; quantity: number } }
   | { type: 'SET_EVENT'; payload: { eventId: string; eventTitle: string } }
+  | { type: 'SET_EVENT_INFO'; payload: EventInfo }
   | { type: 'SET_ATTENDEE_INFO'; payload: AttendeeInfo }
   | { type: 'SET_PROMO_CODE'; payload: PromoCodeApplication | null }
   | { type: 'SET_STEP'; payload: number }
@@ -74,6 +91,7 @@ function loadCartFromStorage(): CheckoutState {
         total: parsedCart.total || 0,
         eventId: parsedCart.eventId || null,
         eventTitle: parsedCart.eventTitle || null,
+        eventInfo: parsedCart.eventInfo || null,
         attendeeInfo: parsedCart.attendeeInfo || null,
         promoCode: parsedCart.promoCode || null,
         promoCodeApplication: parsedCart.promoCodeApplication || null,
@@ -92,6 +110,7 @@ function loadCartFromStorage(): CheckoutState {
     total: 0,
     eventId: null,
     eventTitle: null,
+    eventInfo: null,
     attendeeInfo: null,
     promoCode: null,
     promoCodeApplication: null,
@@ -171,6 +190,10 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
       newState = { ...state, eventId: action.payload.eventId, eventTitle: action.payload.eventTitle };
       break;
 
+    case 'SET_EVENT_INFO':
+      newState = { ...state, eventInfo: action.payload };
+      break;
+
     case 'SET_ATTENDEE_INFO':
       newState = { ...state, attendeeInfo: action.payload };
       break;
@@ -202,6 +225,7 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
         total: 0,
         eventId: null,
         eventTitle: null,
+        eventInfo: null,
         attendeeInfo: null,
         promoCode: null,
         promoCodeApplication: null,
@@ -228,6 +252,7 @@ interface CartContextType {
   removeItem: (ticketTypeId: string) => void;
   updateQuantity: (ticketTypeId: string, quantity: number) => void;
   setEvent: (eventId: string, eventTitle: string) => void;
+  setEventInfo: (eventInfo: EventInfo) => void;
   setAttendeeInfo: (info: AttendeeInfo) => void;
   setPromoCode: (application: PromoCodeApplication | null) => void;
   setStep: (step: number) => void;
@@ -279,6 +304,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_EVENT', payload: { eventId, eventTitle } });
   };
 
+  const setEventInfo = (eventInfo: EventInfo) => {
+    dispatch({ type: 'SET_EVENT_INFO', payload: eventInfo });
+  };
+
   const setAttendeeInfo = (info: AttendeeInfo) => {
     dispatch({ type: 'SET_ATTENDEE_INFO', payload: info });
   };
@@ -302,6 +331,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem,
       updateQuantity,
       setEvent,
+      setEventInfo,
       setAttendeeInfo,
       setPromoCode,
       setStep,

@@ -19,7 +19,7 @@ const TicketSelectionPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { state, addItem, updateQuantity, removeItem, setEvent, setStep } = useCart();
+  const { state, addItem, updateQuantity, removeItem, setEvent, setEventInfo, setStep } = useCart();
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
   const { createHold, releaseHold, currentHolds } = useInventoryHold();
 
@@ -119,9 +119,26 @@ const TicketSelectionPage = () => {
   useEffect(() => {
     if (event) {
       setEvent(event.id, event.title);
+      
+      // Set complete event information for payment processing
+      setEventInfo({
+        id: event.id,
+        title: event.title,
+        start_date: event.start_date,
+        end_date: event.end_date,
+        venue: event.venues ? {
+          name: event.venues.name,
+          address: event.venues.address,
+          city: event.venues.city,
+          state: event.venues.state,
+        } : undefined,
+        is_online: event.is_online || false,
+        online_link: event.online_link || undefined,
+      });
+      
       setStep(1);
     }
-  }, [event, setEvent, setStep]);
+  }, [event, setEvent, setEventInfo, setStep]);
 
 
 

@@ -48,7 +48,7 @@ interface OrderWithDetails {
       city: string;
       state: string;
     };
-  };
+  } | null;
   order_items: Array<{
     id: string;
     price: number;
@@ -118,6 +118,18 @@ serve(async (req) => {
     }
 
     const orderDetails = order as OrderWithDetails;
+
+    // Validate event data exists
+    if (!orderDetails.events) {
+      console.error('No event data found for order:', orderId);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Event data not found for order',
+          orderId 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Format order details for email
     const eventDate = new Date(orderDetails.events.start_date);
