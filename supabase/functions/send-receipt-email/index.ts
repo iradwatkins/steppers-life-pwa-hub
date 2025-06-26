@@ -74,7 +74,10 @@ serve(async (req) => {
 
     const { orderId, userId, customerEmail, customerName }: EmailRequest = await req.json();
 
+    console.log('Receipt email request:', { orderId, userId, customerEmail, customerName });
+
     if (!orderId || !userId || !customerEmail || !customerName) {
+      console.error('Missing required fields:', { orderId, userId, customerEmail, customerName });
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -87,7 +90,7 @@ serve(async (req) => {
       .select(`
         *,
         order_items (*),
-        events!inner (
+        events (
           title,
           start_date,
           venues (
@@ -103,8 +106,13 @@ serve(async (req) => {
       .single();
 
     if (orderError || !order) {
+      console.error('Order fetch error:', orderError);
       return new Response(
-        JSON.stringify({ error: 'Order not found' }),
+        JSON.stringify({ 
+          error: 'Order not found',
+          details: orderError?.message || 'No order data returned',
+          orderError
+        }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
