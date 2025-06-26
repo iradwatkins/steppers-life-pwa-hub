@@ -89,7 +89,8 @@ export class PaymentGatewayManager {
 
       this.availability.square = squareReady.status === 'fulfilled' && squareReady.value;
       this.availability.paypal = paypalReady.status === 'fulfilled' && paypalReady.value;
-      this.availability.cashapp = cashappReady.status === 'fulfilled' && cashappReady.value && CashAppPaymentService.isAvailable();
+      // Cash App Pay requires Square SDK to be initialized since it uses Square's payment processing
+      this.availability.cashapp = this.availability.square && cashappReady.status === 'fulfilled' && cashappReady.value && CashAppPaymentService.isAvailable();
 
       this.isInitialized = true;
       

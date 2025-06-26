@@ -141,7 +141,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       description: 'Pay instantly with Cash App',
       icon: <Smartphone className="h-5 w-5" />,
       processingTime: 'Instant',
-      available: availability.square && DeviceDetection.shouldShowCashApp(),
+      available: availability.cashapp && DeviceDetection.shouldShowCashApp(),
       mobileOnly: true,
     },
     {
