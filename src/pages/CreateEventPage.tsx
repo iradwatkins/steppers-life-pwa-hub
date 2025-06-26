@@ -131,7 +131,7 @@ const CreateEventPage = () => {
   // Load event data for editing
   useEffect(() => {
     const loadEventForEditing = async () => {
-      if (!isEditing || !editEventId) return;
+      if (!isEditing || !editEventId || editEventId === 'null' || editEventId === 'undefined' || editEventId.trim() === '') return;
       
       // Wait for user and organizer data to be available
       if (!user?.id || !hasOrganizer || !organizerId) {

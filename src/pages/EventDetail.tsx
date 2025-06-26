@@ -45,8 +45,10 @@ const EventDetail = () => {
   // Load event data
   useEffect(() => {
     const loadEvent = async () => {
-      if (!id) {
-        setError('No event ID provided');
+      // Enhanced check for invalid event ID
+      if (!id || id === 'null' || id === 'undefined' || id.trim() === '') {
+        console.error('❌ Invalid event ID provided:', id);
+        setError('Invalid event ID provided');
         setIsLoading(false);
         return;
       }
