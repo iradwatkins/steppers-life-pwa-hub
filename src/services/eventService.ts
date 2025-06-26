@@ -256,6 +256,12 @@ export class EventService {
     try {
       console.log('🔍 EventService.getEventById called with ID:', eventId);
       
+      // Guard against null or undefined eventId
+      if (!eventId || eventId === 'null' || eventId === 'undefined') {
+        console.error('❌ EventService.getEventById: Invalid eventId provided:', eventId);
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('events')
         .select(`

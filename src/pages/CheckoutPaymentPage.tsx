@@ -81,7 +81,12 @@ const CheckoutPaymentPage = () => {
     setStep(3);
     // Redirect if no items in cart or no attendee info
     if (state.items.length === 0 || !state.attendeeInfo) {
-      navigate(`/events/${state.eventId}/tickets`);
+      // Guard against null eventId
+      if (state.eventId) {
+        navigate(`/events/${state.eventId}/tickets`);
+      } else {
+        navigate('/events');
+      }
     }
     // Initialize payment fees with base amount
     setPaymentFees({

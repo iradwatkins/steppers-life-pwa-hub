@@ -47,7 +47,12 @@ const CheckoutDetailsPage = () => {
     setStep(2);
     // Redirect if no items in cart
     if (state.items.length === 0) {
-      navigate(`/events/${state.eventId}/tickets`);
+      // Guard against null eventId
+      if (state.eventId) {
+        navigate(`/events/${state.eventId}/tickets`);
+      } else {
+        navigate('/events');
+      }
     }
   }, [setStep, state.items.length, state.eventId, navigate]);
 
