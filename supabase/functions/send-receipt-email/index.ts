@@ -39,10 +39,10 @@ interface OrderWithDetails {
   status: string;
   created_at: string;
   billing_details: any;
-  event: {
+  events: {
     title: string;
     start_date: string;
-    venue?: {
+    venues?: {
       name: string;
       address: string;
       city: string;
@@ -87,10 +87,10 @@ serve(async (req) => {
       .select(`
         *,
         order_items (*),
-        event:events (
+        events!inner (
           title,
           start_date,
-          venue:venues (
+          venues (
             name,
             address,
             city,
@@ -112,7 +112,7 @@ serve(async (req) => {
     const orderDetails = order as OrderWithDetails;
 
     // Format order details for email
-    const eventDate = new Date(orderDetails.event.start_date);
+    const eventDate = new Date(orderDetails.events.start_date);
     const billingDetails = orderDetails.billing_details as any;
 
     const orderItems = orderDetails.order_items.map(item => ({
@@ -158,7 +158,7 @@ serve(async (req) => {
 <body>
     <div class="header">
         <h1>🎟️ Order Confirmed!</h1>
-        <p>Your tickets for ${orderDetails.event.title} are ready</p>
+        <p>Your tickets for ${orderDetails.events.title} are ready</p>
     </div>
     
     <div class="content">
@@ -183,7 +183,7 @@ serve(async (req) => {
             <div class="info-grid">
                 <div class="info-item">
                     <strong>Event</strong>
-                    ${orderDetails.event.title}
+                    ${orderDetails.events.title}
                 </div>
                 <div class="info-item">
                     <strong>Date & Time</strong>
@@ -201,8 +201,8 @@ serve(async (req) => {
                 </div>
                 <div class="info-item">
                     <strong>Venue</strong>
-                    ${orderDetails.event.venue ? 
-                      `${orderDetails.event.venue.name}, ${orderDetails.event.venue.city}, ${orderDetails.event.venue.state}` : 
+                    ${orderDetails.events.venues ? 
+                      `${orderDetails.events.venues.name}, ${orderDetails.events.venues.city}, ${orderDetails.events.venues.state}` : 
                       'Venue TBD'
                     }
                 </div>
