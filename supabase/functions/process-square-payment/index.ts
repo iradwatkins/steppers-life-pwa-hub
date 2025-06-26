@@ -1,6 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Client, Environment, ApiError } from 'https://esm.sh/squareup@14.0.0';
 
 // Define allowed origins for CORS
 const allowedOrigins = [
@@ -92,39 +91,46 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Square client
-    const client = new Client({
-      accessToken: squareToken,
-      environment: squareEnv === 'production' ? Environment.Production : Environment.Sandbox,
-    });
-
-    const paymentsApi = client.paymentsApi;
-
     // Convert amount to cents (Square uses smallest currency unit)
     const amountInCents = Math.round(amount * 100);
 
+    // Determine Square API base URL based on environment
+    const squareBaseUrl = squareEnv === 'production' 
+      ? 'https://connect.squareup.com' 
+      : 'https://connect.squareupsandbox.com';
+
     try {
-      // Create payment request
+      // Create payment request using Square API directly
       const paymentRequest = {
-        sourceId,
-        idempotencyKey,
-        amountMoney: {
-          amount: BigInt(amountInCents),
-          currency: currency.toUpperCase() as 'USD' | 'CAD' | 'EUR' | 'GBP' | 'JPY' | 'AUD',
+        source_id: sourceId,
+        idempotency_key: idempotencyKey,
+        amount_money: {
+          amount: amountInCents,
+          currency: currency.toUpperCase(),
         },
-        locationId: locationId || Deno.env.get('SQUARE_LOCATION_ID'),
+        location_id: locationId || Deno.env.get('SQUARE_LOCATION_ID'),
         note: `Payment for order ${orderId}`,
-        referenceId: orderId,
+        reference_id: orderId,
       };
 
-      // Process payment
-      const { result, statusCode } = await paymentsApi.createPayment(paymentRequest);
+      // Process payment using Square API
+      const squareResponse = await fetch(`${squareBaseUrl}/v2/payments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${squareToken}`,
+          'Content-Type': 'application/json',
+          'Square-Version': '2024-01-17',
+        },
+        body: JSON.stringify(paymentRequest),
+      });
 
-      if (statusCode !== 200 || !result.payment) {
-        throw new Error('Payment failed');
+      const squareResult = await squareResponse.json();
+
+      if (!squareResponse.ok) {
+        throw new Error(squareResult.errors?.[0]?.detail || 'Payment failed');
       }
 
-      const payment = result.payment;
+      const payment = squareResult.payment;
 
       // Update order in database with payment details
       const { error: updateError } = await supabaseClient
@@ -149,10 +155,10 @@ serve(async (req) => {
           paymentId: payment.id,
           status: payment.status,
           orderId,
-          amount: payment.amountMoney?.amount ? Number(payment.amountMoney.amount) / 100 : amount,
-          currency: payment.amountMoney?.currency || currency,
-          receiptNumber: payment.receiptNumber,
-          receiptUrl: payment.receiptUrl,
+          amount: payment.amount_money?.amount ? payment.amount_money.amount / 100 : amount,
+          currency: payment.amount_money?.currency || currency,
+          receipt_number: payment.receipt_number,
+          receipt_url: payment.receipt_url,
         }),
         { 
           status: 200, 
@@ -163,19 +169,10 @@ serve(async (req) => {
     } catch (squareError) {
       console.error('Square API Error:', squareError);
       
-      let errorMessage = 'Payment processing failed';
-      let errorCode = 'PAYMENT_FAILED';
-
-      if (squareError instanceof ApiError) {
-        errorMessage = squareError.errors?.[0]?.detail || errorMessage;
-        errorCode = squareError.errors?.[0]?.code || errorCode;
-      }
-
       return new Response(
         JSON.stringify({
           success: false,
-          error: errorMessage,
-          errorCode,
+          error: squareError.message || 'Payment processing failed',
           orderId,
         }),
         { 
