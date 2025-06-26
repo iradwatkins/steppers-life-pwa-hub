@@ -209,7 +209,40 @@
     }
   }
   
-  /* Foldable Device Optimizations */
+  /* Samsung Galaxy Z Fold Closed State - Force Mobile Layout */
+  @media (max-width: 375px) and (min-height: 800px) {
+    /* Closed Galaxy Z Fold 6 detection */
+    * {
+      max-width: 100vw !important;
+    }
+    
+    .container {
+      width: 100% !important;
+      max-width: 100vw !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+    
+    /* Force mobile navigation even if screen thinks it's larger */
+    .md\\:flex {
+      display: none !important;
+    }
+    
+    .md\\:hidden {
+      display: flex !important;
+    }
+    
+    /* Single column layout */
+    .grid-cols-2 {
+      grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    }
+    
+    .grid-cols-3 {
+      grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    }
+  }
+
+  /* Foldable Device Optimizations (Open State) */
   @media (min-width: 673px) and (max-width: 748px) {
     /* Galaxy Z Fold 6 & Pixel 9 Pro Fold */
     .container {

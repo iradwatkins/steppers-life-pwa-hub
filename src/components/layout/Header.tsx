@@ -55,8 +55,8 @@ const Header = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          {/* Desktop Navigation - Hide on narrow screens including Samsung Fold closed */}
+          <nav className="hidden lg:flex items-center space-x-6">
             <button 
               onClick={() => handleNavigation('/magazine')} 
               className="text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
@@ -94,8 +94,8 @@ const Header = () => {
             )}
           </nav>
 
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="hidden lg:flex items-center space-x-2 flex-1 max-w-md mx-8">
+          {/* Search Bar - Only show on large screens */}
+          <form onSubmit={handleSearch} className="hidden xl:flex items-center space-x-2 flex-1 max-w-md mx-8">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -169,7 +169,7 @@ const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden md:flex items-center space-x-2">
+              <div className="hidden lg:flex items-center space-x-2">
                 <Button variant="ghost" onClick={() => handleNavigation('/login')}>
                   Sign In
                 </Button>
@@ -179,11 +179,11 @@ const Header = () => {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button - Show on medium screens and below */}
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="lg:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -191,9 +191,9 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Show on medium screens and below */}
         {isMenuOpen && (
-          <div className="md:hidden border-t py-4">
+          <div className="lg:hidden border-t py-4">
             <nav className="flex flex-col space-y-4">
               <button 
                 onClick={() => {

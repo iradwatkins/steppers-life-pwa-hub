@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 
 export interface PromoCodeApplication {
   promoCode: string;
@@ -55,19 +55,64 @@ type CartAction =
   | { type: 'SET_STEP'; payload: number }
   | { type: 'CLEAR_CART' };
 
-const initialState: CheckoutState = {
-  items: [],
-  subtotal: 0,
-  discountAmount: 0,
-  discount: 0,
-  total: 0,
-  eventId: null,
-  eventTitle: null,
-  attendeeInfo: null,
-  promoCode: null,
-  promoCodeApplication: null,
-  currentStep: 1,
-};
+// localStorage key for cart persistence
+const CART_STORAGE_KEY = 'steppers-life-cart';
+
+// Function to load cart from localStorage
+function loadCartFromStorage(): CheckoutState {
+  try {
+    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (savedCart) {
+      const parsedCart = JSON.parse(savedCart);
+      return {
+        ...parsedCart,
+        // Ensure all required fields exist with defaults
+        items: parsedCart.items || [],
+        subtotal: parsedCart.subtotal || 0,
+        discountAmount: parsedCart.discountAmount || 0,
+        discount: parsedCart.discount || 0,
+        total: parsedCart.total || 0,
+        eventId: parsedCart.eventId || null,
+        eventTitle: parsedCart.eventTitle || null,
+        attendeeInfo: parsedCart.attendeeInfo || null,
+        promoCode: parsedCart.promoCode || null,
+        promoCodeApplication: parsedCart.promoCodeApplication || null,
+        currentStep: parsedCart.currentStep || 1,
+      };
+    }
+  } catch (error) {
+    console.error('Error loading cart from localStorage:', error);
+  }
+  
+  return {
+    items: [],
+    subtotal: 0,
+    discountAmount: 0,
+    discount: 0,
+    total: 0,
+    eventId: null,
+    eventTitle: null,
+    attendeeInfo: null,
+    promoCode: null,
+    promoCodeApplication: null,
+    currentStep: 1,
+  };
+}
+
+// Function to save cart to localStorage
+function saveCartToStorage(state: CheckoutState) {
+  try {
+    const stateWithTimestamp = {
+      ...state,
+      lastUpdated: Date.now()
+    };
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(stateWithTimestamp));
+  } catch (error) {
+    console.error('Error saving cart to localStorage:', error);
+  }
+}
+
+const initialState: CheckoutState = loadCartFromStorage();
 
 // Helper function to calculate totals
 function calculateTotals(items: CartItem[], promoCodeApplication: PromoCodeApplication | null) {
@@ -79,6 +124,8 @@ function calculateTotals(items: CartItem[], promoCodeApplication: PromoCodeAppli
 }
 
 function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
+  let newState: CheckoutState;
+  
   switch (action.type) {
     case 'ADD_ITEM': {
       const existingItemIndex = state.items.findIndex(
@@ -97,13 +144,15 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
       }
 
       const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.promoCodeApplication);
-      return { ...state, items: newItems, subtotal, discountAmount, discount, total };
+      newState = { ...state, items: newItems, subtotal, discountAmount, discount, total };
+      break;
     }
 
     case 'REMOVE_ITEM': {
       const newItems = state.items.filter(item => item.ticketType.id !== action.payload.ticketTypeId);
       const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.promoCodeApplication);
-      return { ...state, items: newItems, subtotal, discountAmount, discount, total };
+      newState = { ...state, items: newItems, subtotal, discountAmount, discount, total };
+      break;
     }
 
     case 'UPDATE_QUANTITY': {
@@ -114,18 +163,21 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
       ).filter(item => item.quantity > 0);
 
       const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.promoCodeApplication);
-      return { ...state, items: newItems, subtotal, discountAmount, discount, total };
+      newState = { ...state, items: newItems, subtotal, discountAmount, discount, total };
+      break;
     }
 
     case 'SET_EVENT':
-      return { ...state, eventId: action.payload.eventId, eventTitle: action.payload.eventTitle };
+      newState = { ...state, eventId: action.payload.eventId, eventTitle: action.payload.eventTitle };
+      break;
 
     case 'SET_ATTENDEE_INFO':
-      return { ...state, attendeeInfo: action.payload };
+      newState = { ...state, attendeeInfo: action.payload };
+      break;
 
     case 'SET_PROMO_CODE': {
       const { subtotal, discountAmount, discount, total } = calculateTotals(state.items, action.payload);
-      return { 
+      newState = { 
         ...state, 
         promoCode: action.payload?.promoCode || null,
         promoCodeApplication: action.payload, 
@@ -134,17 +186,40 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
         discount, 
         total 
       };
+      break;
     }
 
     case 'SET_STEP':
-      return { ...state, currentStep: action.payload };
+      newState = { ...state, currentStep: action.payload };
+      break;
 
-    case 'CLEAR_CART':
-      return initialState;
+    case 'CLEAR_CART': {
+      newState = {
+        items: [],
+        subtotal: 0,
+        discountAmount: 0,
+        discount: 0,
+        total: 0,
+        eventId: null,
+        eventTitle: null,
+        attendeeInfo: null,
+        promoCode: null,
+        promoCodeApplication: null,
+        currentStep: 1,
+      };
+      break;
+    }
 
     default:
-      return state;
+      newState = state;
   }
+
+  // Save to localStorage after state change
+  if (newState !== state) {
+    saveCartToStorage(newState);
+  }
+  
+  return newState;
 }
 
 interface CartContextType {
@@ -163,6 +238,30 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+
+  // Handle localStorage persistence
+  useEffect(() => {
+    // Clear expired cart items (older than 24 hours)
+    const clearExpiredCart = () => {
+      try {
+        const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+        if (savedCart) {
+          const parsedCart = JSON.parse(savedCart);
+          const lastUpdated = parsedCart.lastUpdated || 0;
+          const twentyFourHours = 24 * 60 * 60 * 1000;
+          
+          if (Date.now() - lastUpdated > twentyFourHours) {
+            localStorage.removeItem(CART_STORAGE_KEY);
+            dispatch({ type: 'CLEAR_CART' });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking cart expiration:', error);
+      }
+    };
+
+    clearExpiredCart();
+  }, []);
 
   const addItem = (ticketType: TicketType, quantity: number) => {
     dispatch({ type: 'ADD_ITEM', payload: { ticketType, quantity } });
