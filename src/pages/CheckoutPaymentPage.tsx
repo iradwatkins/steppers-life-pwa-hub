@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { ExtensionProtection } from '@/utils/extensionProtection';
@@ -19,10 +17,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { OrderService } from '@/services/orderService';
 import { RealPaymentService } from '@/services/realPaymentService';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock, Smartphone, Building, DollarSign } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock } from 'lucide-react';
+import PaymentMethodSelector from '@/components/payments/PaymentMethodSelector';
+import { paymentGatewayManager, type PaymentMethod } from '@/services/paymentGatewayManager';
 
 const paymentFormSchema = z.object({
-  paymentMethod: z.enum(['card', 'paypal', 'apple_pay', 'google_pay', 'cashapp', 'cash']),
+  paymentMethod: z.enum(['square', 'paypal', 'apple_pay', 'google_pay', 'cashapp', 'cash']),
   cardNumber: z.string().optional(),
   expiryDate: z.string().optional(),
   cvv: z.string().optional(),
@@ -32,7 +32,7 @@ const paymentFormSchema = z.object({
   billingState: z.string().optional(),
   billingZip: z.string().optional(),
 }).refine((data) => {
-  if (data.paymentMethod === 'card') {
+  if (data.paymentMethod === 'square') {
     return data.cardNumber && data.expiryDate && data.cvv && data.cardholderName;
   }
   return true;
@@ -48,11 +48,13 @@ const CheckoutPaymentPage = () => {
   const { state, setStep, clearCart } = useCart();
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | undefined>();
+  const [paymentFees, setPaymentFees] = useState({ processingFee: 0, totalAmount: 0 });
 
   const form = useForm<PaymentFormData>({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
-      paymentMethod: 'card',
+      paymentMethod: 'square',
       cardNumber: '',
       expiryDate: '',
       cvv: '',
@@ -64,7 +66,16 @@ const CheckoutPaymentPage = () => {
     }
   });
 
-  const selectedPaymentMethod = form.watch('paymentMethod');
+  const watchedPaymentMethod = form.watch('paymentMethod');
+
+  const handlePaymentMethodSelect = (method: PaymentMethod) => {
+    setSelectedPaymentMethod(method);
+    form.setValue('paymentMethod', method);
+  };
+
+  const handleFeesCalculated = (fees: { processingFee: number; totalAmount: number }) => {
+    setPaymentFees(fees);
+  };
 
   useEffect(() => {
     setStep(3);
@@ -72,7 +83,12 @@ const CheckoutPaymentPage = () => {
     if (state.items.length === 0 || !state.attendeeInfo) {
       navigate(`/events/${state.eventId}/tickets`);
     }
-  }, [setStep, state.items.length, state.attendeeInfo, state.eventId, navigate]);
+    // Initialize payment fees with base amount
+    setPaymentFees({
+      processingFee: 0,
+      totalAmount: Math.round(state.total * 100) // Convert to cents
+    });
+  }, [setStep, state.items.length, state.attendeeInfo, state.eventId, navigate, state.total]);
 
   const onSubmit = async (data: PaymentFormData) => {
     if (!user) {
@@ -120,7 +136,7 @@ const CheckoutPaymentPage = () => {
         totalAmount: state.subtotal,
         discountAmount: state.discountAmount || 0,
         feesAmount: 0, // You can calculate fees if needed
-        finalAmount: state.total,
+        finalAmount: paymentFees.totalAmount > 0 ? paymentFees.totalAmount / 100 : state.total,
         promoCodeUsed: state.promoCode || undefined,
         billingDetails: {
           firstName: state.attendeeInfo.firstName,
@@ -152,40 +168,34 @@ const CheckoutPaymentPage = () => {
 
       // Process payment if not cash
       if (data.paymentMethod !== 'cash') {
-        const paymentRequest = {
-          orderId: order.id,
-          userId: user.id,
-          amount: state.total,
+        const unifiedPaymentRequest = {
+          amount: Math.round(paymentFees.totalAmount), // Use total with fees
           currency: 'USD',
-          paymentMethod: data.paymentMethod as 'card' | 'paypal' | 'apple_pay' | 'google_pay',
-          paymentData: {
-            sourceId: data.paymentMethod === 'card' ? 'card-payment-token' : undefined, // In real implementation, this would come from Square Web SDK
-          },
+          orderId: order.id,
+          customerEmail: state.attendeeInfo.email,
+          customerName: `${state.attendeeInfo.firstName} ${state.attendeeInfo.lastName}`,
+          description: `Event ticket purchase - ${state.eventTitle}`,
         };
 
-        const paymentResult = await RealPaymentService.processPayment(paymentRequest);
+        // Process payment through unified gateway manager
+        const paymentResult = await paymentGatewayManager.processPayment(
+          data.paymentMethod as PaymentMethod,
+          unifiedPaymentRequest,
+          data.paymentMethod === 'square' ? {
+            sourceId: 'card-payment-token', // In real implementation, this would come from Square Web SDK
+          } : undefined
+        );
 
         if (!paymentResult.success) {
           // Update order status to failed
           await OrderService.updateOrderStatus(order.id, 'cancelled');
-          throw new Error(paymentResult.error || 'Payment processing failed');
+          throw new Error(paymentResult.errorMessage || 'Payment processing failed');
         }
 
         console.log('✅ Payment processed successfully:', paymentResult);
 
-        // For PayPal, handle redirect flow
-        if (data.paymentMethod === 'paypal' && paymentResult.approvalUrl) {
-          // Store order info in sessionStorage for return
-          sessionStorage.setItem('pendingOrder', JSON.stringify({
-            orderId: order.id,
-            orderNumber: order.order_number,
-            paypalOrderId: paymentResult.paypalOrderId,
-          }));
-          
-          // Redirect to PayPal for approval
-          window.location.href = paymentResult.approvalUrl;
-          return;
-        }
+        // For PayPal, handle redirect flow (if needed)
+        // PayPal redirect logic would be handled by the PayPal payment service
       }
 
       // Send receipt email
@@ -193,8 +203,8 @@ const CheckoutPaymentPage = () => {
         const emailSent = await RealPaymentService.sendReceiptEmail(
           order.id,
           user.id,
-          data.billingDetails.email,
-          `${data.billingDetails.firstName} ${data.billingDetails.lastName}`
+          state.attendeeInfo.email,
+          `${state.attendeeInfo.firstName} ${state.attendeeInfo.lastName}`
         );
         console.log(emailSent ? '📧 Receipt email sent' : '⚠️ Receipt email failed');
       } catch (emailError) {
@@ -236,38 +246,7 @@ const CheckoutPaymentPage = () => {
     return null; // Will redirect
   }
 
-  const paymentMethods = [
-    {
-      id: 'card',
-      name: 'Credit/Debit Card',
-      icon: CreditCard,
-      description: 'Visa, Mastercard, American Express'
-    },
-    {
-      id: 'cash',
-      name: 'Pay Cash at Venue',
-      icon: DollarSign,
-      description: 'Reserve tickets and pay cash at the event'
-    },
-    {
-      id: 'paypal',
-      name: 'PayPal',
-      icon: Building,
-      description: 'Pay with your PayPal account'
-    },
-    {
-      id: 'apple_pay',
-      name: 'Apple Pay',
-      icon: Smartphone,
-      description: 'Pay with Touch ID or Face ID'
-    },
-    {
-      id: 'google_pay',
-      name: 'Google Pay',
-      icon: Smartphone,
-      description: 'Pay with Google Pay'
-    }
-  ];
+  // Payment method selection is now handled by PaymentMethodSelector component
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -307,46 +286,17 @@ const CheckoutPaymentPage = () => {
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     {/* Payment Method Selection */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
-                      <FormField
-                        control={form.control}
-                        name="paymentMethod"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                className="space-y-3"
-                              >
-                                {paymentMethods.map((method) => (
-                                  <div key={method.id} className="flex items-center space-x-3">
-                                    <RadioGroupItem value={method.id} id={method.id} />
-                                    <Label 
-                                      htmlFor={method.id} 
-                                      className="flex items-center gap-3 cursor-pointer flex-1 p-3 rounded-lg border hover:bg-muted/50"
-                                    >
-                                      <method.icon className="h-5 w-5" />
-                                      <div className="flex-1">
-                                        <div className="font-medium">{method.name}</div>
-                                        <div className="text-sm text-muted-foreground">
-                                          {method.description}
-                                        </div>
-                                      </div>
-                                    </Label>
-                                  </div>
-                                ))}
-                              </RadioGroup>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    <PaymentMethodSelector
+                      amount={Math.round(state.total * 100)} // Convert to cents
+                      currency="USD"
+                      onMethodSelect={handlePaymentMethodSelect}
+                      onFeesCalculated={handleFeesCalculated}
+                      selectedMethod={selectedPaymentMethod}
+                      disabled={isProcessing}
+                    />
 
                     {/* Credit Card Form */}
-                    {selectedPaymentMethod === 'card' && (
+                    {selectedPaymentMethod === 'square' && (
                       <>
                         <Separator />
                         <div>
@@ -475,10 +425,10 @@ const CheckoutPaymentPage = () => {
                     )}
 
                     {/* Alternative Payment Methods */}
-                    {selectedPaymentMethod !== 'card' && (
+                    {selectedPaymentMethod && selectedPaymentMethod !== 'square' && selectedPaymentMethod !== 'cash' && (
                       <div className="p-6 bg-muted/50 rounded-lg text-center">
                         <p className="text-muted-foreground mb-4">
-                          You will be redirected to {paymentMethods.find(m => m.id === selectedPaymentMethod)?.name} to complete your payment.
+                          You will be redirected to {paymentGatewayManager.getPaymentMethodDisplayName(selectedPaymentMethod)} to complete your payment.
                         </p>
                         <Badge variant="secondary">
                           <Lock className="h-3 w-3 mr-1" />
@@ -501,7 +451,7 @@ const CheckoutPaymentPage = () => {
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Details
                       </Button>
-                      <Button type="submit" disabled={isProcessing}>
+                      <Button type="submit" disabled={isProcessing || !selectedPaymentMethod}>
                         {isProcessing ? (
                           <>Processing Payment...</>
                         ) : (
@@ -549,10 +499,12 @@ const CheckoutPaymentPage = () => {
                       <span>Subtotal</span>
                       <span>${state.subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>Processing Fee</span>
-                      <span>${(state.subtotal * 0.029 + 0.30).toFixed(2)}</span>
-                    </div>
+                    {paymentFees.processingFee > 0 && (
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Processing Fee</span>
+                        <span>${(paymentFees.processingFee / 100).toFixed(2)}</span>
+                      </div>
+                    )}
                     {state.discountAmount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Discount</span>
@@ -562,7 +514,7 @@ const CheckoutPaymentPage = () => {
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span>${(state.total + state.subtotal * 0.029 + 0.30).toFixed(2)}</span>
+                      <span>${paymentFees.totalAmount > 0 ? (paymentFees.totalAmount / 100).toFixed(2) : state.total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

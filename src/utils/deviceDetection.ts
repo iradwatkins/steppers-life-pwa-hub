@@ -37,14 +37,27 @@ export class DeviceDetection {
     const isAndroid = /Android/i.test(userAgent);
     
     // Apple Pay support detection
-    const supportsApplePay = isIOS && 
-                            'ApplePaySession' in window && 
-                            typeof window.ApplePaySession !== 'undefined' &&
-                            window.ApplePaySession.canMakePayments();
+    let supportsApplePay = false;
+    try {
+      supportsApplePay = isIOS && 
+                         'ApplePaySession' in window && 
+                         typeof window.ApplePaySession !== 'undefined' &&
+                         window.ApplePaySession.canMakePayments();
+    } catch (error) {
+      // Apple Pay not available or permission denied
+      supportsApplePay = false;
+    }
     
     // Google Pay support detection
-    const supportsGooglePay = isAndroid && 
-                              'PaymentRequest' in window;
+    let supportsGooglePay = false;
+    try {
+      supportsGooglePay = isAndroid && 
+                          'PaymentRequest' in window &&
+                          typeof window.PaymentRequest !== 'undefined';
+    } catch (error) {
+      // Google Pay not available
+      supportsGooglePay = false;
+    }
     
     // Cash App support (mobile browsers)
     const supportsCashApp = isMobile && (
