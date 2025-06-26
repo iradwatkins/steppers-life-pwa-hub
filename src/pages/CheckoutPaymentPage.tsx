@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, CreditCard, ShoppingCart, Lock, Smartphone, Building, DollarSign } from 'lucide-react';
 
 const paymentFormSchema = z.object({
-  paymentMethod: z.enum(['card', 'paypal', 'apple_pay', 'google_pay', 'cash']),
+  paymentMethod: z.enum(['card', 'paypal', 'apple_pay', 'google_pay', 'cashapp', 'cash']),
   cardNumber: z.string().optional(),
   expiryDate: z.string().optional(),
   cvv: z.string().optional(),

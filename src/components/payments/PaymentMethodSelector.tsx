@@ -18,9 +18,11 @@ import {
   Loader2, 
   CheckCircle,
   AlertTriangle,
-  Info
+  Info,
+  Phone
 } from 'lucide-react';
 import { paymentGatewayManager, type PaymentMethod, type PaymentMethodAvailability } from '@/services/paymentGatewayManager';
+import { DeviceDetection } from '@/utils/deviceDetection';
 
 interface PaymentMethodSelectorProps {
   amount: number; // in cents
@@ -86,7 +88,10 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     }
   };
 
-  const paymentMethods: PaymentMethodInfo[] = [
+  // Get device capabilities for payment method filtering
+  const deviceCaps = DeviceDetection.getCapabilities();
+
+  const getAllPaymentMethods = (): PaymentMethodInfo[] => [
     {
       id: 'square',
       name: 'Credit/Debit Card',
@@ -109,12 +114,34 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       available: availability.paypal,
     },
     {
+      id: 'apple_pay',
+      name: 'Apple Pay',
+      description: 'Touch ID, Face ID, or passcode',
+      icon: <Phone className="h-5 w-5" />,
+      processingTime: 'Instant',
+      available: availability.square && DeviceDetection.shouldShowApplePay(),
+      mobileOnly: true,
+    },
+    {
+      id: 'google_pay',
+      name: 'Google Pay',
+      description: 'Pay with Google',
+      icon: (
+        <div className="h-5 w-5 bg-green-600 rounded flex items-center justify-center">
+          <span className="text-white text-xs font-bold">G</span>
+        </div>
+      ),
+      processingTime: 'Instant',
+      available: availability.square && DeviceDetection.shouldShowGooglePay(),
+      mobileOnly: true,
+    },
+    {
       id: 'cashapp',
       name: 'Cash App Pay',
       description: 'Pay instantly with Cash App',
       icon: <Smartphone className="h-5 w-5" />,
       processingTime: 'Instant',
-      available: availability.cashapp,
+      available: availability.square && DeviceDetection.shouldShowCashApp(),
       mobileOnly: true,
     },
     {
@@ -126,6 +153,8 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       available: availability.cash,
     },
   ];
+
+  const paymentMethods = getAllPaymentMethods();
 
   const handleMethodSelect = (methodId: string) => {
     const method = methodId as PaymentMethod;

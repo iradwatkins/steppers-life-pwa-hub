@@ -78,7 +78,11 @@ export class SquarePaymentService {
   async createGooglePay(): Promise<any> {
     try {
       const googlePay = await this.payments.googlePay({
-        // Configuration options
+        buttonOptions: {
+          buttonType: 'pay',
+          buttonColor: 'black',
+          buttonSizeMode: 'fill',
+        },
       });
       return googlePay;
     } catch (error) {
@@ -90,11 +94,33 @@ export class SquarePaymentService {
   async createApplePay(): Promise<any> {
     try {
       const applePay = await this.payments.applePay({
-        // Configuration options
+        buttonOptions: {
+          buttonType: 'pay',
+          buttonColor: 'black',
+          buttonSizeMode: 'fill',
+        },
       });
       return applePay;
     } catch (error) {
       console.error('Error creating Apple Pay:', error);
+      throw error;
+    }
+  }
+
+  async createCashAppPay(): Promise<any> {
+    try {
+      const cashAppPay = await this.payments.cashAppPay({
+        redirectURL: window.location.origin + '/payment/cashapp/callback',
+        referenceId: `cashapp-${Date.now()}`,
+        buttonOptions: {
+          shape: 'round',
+          theme: 'dark',
+          size: 'medium',
+        },
+      });
+      return cashAppPay;
+    } catch (error) {
+      console.error('Error creating Cash App Pay:', error);
       throw error;
     }
   }

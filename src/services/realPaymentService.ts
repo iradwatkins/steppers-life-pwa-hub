@@ -5,7 +5,7 @@ export interface PaymentRequest {
   userId: string;
   amount: number;
   currency: string;
-  paymentMethod: 'card' | 'paypal' | 'apple_pay' | 'google_pay';
+  paymentMethod: 'card' | 'paypal' | 'apple_pay' | 'google_pay' | 'cashapp';
   paymentData?: any;
 }
 
@@ -194,6 +194,8 @@ export class RealPaymentService {
       case 'card':
       case 'apple_pay':
       case 'google_pay':
+      case 'cashapp':
+        // All Square-based payment methods
         return this.processSquarePayment(request);
       
       case 'paypal':

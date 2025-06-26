@@ -7,7 +7,7 @@ import { SquarePaymentService, createSquarePaymentService, type SquarePaymentReq
 import { PayPalPaymentService, createPayPalPaymentService, type PayPalPaymentRequest, type PayPalPaymentResult } from './paymentGateways/paypalPaymentService';
 import { CashAppPaymentService, createCashAppPaymentService, type CashAppPaymentRequest, type CashAppPaymentResult } from './paymentGateways/cashAppPaymentService';
 
-export type PaymentMethod = 'square' | 'paypal' | 'cashapp' | 'cash';
+export type PaymentMethod = 'square' | 'paypal' | 'cashapp' | 'cash' | 'apple_pay' | 'google_pay';
 
 export interface UnifiedPaymentRequest {
   amount: number; // in cents for consistency
@@ -117,11 +117,13 @@ export class PaymentGatewayManager {
     try {
       switch (method) {
         case 'square':
+        case 'apple_pay':
+        case 'google_pay':
+        case 'cashapp':
+          // All these methods use Square's payment processing
           return await this.processSquarePayment(request, paymentMethodData);
         case 'paypal':
           return await this.processPayPalPayment(request);
-        case 'cashapp':
-          return await this.processCashAppPayment(request);
         case 'cash':
           return await this.processCashPayment(request);
         default:
@@ -335,10 +337,14 @@ export class PaymentGatewayManager {
     switch (method) {
       case 'square':
         return this.squareService.getEnvironmentDisplayName();
+      case 'apple_pay':
+        return 'Apple Pay';
+      case 'google_pay':
+        return 'Google Pay';
       case 'paypal':
         return this.paypalService.getEnvironmentDisplayName();
       case 'cashapp':
-        return this.cashappService.getEnvironmentDisplayName();
+        return 'Cash App Pay';
       case 'cash':
         return 'Cash Payment';
       default:
@@ -356,16 +362,16 @@ export class PaymentGatewayManager {
 
     switch (method) {
       case 'square':
+      case 'apple_pay':
+      case 'google_pay':
+      case 'cashapp':
+        // All Square-based payments have same fee structure
         feePercentage = 0.029; // 2.9%
         fixedFee = 30; // $0.30 in cents
         break;
       case 'paypal':
         feePercentage = 0.0349; // 3.49%
         fixedFee = 49; // $0.49 in cents
-        break;
-      case 'cashapp':
-        feePercentage = 0.029; // 2.9% (same as Square)
-        fixedFee = 30; // $0.30 in cents
         break;
       case 'cash':
         feePercentage = 0;
