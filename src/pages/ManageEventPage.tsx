@@ -404,5 +404,16 @@ const ManageEventPage: React.FC = () => {
               <div className="flex items-center space-x-3 mb-2">
                 <h1 className="text-3xl font-bold text-gray-900">{event.title}</h1>
                 <Badge className={`flex items-center space-x-1 ${getStatusColor(event.status)}`}>
-                  {event.status}
+                  {getStatusIcon(event.status)}
+                  <span>{getStatusLabel(event.status)}</span>
                 </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ManageEventPage;
