@@ -36,6 +36,8 @@ import ClassDetail from "./pages/ClassDetail";
 import TicketSelectionPage from "./pages/TicketSelectionPage";
 import CheckoutDetailsPage from "./pages/CheckoutDetailsPage";
 import CheckoutPaymentPage from "./pages/CheckoutPaymentPage";
+import ModernCheckoutPaymentPage from "./pages/ModernCheckoutPaymentPage";
+import ModernPaymentPage from "./pages/ModernPaymentPage";
 import CheckoutConfirmationPage from "./pages/CheckoutConfirmationPage";
 import PayPalReturnPage from "./pages/PayPalReturnPage";
 import CartPage from "./pages/CartPage";
@@ -327,6 +329,16 @@ const RouterWrapper = () => {
           </AuthRoute>
         } />
         <Route path="/checkout/payment" element={
+          <AuthRoute>
+            <ModernCheckoutPaymentPage />
+          </AuthRoute>
+        } />
+        <Route path="/payment" element={
+          <AuthRoute>
+            <ModernPaymentPage />
+          </AuthRoute>
+        } />
+        <Route path="/checkout/payment/legacy" element={
           <AuthRoute>
             <CheckoutPaymentPage />
           </AuthRoute>

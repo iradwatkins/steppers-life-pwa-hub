@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
       registerType: 'prompt',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        maximumFileSizeToCacheInBytes: 5000000, // 5MB limit instead of 2MB
+        maximumFileSizeToCacheInBytes: 10000000, // 10MB limit for large bundles
         skipWaiting: false,
         clientsClaim: false,
         runtimeCaching: [
