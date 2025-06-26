@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { storeService } from '@/services/storeService';
 import type { Store, StoreReview, StoreComment } from '@/types/store';
+import type { UserReview, UserComment } from '@/types/community';
 import FollowButton from '@/components/following/FollowButton';
 import { 
   Store as StoreIcon, 
@@ -31,7 +32,6 @@ import {
   Share2,
   Heart
 } from 'lucide-react';
-import type { Store, UserReview, UserComment } from '@/types/community';
 
 const StoreDetailPage = () => {
   const { id } = useParams<{ id: string }>();
