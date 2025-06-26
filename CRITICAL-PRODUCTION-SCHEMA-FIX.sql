@@ -513,18 +513,18 @@ ALTER TABLE saved_payment_methods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE security_activity_log ENABLE ROW LEVEL SECURITY;
 
 -- Basic RLS policies (users can read their own data)
-CREATE POLICY IF NOT EXISTS "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY IF NOT EXISTS "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "Users can view own orders" ON orders FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY IF NOT EXISTS "Users can view own tickets" ON tickets FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY IF NOT EXISTS "Users can view own payments" ON payments FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own orders" ON orders FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own tickets" ON tickets FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own payments" ON payments FOR SELECT USING (auth.uid() = user_id);
 
 -- Public read access for events and venues
-CREATE POLICY IF NOT EXISTS "Events are viewable by everyone" ON events FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Venues are viewable by everyone" ON venues FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Ticket types are viewable by everyone" ON ticket_types FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Classes are viewable by everyone" ON classes FOR SELECT USING (true);
+CREATE POLICY "Events are viewable by everyone" ON events FOR SELECT USING (true);
+CREATE POLICY "Venues are viewable by everyone" ON venues FOR SELECT USING (true);
+CREATE POLICY "Ticket types are viewable by everyone" ON ticket_types FOR SELECT USING (true);
+CREATE POLICY "Classes are viewable by everyone" ON classes FOR SELECT USING (true);
 
 -- =====================================================
 -- STEP 14: CREATE AUTOMATIC TRIGGERS
