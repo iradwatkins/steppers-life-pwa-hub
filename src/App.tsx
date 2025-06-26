@@ -111,6 +111,10 @@ import VODPurchasePage from "./pages/vod/VODPurchasePage";
 import PromotionalStorePage from "./pages/store/PromotionalStorePage";
 import MerchandiseStorePage from "./pages/merchandise/MerchandiseStorePage";
 import NetworkGrowthPage from "./pages/NetworkGrowthPage";
+import TestProductPage from "./pages/TestProductPage";
+import SimpleCartPage from "./pages/SimpleCartPage";
+import SimpleCheckoutPage from "./pages/SimpleCheckoutPage";
+import SimpleConfirmationPage from "./pages/SimpleConfirmationPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -341,6 +345,20 @@ const RouterWrapper = () => {
         <Route path="/checkout/payment/legacy" element={
           <AuthRoute>
             <CheckoutPaymentPage />
+          </AuthRoute>
+        } />
+        
+        {/* Simple Checkout Test Routes */}
+        <Route path="/test-product" element={<TestProductPage />} />
+        <Route path="/simple-cart" element={<SimpleCartPage />} />
+        <Route path="/simple-checkout" element={
+          <AuthRoute>
+            <SimpleCheckoutPage />
+          </AuthRoute>
+        } />
+        <Route path="/simple-confirmation" element={
+          <AuthRoute>
+            <SimpleConfirmationPage />
           </AuthRoute>
         } />
         <Route path="/checkout/confirmation" element={

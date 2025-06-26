@@ -46,8 +46,21 @@ export interface EventInfo {
   online_link?: string;
 }
 
+export interface SimpleProduct {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+}
+
+export interface SimpleCartItem {
+  product: SimpleProduct;
+  quantity: number;
+}
+
 export interface CheckoutState {
   items: CartItem[];
+  simpleItems: SimpleCartItem[];
   subtotal: number;
   discountAmount: number;
   discount: number;
@@ -65,6 +78,10 @@ type CartAction =
   | { type: 'ADD_ITEM'; payload: { ticketType: TicketType; quantity: number } }
   | { type: 'REMOVE_ITEM'; payload: { ticketTypeId: string } }
   | { type: 'UPDATE_QUANTITY'; payload: { ticketTypeId: string; quantity: number } }
+  | { type: 'ADD_SIMPLE_ITEM'; payload: { product: SimpleProduct; quantity: number } }
+  | { type: 'REMOVE_SIMPLE_ITEM'; payload: { productId: string } }
+  | { type: 'UPDATE_SIMPLE_QUANTITY'; payload: { productId: string; quantity: number } }
+  | { type: 'CLEAR_SIMPLE_CART' }
   | { type: 'SET_EVENT'; payload: { eventId: string; eventTitle: string } }
   | { type: 'SET_EVENT_INFO'; payload: EventInfo }
   | { type: 'SET_ATTENDEE_INFO'; payload: AttendeeInfo }
@@ -85,6 +102,7 @@ function loadCartFromStorage(): CheckoutState {
         ...parsedCart,
         // Ensure all required fields exist with defaults
         items: parsedCart.items || [],
+        simpleItems: parsedCart.simpleItems || [],
         subtotal: parsedCart.subtotal || 0,
         discountAmount: parsedCart.discountAmount || 0,
         discount: parsedCart.discount || 0,
@@ -104,6 +122,7 @@ function loadCartFromStorage(): CheckoutState {
   
   return {
     items: [],
+    simpleItems: [],
     subtotal: 0,
     discountAmount: 0,
     discount: 0,
@@ -134,8 +153,10 @@ function saveCartToStorage(state: CheckoutState) {
 const initialState: CheckoutState = loadCartFromStorage();
 
 // Helper function to calculate totals
-function calculateTotals(items: CartItem[], promoCodeApplication: PromoCodeApplication | null) {
-  const subtotal = items.reduce((sum, item) => sum + (item.ticketType.price * item.quantity), 0);
+function calculateTotals(items: CartItem[], simpleItems: SimpleCartItem[], promoCodeApplication: PromoCodeApplication | null) {
+  const eventSubtotal = items.reduce((sum, item) => sum + (item.ticketType.price * item.quantity), 0);
+  const simpleSubtotal = simpleItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const subtotal = eventSubtotal + simpleSubtotal;
   const discountAmount = promoCodeApplication ? promoCodeApplication.discountAmount : 0;
   const total = Math.max(0, subtotal - discountAmount);
   
@@ -162,14 +183,14 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
         newItems = [...state.items, action.payload];
       }
 
-      const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.promoCodeApplication);
+      const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.simpleItems, state.promoCodeApplication);
       newState = { ...state, items: newItems, subtotal, discountAmount, discount, total };
       break;
     }
 
     case 'REMOVE_ITEM': {
       const newItems = state.items.filter(item => item.ticketType.id !== action.payload.ticketTypeId);
-      const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.promoCodeApplication);
+      const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.simpleItems, state.promoCodeApplication);
       newState = { ...state, items: newItems, subtotal, discountAmount, discount, total };
       break;
     }
@@ -181,7 +202,7 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
           : item
       ).filter(item => item.quantity > 0);
 
-      const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.promoCodeApplication);
+      const { subtotal, discountAmount, discount, total } = calculateTotals(newItems, state.simpleItems, state.promoCodeApplication);
       newState = { ...state, items: newItems, subtotal, discountAmount, discount, total };
       break;
     }
@@ -194,12 +215,58 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
       newState = { ...state, eventInfo: action.payload };
       break;
 
+    case 'ADD_SIMPLE_ITEM': {
+      const existingItemIndex = state.simpleItems.findIndex(
+        item => item.product.id === action.payload.product.id
+      );
+
+      let newSimpleItems: SimpleCartItem[];
+      if (existingItemIndex !== -1) {
+        newSimpleItems = state.simpleItems.map((item, index) =>
+          index === existingItemIndex
+            ? { ...item, quantity: item.quantity + action.payload.quantity }
+            : item
+        );
+      } else {
+        newSimpleItems = [...state.simpleItems, action.payload];
+      }
+
+      const { subtotal, discountAmount, discount, total } = calculateTotals(state.items, newSimpleItems, state.promoCodeApplication);
+      newState = { ...state, simpleItems: newSimpleItems, subtotal, discountAmount, discount, total };
+      break;
+    }
+
+    case 'REMOVE_SIMPLE_ITEM': {
+      const newSimpleItems = state.simpleItems.filter(item => item.product.id !== action.payload.productId);
+      const { subtotal, discountAmount, discount, total } = calculateTotals(state.items, newSimpleItems, state.promoCodeApplication);
+      newState = { ...state, simpleItems: newSimpleItems, subtotal, discountAmount, discount, total };
+      break;
+    }
+
+    case 'UPDATE_SIMPLE_QUANTITY': {
+      const newSimpleItems = state.simpleItems.map(item =>
+        item.product.id === action.payload.productId
+          ? { ...item, quantity: action.payload.quantity }
+          : item
+      ).filter(item => item.quantity > 0);
+
+      const { subtotal, discountAmount, discount, total } = calculateTotals(state.items, newSimpleItems, state.promoCodeApplication);
+      newState = { ...state, simpleItems: newSimpleItems, subtotal, discountAmount, discount, total };
+      break;
+    }
+
+    case 'CLEAR_SIMPLE_CART': {
+      const { subtotal, discountAmount, discount, total } = calculateTotals(state.items, [], state.promoCodeApplication);
+      newState = { ...state, simpleItems: [], subtotal, discountAmount, discount, total };
+      break;
+    }
+
     case 'SET_ATTENDEE_INFO':
       newState = { ...state, attendeeInfo: action.payload };
       break;
 
     case 'SET_PROMO_CODE': {
-      const { subtotal, discountAmount, discount, total } = calculateTotals(state.items, action.payload);
+      const { subtotal, discountAmount, discount, total } = calculateTotals(state.items, state.simpleItems, action.payload);
       newState = { 
         ...state, 
         promoCode: action.payload?.promoCode || null,
@@ -219,6 +286,7 @@ function cartReducer(state: CheckoutState, action: CartAction): CheckoutState {
     case 'CLEAR_CART': {
       newState = {
         items: [],
+        simpleItems: [],
         subtotal: 0,
         discountAmount: 0,
         discount: 0,
@@ -251,6 +319,10 @@ interface CartContextType {
   addItem: (ticketType: TicketType, quantity: number) => void;
   removeItem: (ticketTypeId: string) => void;
   updateQuantity: (ticketTypeId: string, quantity: number) => void;
+  addSimpleItem: (product: SimpleProduct, quantity: number) => void;
+  removeSimpleItem: (productId: string) => void;
+  updateSimpleQuantity: (productId: string, quantity: number) => void;
+  clearSimpleCart: () => void;
   setEvent: (eventId: string, eventTitle: string) => void;
   setEventInfo: (eventInfo: EventInfo) => void;
   setAttendeeInfo: (info: AttendeeInfo) => void;
@@ -304,6 +376,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_EVENT', payload: { eventId, eventTitle } });
   };
 
+  const addSimpleItem = (product: SimpleProduct, quantity: number) => {
+    dispatch({ type: 'ADD_SIMPLE_ITEM', payload: { product, quantity } });
+  };
+
+  const removeSimpleItem = (productId: string) => {
+    dispatch({ type: 'REMOVE_SIMPLE_ITEM', payload: { productId } });
+  };
+
+  const updateSimpleQuantity = (productId: string, quantity: number) => {
+    dispatch({ type: 'UPDATE_SIMPLE_QUANTITY', payload: { productId, quantity } });
+  };
+
+  const clearSimpleCart = () => {
+    dispatch({ type: 'CLEAR_SIMPLE_CART' });
+  };
+
   const setEventInfo = (eventInfo: EventInfo) => {
     dispatch({ type: 'SET_EVENT_INFO', payload: eventInfo });
   };
@@ -330,6 +418,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addItem,
       removeItem,
       updateQuantity,
+      addSimpleItem,
+      removeSimpleItem,
+      updateSimpleQuantity,
+      clearSimpleCart,
       setEvent,
       setEventInfo,
       setAttendeeInfo,
