@@ -51,7 +51,7 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
 };
 
 export const EVENT_TYPE_DESCRIPTIONS: Record<EventType, string> = {
-  simple: 'Free entry with time conditions and door pricing',
+  simple: 'Quick setup with promotional highlights and special offers for attendees',
   ticketed: 'Standard paid events with ticket sales',
   premium: 'Large venues with custom seating charts'
 };
