@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ImageUpload } from '@/components/ui/image-upload';
-import { ProfileImageUpload } from '@/components/profile/ProfileImageUpload';
+import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import { ImageUploadService } from '@/services/imageUploadService';
 import { ImageOptimizer } from '@/utils/imageOptimization';
 import { useAuth } from '@/hooks/useAuth';
