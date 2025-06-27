@@ -17,7 +17,7 @@ import {
   UpdateBlogPostData, 
   BlogListFilters 
 } from '@/types/blog';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export interface UseBlogOptions {
   autoFetch?: boolean;

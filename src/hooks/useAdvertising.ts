@@ -16,7 +16,7 @@ import {
   RevenueReport,
   AdSystemSettings
 } from '@/services/advertisingService';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export interface UseAdvertisingOptions {
   autoFetch?: boolean;
