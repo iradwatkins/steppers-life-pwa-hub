@@ -191,10 +191,12 @@ export const useAdvertising = (options: UseAdvertisingOptions = {}): UseAdvertis
     setError(null);
     try {
       const response = await advertisingService.getDirectAds(filters);
-      setDirectAds(response.ads);
-      setTotal(response.total);
+      setDirectAds(response?.ads || []);
+      setTotal(response?.total || 0);
     } catch (error) {
       handleError(error, 'fetch direct ads');
+      setDirectAds([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }

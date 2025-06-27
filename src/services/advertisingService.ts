@@ -218,7 +218,7 @@ class AdvertisingService {
       }
 
       const response = await apiClient.get(`${this.baseUrl}/direct-ads?${params}`);
-      return response.data;
+      return response.data || { ads: [], total: 0 };
     } catch (error) {
       console.error('Error fetching direct ads:', error);
       return { ads: this.getMockDirectAds(), total: this.getMockDirectAds().length };

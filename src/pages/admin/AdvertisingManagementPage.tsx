@@ -230,7 +230,7 @@ const AdvertisingManagementPage: React.FC = () => {
     return <Badge {...props}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
   };
 
-  const filteredAds = directAds.filter(ad => {
+  const filteredAds = (directAds || []).filter(ad => {
     if (statusFilter !== 'all' && ad.status !== statusFilter) return false;
     if (zoneFilter !== 'all' && ad.zone_id !== zoneFilter) return false;
     return true;
@@ -249,7 +249,7 @@ const AdvertisingManagementPage: React.FC = () => {
         <div className="flex items-center space-x-2">
           {revenueReport && (
             <Badge variant="outline" className="text-green-600">
-              ${revenueReport.direct_ads.total_revenue + revenueReport.adsense.estimated_revenue} Revenue (30d)
+              ${(revenueReport?.direct_ads?.total_revenue || 0) + (revenueReport?.adsense?.estimated_revenue || 0)} Revenue (30d)
             </Badge>
           )}
         </div>
@@ -287,7 +287,7 @@ const AdvertisingManagementPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    ${(revenueReport.direct_ads.total_revenue + revenueReport.adsense.estimated_revenue).toFixed(2)}
+                    ${((revenueReport?.direct_ads?.total_revenue || 0) + (revenueReport?.adsense?.estimated_revenue || 0)).toFixed(2)}
                   </div>
                   <p className="text-xs text-muted-foreground">Last 30 days</p>
                 </CardContent>
@@ -299,9 +299,9 @@ const AdvertisingManagementPage: React.FC = () => {
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{revenueReport.direct_ads.active_ads}</div>
+                  <div className="text-2xl font-bold">{revenueReport?.direct_ads?.active_ads || 0}</div>
                   <p className="text-xs text-muted-foreground">
-                    {revenueReport.direct_ads.pending_ads} pending approval
+                    {revenueReport?.direct_ads?.pending_ads || 0} pending approval
                   </p>
                 </CardContent>
               </Card>
@@ -312,9 +312,9 @@ const AdvertisingManagementPage: React.FC = () => {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{revenueReport.adsense.ctr.toFixed(2)}%</div>
+                  <div className="text-2xl font-bold">{(revenueReport?.adsense?.ctr || 0).toFixed(2)}%</div>
                   <p className="text-xs text-muted-foreground">
-                    {revenueReport.adsense.clicks.toLocaleString()} clicks
+                    {(revenueReport?.adsense?.clicks || 0).toLocaleString()} clicks
                   </p>
                 </CardContent>
               </Card>
@@ -325,9 +325,9 @@ const AdvertisingManagementPage: React.FC = () => {
                   <Settings className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{adZones.length}</div>
+                  <div className="text-2xl font-bold">{(adZones || []).length}</div>
                   <p className="text-xs text-muted-foreground">
-                    {adZones.filter(z => z.is_active).length} active
+                    {(adZones || []).filter(z => z.is_active).length} active
                   </p>
                 </CardContent>
               </Card>
@@ -352,7 +352,7 @@ const AdvertisingManagementPage: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {revenueReport.top_performing_ads.map((ad) => (
+                    {(revenueReport?.top_performing_ads || []).map((ad) => (
                       <TableRow key={ad.ad_id}>
                         <TableCell className="font-medium">{ad.title}</TableCell>
                         <TableCell>{ad.impressions.toLocaleString()}</TableCell>
@@ -480,7 +480,7 @@ const AdvertisingManagementPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {adZones.map((zone) => (
+            {(adZones || []).map((zone) => (
               <Card key={zone.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -554,7 +554,7 @@ const AdvertisingManagementPage: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Zones</SelectItem>
-                  {adZones.map((zone) => (
+                  {(adZones || []).map((zone) => (
                     <SelectItem key={zone.id} value={zone.id}>
                       {zone.name}
                     </SelectItem>
@@ -579,7 +579,7 @@ const AdvertisingManagementPage: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAds.map((ad) => (
+                  {(filteredAds || []).map((ad) => (
                     <TableRow key={ad.id}>
                       <TableCell className="font-medium">{ad.title}</TableCell>
                       <TableCell>{ad.advertiser_name}</TableCell>
@@ -684,19 +684,19 @@ const AdvertisingManagementPage: React.FC = () => {
                       <div>
                         <Label>Est. Revenue (30d)</Label>
                         <div className="text-2xl font-bold text-green-600">
-                          ${revenueReport.adsense.estimated_revenue.toFixed(2)}
+                          ${(revenueReport?.adsense?.estimated_revenue || 0).toFixed(2)}
                         </div>
                       </div>
                       <div>
                         <Label>Impressions</Label>
                         <div className="text-2xl font-bold">
-                          {revenueReport.adsense.impressions.toLocaleString()}
+                          {(revenueReport?.adsense?.impressions || 0).toLocaleString()}
                         </div>
                       </div>
                       <div>
                         <Label>Click Rate</Label>
                         <div className="text-2xl font-bold">
-                          {revenueReport.adsense.ctr.toFixed(2)}%
+                          {(revenueReport?.adsense?.ctr || 0).toFixed(2)}%
                         </div>
                       </div>
                     </div>
