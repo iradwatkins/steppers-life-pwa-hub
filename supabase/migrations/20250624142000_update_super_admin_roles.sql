@@ -13,32 +13,34 @@ SET role = 'super_admin', updated_at = NOW()
 WHERE email = 'bobbygwatkins@gmail.com';
 
 -- Insert profiles if they don't exist (in case they haven't signed up yet)
-INSERT INTO profiles (id, email, role, full_name, created_at, updated_at)
-SELECT 
-    gen_random_uuid(),
-    'iradwatkins@gmail.com',
-    'super_admin',
-    'Ira Watkins',
-    NOW(),
-    NOW()
-WHERE NOT EXISTS (
-    SELECT 1 FROM profiles WHERE email = 'iradwatkins@gmail.com'
-);
+-- INSERT INTO profiles (id, email, role, full_name, created_at, updated_at)
+-- SELECT 
+--     gen_random_uuid(),
+--     'iradwatkins@gmail.com',
+--     'super_admin',
+--     'Ira Watkins',
+--     NOW(),
+--     NOW()
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM profiles WHERE email = 'iradwatkins@gmail.com'
+-- );
 
-INSERT INTO profiles (id, email, role, full_name, created_at, updated_at)
-SELECT 
-    gen_random_uuid(),
-    'bobbygwatkins@gmail.com', 
-    'super_admin',
-    'Bobby Watkins',
-    NOW(),
-    NOW()
-WHERE NOT EXISTS (
-    SELECT 1 FROM profiles WHERE email = 'bobbygwatkins@gmail.com'
-);
+-- INSERT INTO profiles (id, email, role, full_name, created_at, updated_at)
+-- SELECT 
+--     gen_random_uuid(),
+--     'bobbygwatkins@gmail.com', 
+--     'super_admin',
+--     'Bobby Watkins',
+--     NOW(),
+--     NOW()
+-- WHERE NOT EXISTS (
+--     SELECT 1 FROM profiles WHERE email = 'bobbygwatkins@gmail.com'
+-- );
 
 -- Verify the updates
 DO $$
+DECLARE
+    r RECORD;
 BEGIN
     -- Log the current super_admin users
     RAISE NOTICE 'Super admin users after migration:';
