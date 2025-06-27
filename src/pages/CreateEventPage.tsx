@@ -105,7 +105,7 @@ const CreateEventPage = () => {
   const [eventImages, setEventImages] = useState<string[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string>('');
   const [additionalDates, setAdditionalDates] = useState<Array<{startDate: string; startTime: string; endDate?: string; endTime?: string}>>([]);
-  const [isSimpleEvent, setIsSimpleEvent] = useState(false);
+  // Removed isSimpleEvent state - now using eventType field instead
 
   const eventCategories = EventService.getEventCategories();
 
@@ -329,17 +329,17 @@ const CreateEventPage = () => {
         doorPrice: data.doorPrice,
         doorPriceCurrency: data.doorPriceCurrency,
         additionalInfo: {
-          isSimpleEvent: isSimpleEvent,
-          simpleEventPrice: isSimpleEvent ? data.ticketPrice : undefined
+          isSimpleEvent: data.eventType === 'simple',
+          simpleEventPrice: data.eventType === 'simple' ? data.ticketPrice : undefined
         }
       };
 
       // Handle ticket types for both simple and complex events
-      if ((isSimpleEvent && data.ticketPrice) || (!isSimpleEvent && data.requiresTickets && data.ticketPrice)) {
+      if ((data.eventType === 'simple' && data.ticketPrice) || (data.eventType !== 'simple' && data.requiresTickets && data.ticketPrice)) {
         eventData.ticketTypes = [
           {
-            name: isSimpleEvent ? 'Admission' : 'General Admission',
-            description: isSimpleEvent ? 'Event admission' : 'Standard event ticket',
+            name: data.eventType === 'simple' ? 'Admission' : 'General Admission',
+            description: data.eventType === 'simple' ? 'Event admission' : 'Standard event ticket',
             price: parseFloat(data.ticketPrice),
             quantityAvailable: data.capacity ? parseInt(data.capacity) : 100,
             maxPerOrder: 10,
@@ -464,22 +464,69 @@ const CreateEventPage = () => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Simple Event Mode Toggle */}
+            {/* Event Type Selection - Moved to Top */}
             <Card className="border-2 border-stepping-purple/20">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">Simple Event Mode</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Create a basic event listing with just the essentials - title, date, location, and admission price
-                    </p>
-                  </div>
-                  <Switch
-                    checked={isSimpleEvent}
-                    onCheckedChange={setIsSimpleEvent}
-                    className="ml-4"
-                  />
-                </div>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-stepping-purple" />
+                  Event Type
+                </CardTitle>
+                <CardDescription>
+                  Choose the type of event you're creating
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="eventType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-auto">
+                            <SelectValue placeholder="Select event type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="simple">
+                            <div className="flex items-start gap-3 py-2">
+                              <Star className="h-5 w-5 text-green-600 mt-0.5" />
+                              <div>
+                                <div className="font-medium">{EVENT_TYPE_LABELS.simple}</div>
+                                <div className="text-sm text-muted-foreground max-w-sm">
+                                  {EVENT_TYPE_DESCRIPTIONS.simple}
+                                </div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="ticketed">
+                            <div className="flex items-start gap-3 py-2">
+                              <DollarSign className="h-5 w-5 text-blue-600 mt-0.5" />
+                              <div>
+                                <div className="font-medium">{EVENT_TYPE_LABELS.ticketed}</div>
+                                <div className="text-sm text-muted-foreground max-w-sm">
+                                  {EVENT_TYPE_DESCRIPTIONS.ticketed}
+                                </div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="premium">
+                            <div className="flex items-start gap-3 py-2">
+                              <Users className="h-5 w-5 text-purple-600 mt-0.5" />
+                              <div>
+                                <div className="font-medium">{EVENT_TYPE_LABELS.premium}</div>
+                                <div className="text-sm text-muted-foreground max-w-sm">
+                                  {EVENT_TYPE_DESCRIPTIONS.premium}
+                                </div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
@@ -922,7 +969,7 @@ const CreateEventPage = () => {
             </Card>
 
             {/* Featured Image Section - Optional for Simple Events */}
-            {!isSimpleEvent && (
+            {eventType !== 'simple' && (
               <>
                 <Card>
                   <CardHeader>
@@ -974,17 +1021,17 @@ const CreateEventPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  {isSimpleEvent ? 'Admission Price' : 'Attendance Configuration'}
+                  {eventType === 'simple' ? 'Admission Price' : 'Attendance Configuration'}
                 </CardTitle>
                 <CardDescription>
-                  {isSimpleEvent 
+                  {eventType === 'simple'
                     ? 'Set the admission price for your event'
                     : 'Configure how people can attend your event'
                   }
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {isSimpleEvent ? (
+                {eventType === 'simple' ? (
                   /* Simple Event Mode - Just Admission Price */
                   <div className="space-y-4">
                     <FormField
@@ -1050,55 +1097,6 @@ const CreateEventPage = () => {
                       )}
                     />
 
-                    {/* Event Type Selection */}
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="eventType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-base">Event Type</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select event type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="simple">
-                                  <div className="flex items-center gap-2">
-                                    <Star className="h-4 w-4" />
-                                    <div>
-                                      <div className="font-medium">{EVENT_TYPE_LABELS.simple}</div>
-                                      <div className="text-xs text-muted-foreground">{EVENT_TYPE_DESCRIPTIONS.simple}</div>
-                                    </div>
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="ticketed">
-                                  <div className="flex items-center gap-2">
-                                    <DollarSign className="h-4 w-4" />
-                                    <div>
-                                      <div className="font-medium">{EVENT_TYPE_LABELS.ticketed}</div>
-                                      <div className="text-xs text-muted-foreground">{EVENT_TYPE_DESCRIPTIONS.ticketed}</div>
-                                    </div>
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="premium">
-                                  <div className="flex items-center gap-2">
-                                    <Users className="h-4 w-4" />
-                                    <div>
-                                      <div className="font-medium">{EVENT_TYPE_LABELS.premium}</div>
-                                      <div className="text-xs text-muted-foreground">{EVENT_TYPE_DESCRIPTIONS.premium}</div>
-                                    </div>
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
 
                     {/* Simple Event Configuration */}
                     {eventType === 'simple' && (
