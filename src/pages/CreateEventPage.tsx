@@ -72,6 +72,7 @@ const eventFormSchema = z.object({
   freeEntryCondition: z.string().optional(),
   doorPrice: z.string().optional(),
   doorPriceCurrency: z.string().default('USD'),
+  promotionalHighlight: z.string().optional(),
 }).refine((data) => {
   // Validation based on event type
   if (data.eventType === 'simple') {
@@ -137,6 +138,7 @@ const CreateEventPage = () => {
       freeEntryCondition: '',
       doorPrice: '',
       doorPriceCurrency: 'USD',
+      promotionalHighlight: '',
     }
   });
 
@@ -955,8 +957,8 @@ const CreateEventPage = () => {
               </CardContent>
             </Card>
 
-            {/* Featured Image Section - Optional for Simple Events */}
-            {eventType !== 'simple' && (
+            {/* Featured Image Section */}
+            {(
               <>
                 <Card>
                   <CardHeader>
@@ -1041,6 +1043,26 @@ const CreateEventPage = () => {
                           </FormControl>
                           <div className="text-sm text-muted-foreground">
                             Price per person (leave empty for free events)
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="promotionalHighlight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Promotional Highlight (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="e.g., 'Free for first 100 people', 'Ladies free until 10pm', 'Everyone free until 10pm'"
+                              className="min-h-[80px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <div className="text-sm text-muted-foreground">
+                            Add special offers, time-based promotions, or call-to-action messages for attendees
                           </div>
                           <FormMessage />
                         </FormItem>
