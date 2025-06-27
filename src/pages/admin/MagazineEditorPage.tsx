@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RichTextEditor from '@/components/ui/rich-text-editor';
 import { ArrowLeft, Save, Eye, Upload, Youtube, Search, X, Star, Bookmark, Quote, Image } from 'lucide-react';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { useAuth } from '@/hooks/useAuth';
 
 const MagazineEditorPage = () => {
@@ -54,7 +55,6 @@ const MagazineEditorPage = () => {
   const [newTag, setNewTag] = useState('');
   const [newKeyword, setNewKeyword] = useState('');
   const [newPullQuote, setNewPullQuote] = useState('');
-  const [newGalleryImage, setNewGalleryImage] = useState('');
 
   const sections = [
     'Culture',
@@ -235,22 +235,6 @@ const MagazineEditorPage = () => {
     }));
   };
 
-  const addGalleryImage = () => {
-    if (newGalleryImage && !formData.gallery_images?.includes(newGalleryImage)) {
-      setFormData(prev => ({
-        ...prev,
-        gallery_images: [...(prev.gallery_images || []), newGalleryImage]
-      }));
-      setNewGalleryImage('');
-    }
-  };
-
-  const removeGalleryImage = (image: string) => {
-    setFormData(prev => ({
-      ...prev,
-      gallery_images: prev.gallery_images?.filter(img => img !== image) || []
-    }));
-  };
 
   if (loading) {
     return (
@@ -410,12 +394,13 @@ const MagazineEditorPage = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="featured_image">Image URL</Label>
-                      <Input
-                        id="featured_image"
+                      <Label>Featured Image</Label>
+                      <ImageUpload
                         value={formData.featured_image}
-                        onChange={(e) => setFormData(prev => ({ ...prev, featured_image: e.target.value }))}
-                        placeholder="https://example.com/image.jpg"
+                        onChange={(url) => setFormData(prev => ({ ...prev, featured_image: url as string }))}
+                        variant="featured"
+                        multiple={false}
+                        placeholder="Upload a featured image for your article"
                       />
                     </div>
                     <div>
@@ -438,28 +423,15 @@ const MagazineEditorPage = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Add gallery image URL..."
-                        value={newGalleryImage}
-                        onChange={(e) => setNewGalleryImage(e.target.value)}
+                    <div>
+                      <ImageUpload
+                        value={formData.gallery_images || []}
+                        onChange={(urls) => setFormData(prev => ({ ...prev, gallery_images: urls as string[] }))}
+                        variant="gallery"
+                        multiple={true}
+                        maxFiles={10}
+                        placeholder="Upload images for your photo gallery"
                       />
-                      <Button onClick={addGalleryImage}>Add</Button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {formData.gallery_images?.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <img src={image} alt={`Gallery ${index + 1}`} className="w-full h-20 object-cover rounded" />
-                          <Button 
-                            size="sm" 
-                            variant="destructive" 
-                            className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
-                            onClick={() => removeGalleryImage(image)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
                     </div>
                   </CardContent>
                 </Card>

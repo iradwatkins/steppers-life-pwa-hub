@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -32,6 +32,8 @@ import {
   AlignRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ImageUploadService } from '@/services/imageUploadService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface RichTextEditorProps {
   content: string;
@@ -48,6 +50,8 @@ function RichTextEditor({
   editable = true,
   className 
 }: RichTextEditorProps) {
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -102,10 +106,28 @@ function RichTextEditor({
   };
 
   const addImage = () => {
-    const url = window.prompt('Image URL');
+    fileInputRef.current?.click();
+  };
 
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    try {
+      const result = await ImageUploadService.uploadImage(file, 'images', `magazine/${user.id}`);
+      editor.chain().focus().setImage({ src: result.url }).run();
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      // Fallback to URL input
+      const url = window.prompt('Image upload failed. Enter image URL:');
+      if (url) {
+        editor.chain().focus().setImage({ src: url }).run();
+      }
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -290,6 +312,15 @@ function RichTextEditor({
           placeholder={placeholder}
         />
       </div>
+
+      {/* Hidden file input for image uploads */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
     </div>
   );
 }

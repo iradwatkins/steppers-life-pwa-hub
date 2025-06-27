@@ -614,6 +614,16 @@ const RouterWrapper = () => {
             <StoreManagementPage />
           </AdminRoute>
         } />
+        <Route path="/admin/advertising" element={
+          <AdminRoute>
+            <AdvertisingManagementPage />
+          </AdminRoute>
+        } />
+        <Route path="/advertising" element={
+          <AuthRoute>
+            <AdPlacementPortalPage />
+          </AuthRoute>
+        } />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
