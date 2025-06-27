@@ -16,6 +16,7 @@ import SocialShareButtons from '@/components/SocialShareButtons';
 import { SocialSharingService } from '@/services/socialSharingService';
 import { useEventMetaTags } from '@/hooks/useMetaTags';
 import { Calendar, MapPin, Clock, Users, DollarSign, Share2, Heart, ArrowLeft, Star, ExternalLink, Phone, Mail, Globe, AlertTriangle, CheckCircle2, ImageIcon } from 'lucide-react';
+import { ClickableImage } from '@/components/ui/clickable-image';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -271,14 +272,13 @@ const EventDetail = () => {
           {/* Main Hero Image/Video */}
           <div className="aspect-video bg-muted rounded-lg relative overflow-hidden">
             {event.featured_image_url ? (
-              <img 
-                src={event.featured_image_url} 
+              <ClickableImage
+                src={event.featured_image_url}
                 alt={event.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  console.warn('Failed to load featured image:', event.featured_image_url);
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
+                className="w-full h-full"
+                images={[event.featured_image_url, ...(event.gallery_images || [])]}
+                aspectRatio="video"
+                rounded={false}
               />
             ) : (
               <div className="flex items-center justify-center h-full">
@@ -350,15 +350,14 @@ const EventDetail = () => {
           {Array.isArray(event.gallery_images) && event.gallery_images.length > 0 && (
             <div className="flex gap-2 mt-4 overflow-x-auto">
               {(event.gallery_images || []).slice(0, 5).map((image, index) => (
-                <div key={index} className="flex-shrink-0 w-20 h-20 bg-muted rounded-lg overflow-hidden">
-                  <img 
-                    src={image} 
+                <div key={index} className="flex-shrink-0">
+                  <ClickableImage
+                    src={image}
                     alt={`${event.title} gallery ${index + 1}`}
-                    className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
-                    onError={(e) => {
-                      console.warn('Failed to load gallery image:', image);
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
+                    className="w-20 h-20"
+                    images={[event.featured_image_url, ...(event.gallery_images || [])].filter(Boolean)}
+                    currentIndex={event.featured_image_url ? index + 1 : index}
+                    aspectRatio="square"
                   />
                 </div>
               ))}
