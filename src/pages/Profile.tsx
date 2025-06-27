@@ -19,7 +19,7 @@ import NotificationPreferences from '@/components/notifications/NotificationPref
 import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 import SavedPaymentMethods from '@/components/profile/SavedPaymentMethods';
 import SecurityActivityLog from '@/components/profile/SecurityActivityLog';
-import SavedEventsWishlist from '@/components/profile/SavedEventsWishlist';
+import FavoriteEvents from '@/components/profile/FavoriteEvents';
 
 const Profile = () => {
   const { user, loading, updateProfile } = useAuth();
@@ -334,9 +334,9 @@ const Profile = () => {
               <Shield className="h-4 w-4" />
               Security
             </TabsTrigger>
-            <TabsTrigger value="wishlist" className="flex items-center gap-2">
+            <TabsTrigger value="favorites" className="flex items-center gap-2">
               <Heart className="h-4 w-4" />
-              Wishlist
+              Favorite Events
             </TabsTrigger>
             <TabsTrigger value="tickets" className="flex items-center gap-2">
               <Ticket className="h-4 w-4" />
@@ -813,8 +813,8 @@ const Profile = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="wishlist" className="mt-0">
-            <SavedEventsWishlist
+          <TabsContent value="favorites" className="mt-0">
+            <FavoriteEvents
               userId={user?.id || ''}
               disabled={isEditing}
             />
