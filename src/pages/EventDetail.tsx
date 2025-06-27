@@ -561,36 +561,8 @@ const EventDetail = () => {
                   )}
                 </CardContent>
               </Card>
-            ) : event.rsvp_enabled ? (
-              /* RSVP Section for Basic Events */
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    RSVP
-                  </CardTitle>
-                  <CardDescription>
-                    Let us know you're coming
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      This is a free event. RSVP to help us plan accordingly.
-                    </p>
-                    {event.max_rsvps && (
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Limited to {event.max_rsvps} attendees
-                      </p>
-                    )}
-                    <Button className="w-full bg-stepping-gradient">
-                      RSVP for This Event
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             ) : (
-              /* No Action Required - Basic Event Listing */
+              /* Simple Event - View Only */
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -599,10 +571,26 @@ const EventDetail = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground">
-                      This is an informational event listing. No registration required.
-                    </p>
+                  <div className="text-center py-4 space-y-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        This is a Simple Event - just show up and enjoy!
+                      </p>
+                      {event.free_entry_condition && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                          <p className="text-sm font-medium text-green-800">
+                            {event.free_entry_condition}
+                          </p>
+                        </div>
+                      )}
+                      {event.door_price && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-sm text-blue-800">
+                            <span className="font-medium">Door Price:</span> ${event.door_price}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

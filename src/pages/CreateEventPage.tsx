@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { EventType, EVENT_TYPE_LABELS, EVENT_TYPE_DESCRIPTIONS } from '@/types/eventTypes';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles } from '@/hooks/useRoles';
@@ -34,7 +36,9 @@ import {
   Users,
   Tag,
   Image as ImageIcon,
-  ArrowLeft
+  ArrowLeft,
+  Star,
+  DollarSign
 } from 'lucide-react';
 import { US_STATES } from '@/data/usStates';
 
@@ -57,27 +61,34 @@ const eventFormSchema = z.object({
   isOnlineEvent: z.boolean().default(false),
   onlineEventLink: z.string().optional(),
   capacity: z.string().optional(),
+  // Event type configuration
+  eventType: z.enum(['simple', 'ticketed', 'premium']).default('ticketed'),
+  
   // Ticket configuration fields
   requiresTickets: z.boolean().default(true),
   ticketPrice: z.string().optional(),
-  // RSVP configuration fields
-  rsvpEnabled: z.boolean().default(false),
-  maxRSVPs: z.string().optional(),
-  rsvpDeadline: z.string().optional(),
-  allowWaitlist: z.boolean().default(false),
+  
+  // Simple event configuration
+  freeEntryCondition: z.string().optional(),
+  doorPrice: z.string().optional(),
+  doorPriceCurrency: z.string().default('USD'),
 }).refine((data) => {
-  // If tickets are required, price must be provided
-  if (data.requiresTickets && !data.ticketPrice) {
-    return false;
-  }
-  // Either tickets or RSVP must be enabled
-  if (!data.requiresTickets && !data.rsvpEnabled) {
-    return false;
+  // Validation based on event type
+  if (data.eventType === 'simple') {
+    // Simple events must have door price
+    if (!data.doorPrice) {
+      return false;
+    }
+  } else if (data.eventType === 'ticketed' || data.eventType === 'premium') {
+    // Ticketed/Premium events need ticket configuration
+    if (data.requiresTickets && !data.ticketPrice) {
+      return false;
+    }
   }
   return true;
 }, {
-  message: "Either ticket sales or RSVP must be enabled",
-  path: ["requiresTickets"]
+  message: "Event configuration is incomplete",
+  path: ["eventType"]
 });
 
 type EventFormData = z.infer<typeof eventFormSchema>;
@@ -117,14 +128,15 @@ const CreateEventPage = () => {
       isOnlineEvent: false,
       onlineEventLink: '',
       capacity: '',
+      // Event type configuration
+      eventType: 'ticketed' as EventType,
       // Ticket configuration
       requiresTickets: true,
       ticketPrice: '',
-      // RSVP configuration
-      rsvpEnabled: false,
-      maxRSVPs: '',
-      rsvpDeadline: '',
-      allowWaitlist: false,
+      // Simple event configuration
+      freeEntryCondition: '',
+      doorPrice: '',
+      doorPriceCurrency: 'USD',
     }
   });
 
@@ -204,10 +216,6 @@ const CreateEventPage = () => {
           capacity: eventData.max_attendees?.toString() || '',
           requiresTickets: eventData.requires_tickets ?? true,
           ticketPrice: ticketPrice,
-          rsvpEnabled: eventData.rsvp_enabled ?? false,
-          maxRSVPs: eventData.max_rsvps?.toString() || '',
-          rsvpDeadline: eventData.rsvp_deadline ? new Date(eventData.rsvp_deadline).toISOString().split('T')[0] : '',
-          allowWaitlist: eventData.allow_waitlist ?? false,
         };
         
         console.log('📝 Form data to populate:', formData);
@@ -237,7 +245,7 @@ const CreateEventPage = () => {
   const isMultiDay = form.watch('isMultiDay');
   const isOnlineEvent = form.watch('isOnlineEvent');
   const requiresTickets = form.watch('requiresTickets');
-  const rsvpEnabled = form.watch('rsvpEnabled');
+  const eventType = form.watch('eventType');
 
   // Helper function to format date for display
   const formatDateDisplay = (dateString: string) => {
@@ -312,13 +320,14 @@ const CreateEventPage = () => {
         isOnline: data.isOnlineEvent,
         onlineLink: data.onlineEventLink,
         maxAttendees: data.capacity ? parseInt(data.capacity) : 100,
-        // Simple event mode configuration
-        requiresTickets: isSimpleEvent ? !!data.ticketPrice : data.requiresTickets,
-        // RSVP configuration
-        rsvpEnabled: isSimpleEvent ? !data.ticketPrice : data.rsvpEnabled,
-        maxRSVPs: data.maxRSVPs ? parseInt(data.maxRSVPs) : undefined,
-        rsvpDeadline: data.rsvpDeadline ? `${data.rsvpDeadline}T23:59:59` : undefined,
-        allowWaitlist: data.allowWaitlist,
+        // Event type configuration
+        eventType: data.eventType,
+        requiresTickets: data.eventType === 'simple' ? false : data.requiresTickets,
+        
+        // Simple event configuration
+        freeEntryCondition: data.freeEntryCondition,
+        doorPrice: data.doorPrice,
+        doorPriceCurrency: data.doorPriceCurrency,
         additionalInfo: {
           isSimpleEvent: isSimpleEvent,
           simpleEventPrice: isSimpleEvent ? data.ticketPrice : undefined
@@ -1023,160 +1032,175 @@ const CreateEventPage = () => {
                 ) : (
                   /* Full Configuration Mode */
                   <div>
-                {/* Event Capacity */}
-                <FormField
-                  control={form.control}
-                  name="capacity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Capacity</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="150" {...field} />
-                      </FormControl>
-                      <div className="text-sm text-muted-foreground">
-                        Maximum number of attendees (leave empty for unlimited)
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Ticket Configuration Toggle */}
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="requiresTickets"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Paid Tickets Required</FormLabel>
-                          <div className="text-sm text-muted-foreground">
-                            Attendees must purchase tickets to attend this event
-                          </div>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={(checked) => {
-                              field.onChange(checked);
-                              // Auto-enable RSVP if tickets are disabled
-                              if (!checked) {
-                                form.setValue('rsvpEnabled', true);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Ticket Price - only show if tickets are required */}
-                  {requiresTickets && (
+                    {/* Event Capacity */}
                     <FormField
                       control={form.control}
-                      name="ticketPrice"
+                      name="capacity"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Ticket Price *</FormLabel>
+                          <FormLabel>Event Capacity</FormLabel>
                           <FormControl>
-                            <Input placeholder="45.00" {...field} />
+                            <Input type="number" placeholder="150" {...field} />
                           </FormControl>
                           <div className="text-sm text-muted-foreground">
-                            Price per ticket in USD
+                            Maximum number of attendees (leave empty for unlimited)
                           </div>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  )}
 
-                  {/* RSVP Configuration Toggle */}
-                  <FormField
-                    control={form.control}
-                    name="rsvpEnabled"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Enable RSVP</FormLabel>
-                          <div className="text-sm text-muted-foreground">
-                            {requiresTickets 
-                              ? "Allow free RSVPs in addition to paid tickets" 
-                              : "Allow free RSVPs for this event"
-                            }
-                          </div>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            disabled={!requiresTickets} // Always enabled for free events
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* RSVP Configuration - only show if RSVP is enabled */}
-                  {rsvpEnabled && (
-                    <div className="space-y-4 pl-4 border-l-2 border-blue-200">
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="maxRSVPs"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Max RSVPs</FormLabel>
-                              <FormControl>
-                                <Input type="number" placeholder="100" {...field} />
-                              </FormControl>
-                              <div className="text-sm text-muted-foreground">
-                                Leave empty for unlimited
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="rsvpDeadline"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>RSVP Deadline</FormLabel>
-                              <FormControl>
-                                <Input type="date" {...field} />
-                              </FormControl>
-                              <div className="text-sm text-muted-foreground">
-                                Last date to RSVP
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
+                    {/* Event Type Selection */}
+                    <div className="space-y-4">
                       <FormField
                         control={form.control}
-                        name="allowWaitlist"
+                        name="eventType"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-sm">Enable Waitlist</FormLabel>
-                              <div className="text-xs text-muted-foreground">
-                                Allow people to join waitlist when RSVPs are full
-                              </div>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
+                          <FormItem>
+                            <FormLabel className="text-base">Event Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select event type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="simple">
+                                  <div className="flex items-center gap-2">
+                                    <Star className="h-4 w-4" />
+                                    <div>
+                                      <div className="font-medium">{EVENT_TYPE_LABELS.simple}</div>
+                                      <div className="text-xs text-muted-foreground">{EVENT_TYPE_DESCRIPTIONS.simple}</div>
+                                    </div>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="ticketed">
+                                  <div className="flex items-center gap-2">
+                                    <DollarSign className="h-4 w-4" />
+                                    <div>
+                                      <div className="font-medium">{EVENT_TYPE_LABELS.ticketed}</div>
+                                      <div className="text-xs text-muted-foreground">{EVENT_TYPE_DESCRIPTIONS.ticketed}</div>
+                                    </div>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="premium">
+                                  <div className="flex items-center gap-2">
+                                    <Users className="h-4 w-4" />
+                                    <div>
+                                      <div className="font-medium">{EVENT_TYPE_LABELS.premium}</div>
+                                      <div className="text-xs text-muted-foreground">{EVENT_TYPE_DESCRIPTIONS.premium}</div>
+                                    </div>
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-                  )}
-                </div>
+
+                    {/* Simple Event Configuration */}
+                    {eventType === 'simple' && (
+                      <div className="space-y-4 pl-4 border-l-2 border-green-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="freeEntryCondition"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Free Entry Condition</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="e.g., Free for women before 10pm" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <div className="text-sm text-muted-foreground">
+                                  Optional condition for free entry
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="doorPrice"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Door Price</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Input 
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="15.00" 
+                                      className="pl-8"
+                                      {...field} 
+                                    />
+                                  </div>
+                                </FormControl>
+                                <div className="text-sm text-muted-foreground">
+                                  Price at the door (required)
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ticket Configuration */}
+                    {(eventType === 'ticketed' || eventType === 'premium') && (
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="requiresTickets"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">Paid Tickets Required</FormLabel>
+                                <div className="text-sm text-muted-foreground">
+                                  Attendees must purchase tickets to attend this event
+                                </div>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={(checked) => {
+                                    field.onChange(checked);
+                                  }}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Ticket Price - only show if tickets are required */}
+                        {requiresTickets && (
+                          <FormField
+                            control={form.control}
+                            name="ticketPrice"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Ticket Price *</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="45.00" {...field} />
+                                </FormControl>
+                                <div className="text-sm text-muted-foreground">
+                                  Price per ticket in USD
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Info about configuration */}
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -1184,26 +1208,14 @@ const CreateEventPage = () => {
                     <Users className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div className="text-sm">
                       <p className="font-medium text-blue-900">
-                        {requiresTickets && rsvpEnabled
-                          ? "Hybrid Event"
-                          : requiresTickets
-                          ? "Ticketed Event"
-                          : "Free Event"
-                        }
+                        {EVENT_TYPE_LABELS[eventType]}
                       </p>
                       <p className="text-blue-700">
-                        {requiresTickets && rsvpEnabled
-                          ? "This event will have both paid tickets and free RSVP options."
-                          : requiresTickets
-                          ? "Attendees must purchase tickets to attend this event."
-                          : "This is a free event with RSVP-based attendance tracking."
-                        }
+                        {EVENT_TYPE_DESCRIPTIONS[eventType]}
                       </p>
                     </div>
                   </div>
                 </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 

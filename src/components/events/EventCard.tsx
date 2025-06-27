@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ExtendedEvent, getEventPricing, isSimpleEvent } from '@/types/eventTypes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,8 +17,6 @@ type Event = Database['public']['Tables']['events']['Row'] & {
   ticket_types?: any[];
   distance?: number;
   requires_tickets?: boolean;
-  rsvp_enabled?: boolean;
-  max_rsvps?: number;
 };
 
 interface EventCardProps {
@@ -115,27 +114,11 @@ const EventCard: React.FC<EventCardProps> = ({
       priceText = `$${minPrice} - $${maxPrice}`;
     }
     
-    // If both tickets and RSVP are enabled, show hybrid status
-    if (event.requires_tickets && event.rsvp_enabled) {
-      priceText += ' + Free RSVP';
-    }
     
     return priceText;
   };
 
   const getAttendanceInfo = (event: Event) => {
-    // For free events with RSVP, use RSVP data
-    if (event.requires_tickets === false && event.rsvp_enabled) {
-      // TODO: Get actual RSVP data from database
-      const rsvpCount = 0; // Placeholder
-      const maxRsvps = event.max_rsvps || 0;
-      return { 
-        sold: rsvpCount, 
-        capacity: maxRsvps || 100, 
-        isSoldOut: maxRsvps > 0 && rsvpCount >= maxRsvps 
-      };
-    }
-    
     // For ticketed events, use ticket data
     const ticketTypes = event.ticket_types || [];
     if (ticketTypes.length === 0) return { sold: 0, capacity: 0, isSoldOut: false };

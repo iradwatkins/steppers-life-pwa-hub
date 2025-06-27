@@ -119,6 +119,9 @@ export function FollowerDashboard({ followerId, organizerId }: FollowerDashboard
           <Badge variant="secondary" className="bg-green-100 text-green-800">
             Active Seller
           </Badge>
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
+            Individual Tickets Only
+          </Badge>
           <Button variant="outline" size="sm">
             <Eye className="h-4 w-4 mr-2" />
             View Profile
@@ -139,6 +142,33 @@ export function FollowerDashboard({ followerId, organizerId }: FollowerDashboard
             {period === 'all_time' ? 'All Time' : period.charAt(0).toUpperCase() + period.slice(1)}
           </Button>
         ))}
+      </div>
+
+      {/* Sales Restrictions Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Users className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-medium text-blue-900 mb-1">Your Sales Permissions</h3>
+            <p className="text-sm text-blue-700 mb-2">
+              As a follower, you can sell <strong>individual tickets</strong> for events and earn commissions.
+            </p>
+            <div className="flex items-center gap-4 text-xs text-blue-600">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                Individual tickets
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                Table bookings (organizer only)
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                Seating charts (organizer only)
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Key Metrics Cards */}

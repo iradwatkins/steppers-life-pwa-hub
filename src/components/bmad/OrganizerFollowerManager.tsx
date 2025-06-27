@@ -521,6 +521,33 @@ export function OrganizerFollowerManager({ organizerId, organizerUserId }: Organ
                 <Label htmlFor="can_create_promo_codes">Can create promo codes</Label>
               </div>
             </div>
+            
+            {/* Sales Restrictions Info */}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Users className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-medium text-blue-900 mb-1">Follower Sales Permissions</h4>
+                  <p className="text-xs text-blue-700 mb-2">
+                    Followers can sell individual tickets and earn commissions, but cannot sell:
+                  </p>
+                  <div className="space-y-1 text-xs text-blue-600">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+                      Table bookings and reserved seating
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+                      Premium event seating charts
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                      Individual tickets (all event types)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Commission Structure */}
             <div className="space-y-3">

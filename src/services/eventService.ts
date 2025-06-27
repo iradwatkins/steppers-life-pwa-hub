@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { calculateDistance, geocodeAddress } from '@/utils/geolocation';
+import { EventType, SimpleEventConfig } from '@/types/eventTypes';
 
 type Event = Database['public']['Tables']['events']['Row'];
 type EventInsert = Database['public']['Tables']['events']['Insert'];
@@ -32,8 +33,15 @@ export interface CreateEventData {
   maxAttendees?: number;
   featuredImageUrl?: string;
   galleryImages?: string[];
-  // Ticket configuration
+  // Event type configuration
+  eventType?: EventType;
   requiresTickets?: boolean;
+  
+  // Simple event configuration
+  freeEntryCondition?: string;
+  doorPrice?: string;
+  doorPriceCurrency?: string;
+  
   ticketTypes?: {
     name: string;
     description?: string;
@@ -41,11 +49,6 @@ export interface CreateEventData {
     quantityAvailable: number;
     maxPerOrder?: number;
   }[];
-  // RSVP configuration
-  rsvpEnabled?: boolean;
-  maxRSVPs?: number;
-  rsvpDeadline?: string;
-  allowWaitlist?: boolean;
   additionalInfo?: Record<string, any>;
 }
 
@@ -156,11 +159,13 @@ export class EventService {
         featured_image_url: eventData.featuredImageUrl,
         gallery_images: eventData.galleryImages,
         max_attendees: eventData.maxAttendees,
-        // Optional ticket and RSVP configuration
+        // Event type and ticket configuration
+        event_type: eventData.eventType ?? 'ticketed',
         requires_tickets: eventData.requiresTickets ?? true,
-        rsvp_enabled: eventData.rsvpEnabled ?? false,
-        max_rsvps: eventData.maxRSVPs,
-        rsvp_deadline: eventData.rsvpDeadline,
+        // Simple event configuration
+        free_entry_condition: eventData.freeEntryCondition,
+        door_price: eventData.doorPrice ? parseFloat(eventData.doorPrice) : null,
+        door_price_currency: eventData.doorPriceCurrency ?? 'USD',
         additional_info: eventData.additionalInfo,
       };
       console.log('📅 Event insert data:', eventInsertData);

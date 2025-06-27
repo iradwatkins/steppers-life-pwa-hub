@@ -54,24 +54,16 @@ const ticketingFormSchema = z.object({
   eventId: z.string(),
   requiresTickets: z.boolean().default(true),
   ticketTypes: z.array(ticketTypeSchema).optional(),
-  // RSVP configuration
-  rsvpEnabled: z.boolean().default(false),
-  maxRSVPs: z.string().optional(),
-  rsvpDeadline: z.string().optional(),
-  allowWaitlist: z.boolean().default(false),
 }).refine((data) => {
   // If tickets are required, at least one ticket type must exist
   if (data.requiresTickets && (!data.ticketTypes || data.ticketTypes.length === 0)) {
     return false;
   }
-  // Either tickets or RSVP must be enabled
-  if (!data.requiresTickets && !data.rsvpEnabled) {
-    return false;
+  // If tickets are not required, this is a free event
+  if (!data.requiresTickets) {
+    return true;
   }
   return true;
-}, {
-  message: "Either ticket sales or RSVP must be enabled",
-  path: ["requiresTickets"]
 });
 
 type TicketingFormData = z.infer<typeof ticketingFormSchema>;
@@ -111,11 +103,6 @@ const EventTicketingPage = () => {
           groupDiscount: '',
         }
       ],
-      // RSVP configuration
-      rsvpEnabled: false,
-      maxRSVPs: '',
-      rsvpDeadline: '',
-      allowWaitlist: false,
     }
   });
 
@@ -125,7 +112,6 @@ const EventTicketingPage = () => {
   });
 
   const requiresTickets = form.watch('requiresTickets');
-  const rsvpEnabled = form.watch('rsvpEnabled');
 
   useEffect(() => {
     if (!user) {
@@ -179,10 +165,8 @@ const EventTicketingPage = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const successMessage = data.requiresTickets 
-        ? data.rsvpEnabled 
-          ? 'Event configuration saved! Attendees can purchase tickets or RSVP for free.'
-          : 'Ticketing configuration saved! Now configure seating arrangements.'
-        : 'RSVP configuration saved! Your free event is ready for attendees.';
+        ? 'Ticketing configuration saved! Now configure seating arrangements.'
+        : 'Event configuration saved! Your free event is ready for attendees.';
       
       toast.success(successMessage);
       
@@ -215,7 +199,7 @@ const EventTicketingPage = () => {
             Back to Dashboard
           </Button>
           <h1 className="text-3xl font-bold mb-2">Configure Event Attendance</h1>
-          <p className="text-muted-foreground">Set up ticketing, RSVP options, and attendance management for your event</p>
+          <p className="text-muted-foreground">Set up ticketing and attendance management for your event</p>
         </div>
 
         <Form {...form}>
@@ -247,105 +231,14 @@ const EventTicketingPage = () => {
                       <FormControl>
                         <Switch
                           checked={field.value}
-                          onCheckedChange={(checked) => {
-                            field.onChange(checked);
-                            // Auto-enable RSVP if tickets are disabled
-                            if (!checked) {
-                              form.setValue('rsvpEnabled', true);
-                            }
-                          }}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                {/* RSVP Configuration Toggle */}
-                <FormField
-                  control={form.control}
-                  name="rsvpEnabled"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Enable RSVP</FormLabel>
-                        <div className="text-sm text-muted-foreground">
-                          {requiresTickets 
-                            ? "Allow free RSVPs in addition to paid tickets" 
-                            : "Allow free RSVPs for this event"
-                          }
-                        </div>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
                           onCheckedChange={field.onChange}
-                          disabled={!requiresTickets} // Always enabled for free events
                         />
                       </FormControl>
                     </FormItem>
                   )}
                 />
 
-                {/* RSVP Configuration - only show if RSVP is enabled */}
-                {rsvpEnabled && (
-                  <div className="space-y-4 pl-4 border-l-2 border-blue-200">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="maxRSVPs"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Max RSVPs</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="100" {...field} />
-                            </FormControl>
-                            <div className="text-sm text-muted-foreground">
-                              Leave empty for unlimited
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="rsvpDeadline"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>RSVP Deadline</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <div className="text-sm text-muted-foreground">
-                              Last date to RSVP
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name="allowWaitlist"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-sm">Enable Waitlist</FormLabel>
-                            <div className="text-xs text-muted-foreground">
-                              Allow people to join waitlist when RSVPs are full
-                            </div>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
 
                 {/* Info about configuration */}
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -353,19 +246,12 @@ const EventTicketingPage = () => {
                     <Users className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div className="text-sm">
                       <p className="font-medium text-blue-900">
-                        {requiresTickets && rsvpEnabled
-                          ? "Hybrid Event"
-                          : requiresTickets
-                          ? "Ticketed Event"
-                          : "Free Event"
-                        }
+                        {requiresTickets ? "Ticketed Event" : "Free Event"}
                       </p>
                       <p className="text-blue-700">
-                        {requiresTickets && rsvpEnabled
-                          ? "This event will have both paid tickets and free RSVP options."
-                          : requiresTickets
+                        {requiresTickets
                           ? "Attendees must purchase tickets to attend this event."
-                          : "This is a free event with RSVP-based attendance tracking."
+                          : "This is a free event."
                         }
                       </p>
                     </div>

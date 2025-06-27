@@ -45,8 +45,6 @@ const physicalClassSchema = z.object({
   zip_code: z.string().optional(),
   max_students: z.number().min(1, 'Must allow at least 1 student').max(100, 'Maximum 100 students'),
   duration_minutes: z.number().min(30, 'Minimum 30 minutes').max(480, 'Maximum 8 hours'),
-  rsvp_required: z.boolean().default(true),
-  rsvp_deadline_hours: z.number().min(1).max(168).optional(), // 1 hour to 1 week
   waitlist_enabled: z.boolean().default(false),
   
   // Recurring pattern
@@ -94,8 +92,6 @@ const CreatePhysicalClassPage = () => {
       location: '',
       max_students: 20,
       duration_minutes: 90,
-      rsvp_required: true,
-      rsvp_deadline_hours: 24,
       waitlist_enabled: false,
       is_recurring: false,
       class_dates: [{ date: '', start_time: '', end_time: '' }],
@@ -211,8 +207,6 @@ const CreatePhysicalClassPage = () => {
         requirements: data.requirements,
         what_to_expect: data.what_to_expect,
         tags: data.tags || [],
-        rsvp_required: data.rsvp_required,
-        rsvp_deadline: data.rsvp_deadline_hours ? `${data.rsvp_deadline_hours} hours` : undefined,
         waitlist_enabled: data.waitlist_enabled
       };
 
@@ -720,12 +714,12 @@ const CreatePhysicalClassPage = () => {
                 </Card>
               )}
 
-              {/* Capacity & RSVP */}
+              {/* Class Capacity */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    Capacity & RSVP
+                    Class Capacity
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -749,50 +743,6 @@ const CreatePhysicalClassPage = () => {
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="rsvp_required"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">RSVP Required</FormLabel>
-                          <div className="text-sm text-muted-foreground">
-                            Students must RSVP before attending
-                          </div>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  {form.watch('rsvp_required') && (
-                    <FormField
-                      control={form.control}
-                      name="rsvp_deadline_hours"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>RSVP Deadline (hours before class)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              min="1" 
-                              max="168"
-                              placeholder="24"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
 
                   <FormField
                     control={form.control}
@@ -1001,7 +951,7 @@ const CreatePhysicalClassPage = () => {
                       <li>Class reminders (based on your schedule above)</li>
                       <li>Class cancellations or changes</li>
                       <li>Waitlist availability</li>
-                      <li>RSVP confirmations</li>
+                      <li>Registration confirmations</li>
                     </ul>
                   </div>
                 </CardContent>

@@ -174,6 +174,7 @@ class DelegatedSalesService {
   }
 
   // Process delegated ticket sale
+  // NOTE: Followers can only sell individual tickets, not table bookings or reserved seating
   async processDelegatedSale(request: DelegatedSaleRequest): Promise<DelegatedSaleResponse> {
     try {
       // Step 1: Validate the sale

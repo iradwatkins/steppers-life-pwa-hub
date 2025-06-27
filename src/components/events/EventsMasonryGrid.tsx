@@ -8,8 +8,6 @@ type Event = Database['public']['Tables']['events']['Row'] & {
   ticket_types?: any[];
   distance?: number;
   requires_tickets?: boolean;
-  rsvp_enabled?: boolean;
-  max_rsvps?: number;
 };
 
 interface EventsMasonryGridProps {

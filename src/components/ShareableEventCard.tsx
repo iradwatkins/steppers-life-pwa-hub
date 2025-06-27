@@ -21,8 +21,6 @@ type Event = Database['public']['Tables']['events']['Row'] & {
   distance?: number;
   isFavorited?: boolean;
   requires_tickets?: boolean;
-  rsvp_enabled?: boolean;
-  max_rsvps?: number;
 };
 
 interface ShareableEventCardProps {
@@ -90,7 +88,7 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
   const getEventPrice = (event: Event) => {
     // Check if this is a free event (no tickets required)
     if (event.requires_tickets === false) {
-      return event.rsvp_enabled ? 'Free - RSVP Required' : 'Free';
+      return 'Free';
     }
     
     // For ticketed events, check ticket types
@@ -107,32 +105,17 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     
-    let priceText = '';
     if (minPrice === maxPrice) {
-      priceText = `$${minPrice}`;
+      return `$${minPrice}`;
     } else {
-      priceText = `$${minPrice} - $${maxPrice}`;
+      return `$${minPrice} - $${maxPrice}`;
     }
-    
-    // If both tickets and RSVP are enabled, show hybrid status
-    if (event.requires_tickets && event.rsvp_enabled) {
-      priceText += ' + Free RSVP';
-    }
-    
-    return priceText;
   };
 
   const getAttendanceInfo = (event: Event) => {
-    // For free events with RSVP, use RSVP data
-    if (event.requires_tickets === false && event.rsvp_enabled) {
-      // TODO: Get actual RSVP data from database
-      const rsvpCount = 0; // Placeholder
-      const maxRsvps = event.max_rsvps || 0;
-      return { 
-        sold: rsvpCount, 
-        capacity: maxRsvps || 100, 
-        isSoldOut: maxRsvps > 0 && rsvpCount >= maxRsvps 
-      };
+    // For free events, return basic capacity info
+    if (event.requires_tickets === false) {
+      return { sold: 0, capacity: 100, isSoldOut: false };
     }
     
     // For ticketed events, use ticket data
@@ -149,11 +132,11 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
 
   const getActionButtonText = (event: Event, isSoldOut: boolean) => {
     if (isSoldOut) {
-      return event.requires_tickets === false ? 'Waitlist Full' : 'Sold Out';
+      return 'Sold Out';
     }
     
     if (event.requires_tickets === false) {
-      return event.rsvp_enabled ? 'RSVP Now' : 'View Details';
+      return 'View Details';
     }
     
     return 'Get Tickets';
