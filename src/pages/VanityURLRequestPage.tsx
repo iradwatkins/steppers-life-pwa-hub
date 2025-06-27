@@ -86,7 +86,7 @@ const VanityURLRequestPage: React.FC = () => {
     try {
       if (!user?.id) return;
       
-      const { VanityURLService } = await import('@/services/vanityURLService');
+      const { VanityURLService } = await import('@/services/vanityUrlService');
       const requests = await VanityURLService.getUserRequests(user.id);
       setUserRequests(requests);
     } catch (error) {
@@ -96,7 +96,7 @@ const VanityURLRequestPage: React.FC = () => {
 
   const generateSuggestions = async (baseUrl: string) => {
     try {
-      const { VanityURLService } = await import('@/services/vanityURLService');
+      const { VanityURLService } = await import('@/services/vanityUrlService');
       const suggestions = await VanityURLService.generateSuggestions(baseUrl);
       setSuggestions(suggestions);
     } catch (error) {
@@ -112,7 +112,7 @@ const VanityURLRequestPage: React.FC = () => {
 
   const checkAvailability = async (url: string): Promise<boolean> => {
     try {
-      const { VanityURLService } = await import('@/services/vanityURLService');
+      const { VanityURLService } = await import('@/services/vanityUrlService');
       return await VanityURLService.checkURLAvailability(url);
     } catch (error) {
       console.error('Error checking availability:', error);
@@ -164,7 +164,7 @@ const VanityURLRequestPage: React.FC = () => {
         return;
       }
 
-      const { VanityURLService } = await import('@/services/vanityURLService');
+      const { VanityURLService } = await import('@/services/vanityUrlService');
       await VanityURLService.createRequest({
         requestedUrl: requestedUrl,
         targetUrl: targetUrl,
@@ -422,7 +422,7 @@ const VanityURLRequestPage: React.FC = () => {
                               size="sm"
                               variant="outline"
                               onClick={async () => {
-                                const { VanityURLService } = await import('@/services/vanityURLService');
+                                const { VanityURLService } = await import('@/services/vanityUrlService');
                                 const shareData = VanityURLService.generateShareData(
                                   request.requestedUrl,
                                   'Check out this SteppersLife event!'

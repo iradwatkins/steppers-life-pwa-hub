@@ -110,7 +110,7 @@ const VanityURLManagementPage: React.FC = () => {
     try {
       setIsLoading(true);
       // Import the new VanityURLService for actual backend integration
-      const { VanityURLService } = await import('@/services/vanityURLService');
+      const { VanityURLService } = await import('@/services/vanityUrlService');
       const requests = await VanityURLService.getAllRequests();
       setRequests(requests);
     } catch (error) {
@@ -161,7 +161,7 @@ const VanityURLManagementPage: React.FC = () => {
 
   const handleApproveRequest = async (requestId: string) => {
     try {
-      const { VanityURLService } = await import('@/services/vanityURLService');
+      const { VanityURLService } = await import('@/services/vanityUrlService');
       await VanityURLService.approveRequest(requestId, user?.id || 'admin');
       
       // Reload the requests to get updated data
@@ -183,7 +183,7 @@ const VanityURLManagementPage: React.FC = () => {
 
   const handleRejectRequest = async (requestId: string, reason: string) => {
     try {
-      const { VanityURLService } = await import('@/services/vanityURLService');
+      const { VanityURLService } = await import('@/services/vanityUrlService');
       await VanityURLService.rejectRequest(requestId, user?.id || 'admin', reason);
       
       // Reload the requests to get updated data
@@ -205,7 +205,7 @@ const VanityURLManagementPage: React.FC = () => {
 
   const handleDeactivateURL = async (requestId: string) => {
     try {
-      const { VanityURLService } = await import('@/services/vanityURLService');
+      const { VanityURLService } = await import('@/services/vanityUrlService');
       await VanityURLService.deleteVanityURL(requestId);
       
       // Reload the requests to get updated data
