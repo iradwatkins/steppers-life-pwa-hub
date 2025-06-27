@@ -62,7 +62,7 @@ const eventFormSchema = z.object({
   onlineEventLink: z.string().optional(),
   capacity: z.string().optional(),
   // Event type configuration
-  eventType: z.enum(['simple', 'ticketed', 'premium']).default('ticketed'),
+  eventType: z.enum(['simple', 'ticketed', 'premium']).default('simple'),
   
   // Ticket configuration fields
   requiresTickets: z.boolean().default(true),
@@ -129,7 +129,7 @@ const CreateEventPage = () => {
       onlineEventLink: '',
       capacity: '',
       // Event type configuration
-      eventType: 'ticketed' as EventType,
+      eventType: 'simple' as EventType,
       // Ticket configuration
       requiresTickets: true,
       ticketPrice: '',

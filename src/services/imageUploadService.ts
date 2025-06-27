@@ -1,8 +1,12 @@
 import { supabase } from '@/integrations/supabase/client';
+import { ImageOptimizer, type OptimizedImageResult } from '@/utils/imageOptimization';
 
 export interface UploadResult {
   url: string;
   path: string;
+  originalSize?: number;
+  optimizedSize?: number;
+  compressionRatio?: number;
 }
 
 export interface StorageDiagnostic {
@@ -60,26 +64,23 @@ export class ImageUploadService {
   }
 
   /**
-   * Upload a single image file to Supabase Storage
+   * Upload a single image file to Supabase Storage with optimization
    */
-  static async uploadImage(file: File, bucket: string = 'images', folder?: string): Promise<UploadResult> {
+  static async uploadImage(file: File, bucket: string = 'images', folder?: string, optimize: boolean = true): Promise<UploadResult> {
     try {
-      console.log('📸 Starting image upload:', { 
+      console.log('📸 Starting optimized image upload:', { 
         fileName: file.name, 
         fileSize: file.size, 
         bucket, 
         folder,
+        optimize,
         environment: import.meta.env.VITE_APP_ENV 
       });
 
       // Step 1: Validate file
-      if (!file.type.startsWith('image/')) {
-        throw new Error('File must be an image');
-      }
-
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        throw new Error('Image must be smaller than 10MB');
+      const validation = ImageOptimizer.validateImageFile(file);
+      if (!validation.valid) {
+        throw new Error(validation.error);
       }
 
       // Step 2: Diagnose storage before attempting upload
@@ -89,8 +90,25 @@ export class ImageUploadService {
         throw new Error(`Storage not ready: ${diagnostic.error}`);
       }
 
-      // Step 3: Generate unique filename
-      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
+      let fileToUpload = file;
+      let optimizationResult: OptimizedImageResult | null = null;
+
+      // Step 3: Optimize image if requested
+      if (optimize) {
+        console.log('🔧 Optimizing image...');
+        optimizationResult = await ImageOptimizer.optimizeImage(file);
+        fileToUpload = optimizationResult.file;
+        
+        console.log('✅ Image optimized:', {
+          originalSize: optimizationResult.originalSize,
+          optimizedSize: optimizationResult.optimizedSize,
+          compressionRatio: optimizationResult.compressionRatio,
+          format: optimizationResult.format
+        });
+      }
+
+      // Step 4: Generate unique filename
+      const fileExt = fileToUpload.name.split('.').pop()?.toLowerCase() || 'webp';
       const timestamp = Date.now();
       const random = Math.random().toString(36).substring(2);
       const fileName = `${timestamp}-${random}.${fileExt}`;
@@ -98,13 +116,13 @@ export class ImageUploadService {
 
       console.log('📤 Uploading to path:', filePath);
 
-      // Step 4: Upload to Supabase Storage
+      // Step 5: Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file, {
+        .upload(filePath, fileToUpload, {
           cacheControl: '3600',
           upsert: false,
-          contentType: file.type
+          contentType: fileToUpload.type
         });
 
       if (error) {
@@ -120,7 +138,7 @@ export class ImageUploadService {
 
       console.log('✅ Upload successful:', data);
 
-      // Step 5: Get public URL
+      // Step 6: Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
         .getPublicUrl(filePath);
@@ -129,7 +147,10 @@ export class ImageUploadService {
 
       return {
         url: publicUrl,
-        path: filePath
+        path: filePath,
+        originalSize: optimizationResult?.originalSize,
+        optimizedSize: optimizationResult?.optimizedSize,
+        compressionRatio: optimizationResult?.compressionRatio
       };
     } catch (error) {
       console.error('❌ Image upload error:', error);
@@ -181,17 +202,60 @@ export class ImageUploadService {
   }
 
   /**
-   * Upload profile picture specifically
+   * Upload profile picture specifically with optimization
    */
   static async uploadProfilePicture(file: File, userId: string): Promise<UploadResult> {
-    return this.uploadImage(file, 'images', `profiles/${userId}`);
+    try {
+      console.log('👤 Uploading optimized profile picture for user:', userId);
+      
+      // Use specific profile picture optimization
+      const optimizedResult = await ImageOptimizer.optimizeProfilePicture(file);
+      
+      // Upload the optimized file
+      const result = await this.uploadImage(optimizedResult.file, 'images', `profiles/${userId}`, false);
+      
+      // Include optimization stats
+      return {
+        ...result,
+        originalSize: optimizedResult.originalSize,
+        optimizedSize: optimizedResult.optimizedSize,
+        compressionRatio: optimizedResult.compressionRatio
+      };
+    } catch (error) {
+      console.error('❌ Profile picture upload failed:', error);
+      throw error;
+    }
   }
 
   /**
-   * Upload event images
+   * Upload event images with optimization
    */
   static async uploadEventImages(files: File[], eventId: string): Promise<UploadResult[]> {
-    return this.uploadMultipleImages(files, 'images', `events/${eventId}`);
+    console.log(`🎉 Uploading ${files.length} optimized event images for event:`, eventId);
+    
+    const results: UploadResult[] = [];
+    for (const file of files) {
+      try {
+        // Use specific event image optimization
+        const optimizedResult = await ImageOptimizer.optimizeEventImage(file);
+        
+        // Upload the optimized file
+        const result = await this.uploadImage(optimizedResult.file, 'images', `events/${eventId}`, false);
+        
+        // Include optimization stats
+        results.push({
+          ...result,
+          originalSize: optimizedResult.originalSize,
+          optimizedSize: optimizedResult.optimizedSize,
+          compressionRatio: optimizedResult.compressionRatio
+        });
+      } catch (error) {
+        console.error(`❌ Failed to upload event image ${file.name}:`, error);
+        throw error;
+      }
+    }
+    
+    return results;
   }
 
   /**

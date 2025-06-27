@@ -166,8 +166,8 @@ export async function setupAllStorageBuckets(): Promise<{
     {
       name: 'user-uploads',
       public: true,
-      fileSizeLimit: 5242880, // 5MB
-      allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+      fileSizeLimit: 10485760, // 10MB
+      allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
     },
     {
       name: 'documents',

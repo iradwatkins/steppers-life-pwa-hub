@@ -115,6 +115,8 @@ import TestProductPage from "./pages/TestProductPage";
 import SimpleCartPage from "./pages/SimpleCartPage";
 import SimpleCheckoutPage from "./pages/SimpleCheckoutPage";
 import SimpleConfirmationPage from "./pages/SimpleConfirmationPage";
+import StorageDiagnosticPage from "./pages/StorageDiagnosticPage";
+import ImageUploadTestPage from "./pages/ImageUploadTestPage";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProtectedRoute, AdminRoute, OrganizerRoute, AuthRoute } from "./components/auth/ProtectedRoute";
@@ -543,6 +545,16 @@ const RouterWrapper = () => {
         <Route path="/admin/vanity-urls" element={
           <AdminRoute>
             <VanityURLManagementPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/storage-diagnostic" element={
+          <AdminRoute>
+            <StorageDiagnosticPage />
+          </AdminRoute>
+        } />
+        <Route path="/admin/image-upload-test" element={
+          <AdminRoute>
+            <ImageUploadTestPage />
           </AdminRoute>
         } />
         <Route path="/vanity-urls" element={

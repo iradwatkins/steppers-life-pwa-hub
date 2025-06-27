@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { Camera, Upload, X, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ImageUploadService } from '@/services/imageUploadService';
 
 interface ProfileImageUploadProps {
   currentImageUrl?: string;
@@ -27,15 +28,10 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
-      return;
-    }
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be smaller than 5MB');
+    // Validate file using ImageUploadService
+    const validation = ImageUploadService.validateImageFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error);
       return;
     }
 
@@ -51,41 +47,23 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     setIsUploading(true);
     
     try {
-      console.log('🔄 Uploading profile image...');
+      console.log('🔄 Uploading optimized profile image...');
       
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const filePath = `profile-images/${fileName}`;
-
-      // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('❌ Upload error:', uploadError);
-        throw uploadError;
-      }
-
-      console.log('✅ Image uploaded successfully:', uploadData);
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath);
-
-      const publicUrl = urlData.publicUrl;
-      console.log('🔗 Public URL generated:', publicUrl);
+      // Use the optimized ImageUploadService
+      const uploadResult = await ImageUploadService.uploadProfilePicture(file, userId);
+      
+      console.log('✅ Optimized image uploaded successfully:', {
+        url: uploadResult.url,
+        originalSize: uploadResult.originalSize,
+        optimizedSize: uploadResult.optimizedSize,
+        compressionRatio: uploadResult.compressionRatio
+      });
 
       // Update user profile with new image URL
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
-          profile_picture_url: publicUrl,
+          profile_picture_url: uploadResult.url,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
@@ -95,10 +73,10 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
         throw updateError;
       }
 
-      console.log('✅ Profile updated with new image URL');
+      console.log('✅ Profile updated with new optimized image URL');
       
       // Call callback to update parent component
-      onImageUpdate(publicUrl);
+      onImageUpdate(uploadResult.url);
       
       toast.success('Profile picture updated successfully!');
     } catch (error) {
