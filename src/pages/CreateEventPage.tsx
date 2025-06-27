@@ -499,6 +499,17 @@ const CreateEventPage = () => {
                               </div>
                             </div>
                           </SelectItem>
+                          <SelectItem value="ticketed">
+                            <div className="flex items-start gap-3 py-2">
+                              <DollarSign className="h-5 w-5 text-blue-600 mt-0.5" />
+                              <div>
+                                <div className="font-medium">{EVENT_TYPE_LABELS.ticketed}</div>
+                                <div className="text-sm text-muted-foreground max-w-sm">
+                                  {EVENT_TYPE_DESCRIPTIONS.ticketed}
+                                </div>
+                              </div>
+                            </div>
+                          </SelectItem>
                           <SelectItem value="premium">
                             <div className="flex items-start gap-3 py-2">
                               <Users className="h-5 w-5 text-purple-600 mt-0.5" />
