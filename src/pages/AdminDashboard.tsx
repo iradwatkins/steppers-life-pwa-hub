@@ -88,11 +88,23 @@ const AdminDashboard = () => {
           .order('created_at', { ascending: false })
           .limit(5);
 
+        // Calculate total revenue from completed orders
+        const { data: revenueData, error: revenueError } = await supabase
+          .from('orders')
+          .select('total_amount')
+          .eq('status', 'completed');
+
+        const totalRevenue = revenueData?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+
+        if (revenueError) {
+          console.warn('⚠️ Error calculating revenue:', revenueError);
+        }
+
         setStats({
           totalUsers: usersResult.count || 0,
           totalEvents: eventsResult.count || 0,
           totalOrganizers: organizersResult.count || 0,
-          totalRevenue: 0, // TODO: Calculate from orders
+          totalRevenue: totalRevenue,
           recentEvents: recentEvents || [],
           recentUsers: recentUsers || [],
         });

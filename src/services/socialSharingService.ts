@@ -307,18 +307,77 @@ export class SocialSharingService {
   }
 
   /**
-   * Track share analytics (placeholder for future implementation)
+   * Track share analytics with comprehensive data collection
    */
-  private static trackShare(platform: string, url: string): void {
-    // TODO: Implement analytics tracking
-    console.log(`Shared to ${platform}:`, url);
-    
-    // Example: Send to analytics service
-    // AnalyticsService.track('social_share', {
-    //   platform,
-    //   url,
-    //   timestamp: new Date()
-    // });
+  private static async trackShare(platform: string, url: string, additionalData?: {
+    eventId?: string;
+    userId?: string;
+    shareType?: 'event' | 'profile' | 'general';
+  }): Promise<void> {
+    try {
+      console.log(`📊 Tracking share to ${platform}:`, url);
+      
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Record share event in analytics
+      const shareData = {
+        platform,
+        shared_url: url,
+        event_id: additionalData?.eventId,
+        user_id: additionalData?.userId,
+        share_type: additionalData?.shareType || 'general',
+        timestamp: new Date().toISOString(),
+        user_agent: navigator.userAgent,
+        referrer: document.referrer
+      };
+
+      const { error } = await supabase
+        .from('social_shares')
+        .insert(shareData);
+
+      if (error) {
+        console.error('❌ Error tracking share analytics:', error);
+      } else {
+        console.log('✅ Share analytics tracked successfully');
+      }
+
+      // Also send to real-time analytics if available
+      try {
+        const analyticsEvent = {
+          event_type: 'social_share',
+          platform,
+          url,
+          ...additionalData,
+          timestamp: new Date().toISOString()
+        };
+
+        // Could integrate with Google Analytics, Mixpanel, etc.
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'share', {
+            method: platform,
+            content_type: additionalData?.shareType || 'general',
+            item_id: additionalData?.eventId || url
+          });
+        }
+
+        // Custom analytics webhook
+        if (process.env.REACT_APP_ANALYTICS_WEBHOOK_URL) {
+          fetch(process.env.REACT_APP_ANALYTICS_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(analyticsEvent)
+          }).catch(err => console.warn('⚠️ Analytics webhook failed:', err));
+        }
+
+      } catch (analyticsError) {
+        console.warn('⚠️ External analytics tracking failed:', analyticsError);
+      }
+
+    } catch (error) {
+      console.error('❌ Error in trackShare:', error);
+    }
   }
 
   /**

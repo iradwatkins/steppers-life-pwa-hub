@@ -138,8 +138,8 @@ const EventSeatingPage: React.FC = () => {
     try {
       console.log('💺 Saving seating configuration:', data);
       
-      // TODO: Implement backend integration
-      // await SeatingService.saveSeatingConfiguration(eventId, data);
+      const { SeatingService } = await import('@/services/seatingService');
+      await SeatingService.saveSeatingConfiguration(eventId, data);
       
       toast.success('Seating configuration saved successfully!');
       

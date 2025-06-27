@@ -109,48 +109,10 @@ const VanityURLManagementPage: React.FC = () => {
   const loadVanityURLRequests = async () => {
     try {
       setIsLoading(true);
-      // TODO: Replace with actual API call
-      const mockRequests: VanityURLRequest[] = [
-        {
-          id: '1',
-          requestedUrl: 'stepperslife.com/chicagostep',
-          requestedBy: 'John Smith',
-          userType: 'organizer',
-          targetUrl: 'https://stepperslife.com/events/chicago-stepping-weekend',
-          status: 'pending',
-          requestDate: '2024-01-15T10:30:00Z',
-          clickCount: 0,
-          isActive: false
-        },
-        {
-          id: '2',
-          requestedUrl: 'stepperslife.com/sarahevents',
-          requestedBy: 'Sarah Johnson',
-          userType: 'organizer',
-          targetUrl: 'https://stepperslife.com/organizers/sarah-johnson',
-          status: 'approved',
-          requestDate: '2024-01-10T14:20:00Z',
-          reviewedBy: 'Admin',
-          reviewDate: '2024-01-12T09:15:00Z',
-          clickCount: 247,
-          isActive: true
-        },
-        {
-          id: '3',
-          requestedUrl: 'stepperslife.com/agent123',
-          requestedBy: 'Mike Rodriguez',
-          userType: 'sales_agent',
-          targetUrl: 'https://stepperslife.com/agents/mike-rodriguez/events',
-          status: 'rejected',
-          requestDate: '2024-01-08T16:45:00Z',
-          reviewedBy: 'Admin',
-          reviewDate: '2024-01-09T11:30:00Z',
-          rejectionReason: 'URL too generic, please use more specific identifier',
-          clickCount: 0,
-          isActive: false
-        }
-      ];
-      setRequests(mockRequests);
+      // Import the new VanityURLService for actual backend integration
+      const { VanityURLService } = await import('@/services/vanityURLService');
+      const requests = await VanityURLService.getAllRequests();
+      setRequests(requests);
     } catch (error) {
       console.error('Error loading vanity URL requests:', error);
       toast({
@@ -199,20 +161,11 @@ const VanityURLManagementPage: React.FC = () => {
 
   const handleApproveRequest = async (requestId: string) => {
     try {
-      // TODO: Replace with actual API call
-      setRequests(current =>
-        current.map(request =>
-          request.id === requestId
-            ? { 
-                ...request, 
-                status: 'approved' as const, 
-                reviewedBy: 'Current Admin',
-                reviewDate: new Date().toISOString(),
-                isActive: true
-              }
-            : request
-        )
-      );
+      const { VanityURLService } = await import('@/services/vanityURLService');
+      await VanityURLService.approveRequest(requestId, user?.id || 'admin');
+      
+      // Reload the requests to get updated data
+      await loadVanityURLRequests();
 
       toast({
         title: "Request Approved",
@@ -230,21 +183,11 @@ const VanityURLManagementPage: React.FC = () => {
 
   const handleRejectRequest = async (requestId: string, reason: string) => {
     try {
-      // TODO: Replace with actual API call
-      setRequests(current =>
-        current.map(request =>
-          request.id === requestId
-            ? { 
-                ...request, 
-                status: 'rejected' as const, 
-                reviewedBy: 'Current Admin',
-                reviewDate: new Date().toISOString(),
-                rejectionReason: reason,
-                isActive: false
-              }
-            : request
-        )
-      );
+      const { VanityURLService } = await import('@/services/vanityURLService');
+      await VanityURLService.rejectRequest(requestId, user?.id || 'admin', reason);
+      
+      // Reload the requests to get updated data
+      await loadVanityURLRequests();
 
       toast({
         title: "Request Rejected",
@@ -262,14 +205,11 @@ const VanityURLManagementPage: React.FC = () => {
 
   const handleDeactivateURL = async (requestId: string) => {
     try {
-      // TODO: Replace with actual API call
-      setRequests(current =>
-        current.map(request =>
-          request.id === requestId
-            ? { ...request, isActive: false }
-            : request
-        )
-      );
+      const { VanityURLService } = await import('@/services/vanityURLService');
+      await VanityURLService.deleteVanityURL(requestId);
+      
+      // Reload the requests to get updated data
+      await loadVanityURLRequests();
 
       toast({
         title: "URL Deactivated",

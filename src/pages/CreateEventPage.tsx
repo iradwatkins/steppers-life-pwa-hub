@@ -374,9 +374,23 @@ const CreateEventPage = () => {
         eventData.galleryImages = eventImages;
       }
 
-      // TODO: Handle additional dates for multi-day events
+      // Handle additional dates for multi-day events
       if (additionalDates.length > 0) {
-        console.log('📅 Additional dates:', additionalDates);
+        console.log('📅 Processing multi-day event with additional dates:', additionalDates);
+        
+        // Add additional dates to event data
+        eventData.additional_dates = additionalDates.map(date => ({
+          date: date.toISOString().split('T')[0],
+          start_time: eventData.start_time,
+          end_time: eventData.end_time,
+          is_main_date: false
+        }));
+        
+        eventData.is_multi_day = true;
+        eventData.total_days = additionalDates.length + 1; // +1 for main date
+      } else {
+        eventData.is_multi_day = false;
+        eventData.total_days = 1;
       }
 
       console.log('📋 Final event data being sent to service:', eventData);

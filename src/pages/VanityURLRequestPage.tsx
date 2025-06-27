@@ -84,29 +84,11 @@ const VanityURLRequestPage: React.FC = () => {
 
   const loadUserRequests = async () => {
     try {
-      // TODO: Replace with actual API call
-      const mockRequests: VanityURLRequest[] = [
-        {
-          id: '1',
-          requestedUrl: 'stepperslife.com/myevents',
-          targetUrl: 'https://stepperslife.com/organizers/user123/events',
-          status: 'approved',
-          requestDate: '2024-01-10T14:20:00Z',
-          reviewDate: '2024-01-12T09:15:00Z',
-          clickCount: 127,
-          isActive: true
-        },
-        {
-          id: '2',
-          requestedUrl: 'stepperslife.com/promo2024',
-          targetUrl: 'https://stepperslife.com/events/winter-stepping-series',
-          status: 'pending',
-          requestDate: '2024-01-15T16:30:00Z',
-          clickCount: 0,
-          isActive: false
-        }
-      ];
-      setUserRequests(mockRequests);
+      if (!user?.id) return;
+      
+      const { VanityURLService } = await import('@/services/vanityURLService');
+      const requests = await VanityURLService.getUserRequests(user.id);
+      setUserRequests(requests);
     } catch (error) {
       console.error('Error loading user requests:', error);
     }
@@ -114,14 +96,9 @@ const VanityURLRequestPage: React.FC = () => {
 
   const generateSuggestions = async (baseUrl: string) => {
     try {
-      // TODO: Replace with actual API call
-      const mockSuggestions: URLSuggestion[] = [
-        { url: `stepperslife.com/${baseUrl}`, available: true },
-        { url: `stepperslife.com/${baseUrl}2024`, available: true },
-        { url: `stepperslife.com/${baseUrl}events`, available: false, reason: 'Already taken' },
-        { url: `stepperslife.com/my${baseUrl}`, available: true }
-      ];
-      setSuggestions(mockSuggestions);
+      const { VanityURLService } = await import('@/services/vanityURLService');
+      const suggestions = await VanityURLService.generateSuggestions(baseUrl);
+      setSuggestions(suggestions);
     } catch (error) {
       console.error('Error generating suggestions:', error);
     }
@@ -135,9 +112,8 @@ const VanityURLRequestPage: React.FC = () => {
 
   const checkAvailability = async (url: string): Promise<boolean> => {
     try {
-      // TODO: Replace with actual API call
-      const existingUrls = ['chicagostep', 'sarahevents', 'events2024'];
-      return !existingUrls.includes(url.toLowerCase());
+      const { VanityURLService } = await import('@/services/vanityURLService');
+      return await VanityURLService.checkURLAvailability(url);
     } catch (error) {
       console.error('Error checking availability:', error);
       return false;
@@ -179,18 +155,25 @@ const VanityURLRequestPage: React.FC = () => {
         return;
       }
 
-      // TODO: Replace with actual API call
-      const newRequest: VanityURLRequest = {
-        id: Date.now().toString(),
-        requestedUrl: `stepperslife.com/${requestedUrl}`,
-        targetUrl,
-        status: 'pending',
-        requestDate: new Date().toISOString(),
-        clickCount: 0,
-        isActive: false
-      };
+      if (!user?.id) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to submit a vanity URL request.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      setUserRequests(current => [newRequest, ...current]);
+      const { VanityURLService } = await import('@/services/vanityURLService');
+      await VanityURLService.createRequest({
+        requestedUrl: requestedUrl,
+        targetUrl: targetUrl,
+        description: purpose,
+        userId: user.id
+      });
+      
+      // Reload user requests to show the new one
+      await loadUserRequests();
 
       // Reset form
       setRequestedUrl('');
@@ -438,12 +421,27 @@ const VanityURLRequestPage: React.FC = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
-                                // TODO: Implement share functionality
-                                toast({
-                                  title: "Share",
-                                  description: "Share functionality would open here.",
-                                });
+                              onClick={async () => {
+                                const { VanityURLService } = await import('@/services/vanityURLService');
+                                const shareData = VanityURLService.generateShareData(
+                                  request.requestedUrl,
+                                  'Check out this SteppersLife event!'
+                                );
+                                
+                                if (navigator.share) {
+                                  try {
+                                    await navigator.share(shareData);
+                                  } catch (error) {
+                                    console.log('Share cancelled or failed');
+                                  }
+                                } else {
+                                  // Fallback: copy to clipboard
+                                  await navigator.clipboard.writeText(shareData.url);
+                                  toast({
+                                    title: "Copied to Clipboard",
+                                    description: "URL copied to clipboard for sharing.",
+                                  });
+                                }
                               }}
                             >
                               <Share className="h-3 w-3" />

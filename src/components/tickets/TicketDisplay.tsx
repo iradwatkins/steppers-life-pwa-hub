@@ -75,13 +75,67 @@ const TicketDisplay: React.FC = () => {
 
     try {
       setVerifyingCode(orderId);
-      // TODO: Implement actual verification logic
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
       
-      // For demo purposes, assume verification succeeds
-      const success = Math.random() > 0.3; // 70% success rate for demo
+      // Implement actual verification logic with Supabase
+      const { supabase } = await import('@/integrations/supabase/client');
       
-      if (success) {
+      // Verify the order exists and belongs to the current user
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          events (
+            title,
+            start_date,
+            venue
+          ),
+          order_items (
+            quantity,
+            ticket_types (
+              name,
+              price
+            )
+          )
+        `)
+        .eq('id', orderId)
+        .eq('user_id', user?.id)
+        .single();
+
+      if (orderError || !order) {
+        toast({
+          title: "Verification Failed",
+          description: "Order not found or you don't have permission to verify this ticket.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if payment is completed
+      if (order.status === 'completed') {
+        toast({
+          title: "Payment Already Verified",
+          description: "This ticket has already been verified and is active."
+        });
+        fetchTickets(); // Refresh tickets
+        setPendingCode('');
+        return;
+      }
+
+      // For pending payments, check if verification code matches
+      if (order.status === 'pending' && order.verification_code === pendingCode) {
+        // Update order status to completed
+        const { error: updateError } = await supabase
+          .from('orders')
+          .update({
+            status: 'completed',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', orderId);
+
+        if (updateError) {
+          throw updateError;
+        }
+
         toast({
           title: "Payment Verified",
           description: "Your ticket has been confirmed and is now available!"
@@ -90,8 +144,8 @@ const TicketDisplay: React.FC = () => {
         setPendingCode('');
       } else {
         toast({
-          title: "Verification Failed",
-          description: "The code entered is invalid. Please check and try again.",
+          title: "Verification Failed", 
+          description: "The verification code is invalid. Please check your payment confirmation and try again.",
           variant: "destructive"
         });
       }

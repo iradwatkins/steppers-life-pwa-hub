@@ -40,11 +40,45 @@ class ReviewService {
   // Get reviews for an event
   async getEventReviews(eventId: string): Promise<Review[]> {
     try {
-      // TODO: Implement actual database query when review system is built
       console.log('Fetching reviews for event:', eventId);
       
-      // For now, return empty array since review system isn't implemented yet
-      return [];
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { data, error } = await supabase
+        .from('event_reviews')
+        .select(`
+          *,
+          users!inner (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('event_id', eventId)
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching reviews:', error);
+        throw error;
+      }
+
+      return (data || []).map(review => ({
+        id: review.id,
+        event_id: review.event_id,
+        user_id: review.user_id,
+        rating: review.rating,
+        title: review.title || '',
+        comment: review.comment || '',
+        verified_attendee: review.verified_attendee || false,
+        is_approved: review.is_approved,
+        helpful_votes: review.helpful_votes || 0,
+        created_at: review.created_at,
+        updated_at: review.updated_at,
+        user: {
+          full_name: (review.users as any)?.full_name || 'Anonymous',
+          avatar_url: (review.users as any)?.avatar_url
+        }
+      }));
     } catch (error) {
       console.error('Error fetching event reviews:', error);
       return [];
@@ -99,8 +133,57 @@ class ReviewService {
     comment: string;
   }): Promise<boolean> {
     try {
-      // TODO: Implement actual review submission
       console.log('Submitting review for event:', eventId, 'by user:', userId, reviewData);
+      
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Check if user attended the event (has completed order)
+      const { data: attendeeCheck, error: attendeeError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('event_id', eventId)
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .single();
+
+      const verifiedAttendee = !attendeeError && attendeeCheck;
+
+      // Check if user already reviewed this event
+      const { data: existingReview, error: existingError } = await supabase
+        .from('event_reviews')
+        .select('id')
+        .eq('event_id', eventId)
+        .eq('user_id', userId)
+        .single();
+
+      if (!existingError && existingReview) {
+        console.warn('User has already reviewed this event');
+        return false;
+      }
+
+      const { data, error } = await supabase
+        .from('event_reviews')
+        .insert({
+          event_id: eventId,
+          user_id: userId,
+          rating: reviewData.rating,
+          title: reviewData.title,
+          comment: reviewData.comment,
+          verified_attendee: verifiedAttendee,
+          is_approved: true, // Auto-approve for now, could add moderation later
+          helpful_votes: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error submitting review:', error);
+        throw error;
+      }
+
+      console.log('✅ Review submitted successfully:', data);
       return true;
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -111,8 +194,47 @@ class ReviewService {
   // Mark a review as helpful
   async markReviewHelpful(reviewId: string, userId: string): Promise<boolean> {
     try {
-      // TODO: Implement helpful vote functionality
       console.log('Marking review helpful:', reviewId, 'by user:', userId);
+      
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Check if user already voted on this review
+      const { data: existingVote, error: voteError } = await supabase
+        .from('review_helpful_votes')
+        .select('id')
+        .eq('review_id', reviewId)
+        .eq('user_id', userId)
+        .single();
+
+      if (!voteError && existingVote) {
+        console.warn('User already voted on this review');
+        return false;
+      }
+
+      // Add helpful vote
+      const { error: insertError } = await supabase
+        .from('review_helpful_votes')
+        .insert({
+          review_id: reviewId,
+          user_id: userId,
+          created_at: new Date().toISOString()
+        });
+
+      if (insertError) {
+        console.error('❌ Error recording helpful vote:', insertError);
+        throw insertError;
+      }
+
+      // Update helpful votes count
+      const { error: updateError } = await supabase
+        .rpc('increment_helpful_votes', { review_id: reviewId });
+
+      if (updateError) {
+        console.error('❌ Error updating helpful votes count:', updateError);
+        throw updateError;
+      }
+
+      console.log('✅ Review marked as helpful successfully');
       return true;
     } catch (error) {
       console.error('Error marking review helpful:', error);

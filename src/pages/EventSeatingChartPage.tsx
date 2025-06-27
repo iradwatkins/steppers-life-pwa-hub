@@ -252,8 +252,8 @@ const EventSeatingChartPage: React.FC = () => {
     try {
       console.log('💺 Saving seating chart:', data);
       
-      // TODO: Implement backend integration
-      // await SeatingChartService.saveSeatingChart(eventId, data);
+      const { SeatingChartService } = await import('@/services/seatingService');
+      await SeatingChartService.saveSeatingChart(eventId, data);
       
       toast.success('Seating chart saved successfully!');
       navigate(`/organizer/event/${eventId}/seating`);

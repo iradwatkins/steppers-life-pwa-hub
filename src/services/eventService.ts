@@ -167,6 +167,9 @@ export class EventService {
         door_price: eventData.doorPrice ? parseFloat(eventData.doorPrice) : null,
         door_price_currency: eventData.doorPriceCurrency ?? 'USD',
         additional_info: eventData.additionalInfo,
+        // Multi-day event support
+        is_multi_day: eventData.is_multi_day || false,
+        total_days: eventData.total_days || 1,
       };
       console.log('📅 Event insert data:', eventInsertData);
 
@@ -246,6 +249,32 @@ export class EventService {
         }
       } else {
         console.log('🆓 Free event - no ticket types needed');
+      }
+
+      // Handle additional dates for multi-day events
+      if (eventData.additional_dates && eventData.additional_dates.length > 0) {
+        console.log('📅 Creating additional dates for multi-day event...');
+        
+        const additionalDatesData = eventData.additional_dates.map(dateInfo => ({
+          event_id: event.id,
+          date: dateInfo.date,
+          start_time: dateInfo.start_time,
+          end_time: dateInfo.end_time,
+          is_main_date: dateInfo.is_main_date || false,
+          created_at: new Date().toISOString()
+        }));
+
+        const { error: datesError } = await supabase
+          .from('event_dates')
+          .insert(additionalDatesData);
+
+        if (datesError) {
+          console.error('❌ Additional dates creation error:', datesError);
+          // Don't rollback - event can exist without additional dates
+          console.warn('⚠️ Multi-day event created but additional dates failed to save');
+        } else {
+          console.log('✅ Additional dates created successfully');
+        }
       }
 
       console.log('🎉 Event creation completed successfully:', event);
@@ -1104,8 +1133,59 @@ export class EventService {
 
       if (updateError) throw updateError;
 
-      // TODO: Send cancellation notifications to ticket holders
-      // TODO: Process refunds if applicable
+      // Send cancellation notifications to ticket holders
+      try {
+        const { NotificationService } = await import('./notificationService');
+        
+        const cancellationData = {
+          eventId,
+          eventTitle: cancelledEvent.title,
+          eventDate: new Date(cancelledEvent.start_date).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          reason: cancellationReason,
+          organizerName: cancelledEvent.organizers?.organization_name || 'Event Organizer'
+        };
+
+        console.log('📧 Sending cancellation notifications...');
+        const notificationResults = await NotificationService.sendEventCancellationNotifications(
+          eventId, 
+          cancellationData
+        );
+        
+        console.log(`✅ Notifications sent: ${notificationResults.success} success, ${notificationResults.failed} failed`);
+
+        // Process refunds for ticket holders
+        console.log('💰 Processing refunds...');
+        const refundResults = await NotificationService.processEventCancellationRefunds(eventId);
+        
+        console.log(`✅ Refunds processed: ${refundResults.success} success, ${refundResults.failed} failed, $${refundResults.totalRefunded.toFixed(2)} total`);
+
+        // Log cancellation activity
+        await this.logEventActivity(eventId, organizerId, 'cancelled', {
+          reason: cancellationReason,
+          notifications_sent: notificationResults.success,
+          notifications_failed: notificationResults.failed,
+          refunds_processed: refundResults.success,
+          refunds_failed: refundResults.failed,
+          total_refunded: refundResults.totalRefunded
+        });
+
+      } catch (notificationError) {
+        console.error('❌ Error in cancellation notifications/refunds:', notificationError);
+        // Don't throw error here - event is still cancelled even if notifications fail
+        
+        // Log the error but continue
+        await this.logEventActivity(eventId, organizerId, 'cancelled', {
+          reason: cancellationReason,
+          notification_error: notificationError instanceof Error ? notificationError.message : 'Unknown error'
+        });
+      }
 
       console.log('✅ Event cancelled successfully:', cancelledEvent);
       return cancelledEvent;

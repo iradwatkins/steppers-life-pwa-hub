@@ -6,7 +6,6 @@
  */
 
 import { apiClient } from './apiClient';
-import { trackEvent } from './analyticsService';
 
 export interface VanityURLRequest {
   id: string;
@@ -68,11 +67,17 @@ class VanityUrlService {
     try {
       const response = await apiClient.post(`${this.baseUrl}/requests`, request);
       
-      trackEvent('vanity_url_requested', {
-        requestedUrl: request.requestedUrl,
-        userType: request.userType,
-        purpose: request.purpose
-      });
+      // Track event via advanced analytics
+      try {
+        const { AdvancedAnalyticsService } = await import('./advancedAnalyticsService');
+        await AdvancedAnalyticsService.trackEvent('vanity_url_requested', {
+          requestedUrl: request.requestedUrl,
+          userType: request.userType,
+          purpose: request.purpose
+        });
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics tracking failed:', analyticsError);
+      }
 
       return response.data;
     } catch (error) {
@@ -162,10 +167,16 @@ class VanityUrlService {
         reviewedBy
       });
 
-      trackEvent('vanity_url_approved', {
-        requestId,
-        reviewedBy
-      });
+      // Track approval event
+      try {
+        const { AdvancedAnalyticsService } = await import('./advancedAnalyticsService');
+        await AdvancedAnalyticsService.trackEvent('vanity_url_approved', {
+          requestId,
+          reviewedBy
+        });
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics tracking failed:', analyticsError);
+      }
 
       return response.data;
     } catch (error) {
@@ -184,11 +195,17 @@ class VanityUrlService {
         reason
       });
 
-      trackEvent('vanity_url_rejected', {
-        requestId,
-        reviewedBy,
-        reason
-      });
+      // Track rejection event
+      try {
+        const { AdvancedAnalyticsService } = await import('./advancedAnalyticsService');
+        await AdvancedAnalyticsService.trackEvent('vanity_url_rejected', {
+          requestId,
+          reviewedBy,
+          reason
+        });
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics tracking failed:', analyticsError);
+      }
 
       return response.data;
     } catch (error) {
@@ -206,10 +223,16 @@ class VanityUrlService {
         isActive
       });
 
-      trackEvent('vanity_url_toggled', {
-        requestId,
-        isActive
-      });
+      // Track toggle event
+      try {
+        const { AdvancedAnalyticsService } = await import('./advancedAnalyticsService');
+        await AdvancedAnalyticsService.trackEvent('vanity_url_toggled', {
+          requestId,
+          isActive
+        });
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics tracking failed:', analyticsError);
+      }
 
       return response.data;
     } catch (error) {
@@ -344,10 +367,16 @@ class VanityUrlService {
     try {
       const response = await apiClient.patch(`${this.baseUrl}/requests/${requestId}`, updates);
 
-      trackEvent('vanity_url_updated', {
-        requestId,
-        updates
-      });
+      // Track update event
+      try {
+        const { AdvancedAnalyticsService } = await import('./advancedAnalyticsService');
+        await AdvancedAnalyticsService.trackEvent('vanity_url_updated', {
+          requestId,
+          updates
+        });
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics tracking failed:', analyticsError);
+      }
 
       return response.data;
     } catch (error) {
@@ -363,9 +392,15 @@ class VanityUrlService {
     try {
       await apiClient.delete(`${this.baseUrl}/requests/${requestId}`);
 
-      trackEvent('vanity_url_deleted', {
-        requestId
-      });
+      // Track deletion event
+      try {
+        const { AdvancedAnalyticsService } = await import('./advancedAnalyticsService');
+        await AdvancedAnalyticsService.trackEvent('vanity_url_deleted', {
+          requestId
+        });
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics tracking failed:', analyticsError);
+      }
     } catch (error) {
       console.error('Error deleting vanity URL request:', error);
       throw new Error('Failed to delete vanity URL request');
