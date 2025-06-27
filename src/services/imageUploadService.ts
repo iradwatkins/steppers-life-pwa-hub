@@ -18,7 +18,7 @@ export interface StorageDiagnostic {
 
 export class ImageUploadService {
   /**
-   * Diagnose storage configuration issues and auto-create bucket if missing
+   * Diagnose storage configuration and check if images bucket exists
    */
   static async diagnoseStorage(): Promise<StorageDiagnostic> {
     try {
@@ -38,32 +38,7 @@ export class ImageUploadService {
       }
       
       const bucketNames = buckets?.map(b => b.name) || [];
-      let hasImagesBucket = bucketNames.includes('images');
-      
-      // If images bucket doesn't exist, try to create it
-      if (!hasImagesBucket) {
-        console.log('🛠️ Images bucket not found, attempting to create...');
-        
-        const { data: newBucket, error: createError } = await supabase.storage.createBucket('images', {
-          public: true,
-          fileSizeLimit: 10485760, // 10MB
-          allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
-        });
-        
-        if (createError) {
-          console.error('❌ Failed to create images bucket:', createError);
-          return {
-            bucketsExist: bucketNames,
-            imagesBucket: false,
-            canUpload: false,
-            error: `Cannot create images bucket: ${createError.message}`
-          };
-        }
-        
-        console.log('✅ Images bucket created successfully');
-        hasImagesBucket = true;
-        bucketNames.push('images');
-      }
+      const hasImagesBucket = bucketNames.includes('images');
       
       console.log('📊 Storage diagnostic:', {
         availableBuckets: bucketNames,
@@ -71,11 +46,21 @@ export class ImageUploadService {
         totalBuckets: bucketNames.length
       });
       
+      if (!hasImagesBucket) {
+        console.error('❌ Images bucket not found. Please run the storage setup SQL script in your Supabase dashboard.');
+        return {
+          bucketsExist: bucketNames,
+          imagesBucket: false,
+          canUpload: false,
+          error: 'Images bucket not found. Please create the bucket using the SQL script in your database dashboard.'
+        };
+      }
+      
       return {
         bucketsExist: bucketNames,
         imagesBucket: hasImagesBucket,
         canUpload: hasImagesBucket,
-        error: hasImagesBucket ? undefined : 'Images bucket not found and could not be created'
+        error: undefined
       };
     } catch (error) {
       console.error('❌ Storage diagnostic failed:', error);
