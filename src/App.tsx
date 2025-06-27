@@ -82,6 +82,7 @@ import VanityURLManagementPage from "./pages/admin/VanityURLManagementPage";
 import VanityURLRequestPage from "./pages/VanityURLRequestPage";
 import AdvertisingManagementPage from "./pages/admin/AdvertisingManagementPage";
 import AdPlacementPortalPage from "./pages/AdPlacementPortalPage";
+import TestUploads from "./pages/TestUploads";
 import EventRefundsPage from "./pages/admin/EventRefundsPage";
 import InventoryDashboardPage from "./pages/admin/InventoryDashboardPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
@@ -624,6 +625,7 @@ const RouterWrapper = () => {
             <AdPlacementPortalPage />
           </AuthRoute>
         } />
+        <Route path="/test-uploads" element={<TestUploads />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
