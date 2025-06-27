@@ -18,7 +18,7 @@ export interface StorageDiagnostic {
 
 export class ImageUploadService {
   /**
-   * Diagnose storage configuration issues
+   * Diagnose storage configuration issues and auto-create bucket if missing
    */
   static async diagnoseStorage(): Promise<StorageDiagnostic> {
     try {
@@ -38,7 +38,32 @@ export class ImageUploadService {
       }
       
       const bucketNames = buckets?.map(b => b.name) || [];
-      const hasImagesBucket = bucketNames.includes('images');
+      let hasImagesBucket = bucketNames.includes('images');
+      
+      // If images bucket doesn't exist, try to create it
+      if (!hasImagesBucket) {
+        console.log('🛠️ Images bucket not found, attempting to create...');
+        
+        const { data: newBucket, error: createError } = await supabase.storage.createBucket('images', {
+          public: true,
+          fileSizeLimit: 10485760, // 10MB
+          allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+        });
+        
+        if (createError) {
+          console.error('❌ Failed to create images bucket:', createError);
+          return {
+            bucketsExist: bucketNames,
+            imagesBucket: false,
+            canUpload: false,
+            error: `Cannot create images bucket: ${createError.message}`
+          };
+        }
+        
+        console.log('✅ Images bucket created successfully');
+        hasImagesBucket = true;
+        bucketNames.push('images');
+      }
       
       console.log('📊 Storage diagnostic:', {
         availableBuckets: bucketNames,
@@ -50,7 +75,7 @@ export class ImageUploadService {
         bucketsExist: bucketNames,
         imagesBucket: hasImagesBucket,
         canUpload: hasImagesBucket,
-        error: hasImagesBucket ? undefined : 'Images bucket not found. Please run storage-diagnostic-and-fix.sql'
+        error: hasImagesBucket ? undefined : 'Images bucket not found and could not be created'
       };
     } catch (error) {
       console.error('❌ Storage diagnostic failed:', error);
