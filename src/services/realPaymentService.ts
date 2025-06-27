@@ -127,13 +127,8 @@ export class RealPaymentService {
           paypalOrderId,
           orderId,
           userId,
+          action: 'capture', // Include action in body instead of query
         },
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }, {
-        method: 'POST',
-        query: { action: 'capture' },
       });
 
       if (error) {

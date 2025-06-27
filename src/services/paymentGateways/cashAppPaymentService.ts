@@ -84,31 +84,24 @@ export class CashAppPaymentService {
       const tokenResult = await this.cashAppPay.tokenize();
       
       if (tokenResult.status === 'OK') {
-        // Send token to backend for processing
-        const response = await fetch('/api/payments/cashapp/process', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            token: tokenResult.token,
-            amount: request.amount,
-            currency: request.currency,
-            orderId: request.orderId,
-            customerEmail: request.customerEmail,
-            description: request.description,
-          }),
+        // Process through existing Square infrastructure
+        const { RealPaymentService } = await import('../realPaymentService');
+        const result = await RealPaymentService.processSquarePayment({
+          orderId: request.orderId,
+          userId: request.userId || 'anonymous',
+          amount: request.amount / 100, // Convert cents to dollars
+          currency: request.currency,
+          paymentMethod: 'cashapp',
+          paymentData: { sourceId: tokenResult.token }
         });
-
-        const result = await response.json();
         
         return {
           success: result.success,
           paymentId: result.paymentId,
-          cashAppPayId: result.cashAppPayId,
-          status: result.status,
-          errorMessage: result.errorMessage,
-          details: result.details,
+          cashAppPayId: result.paymentId,
+          status: result.success ? 'COMPLETED' : 'FAILED',
+          errorMessage: result.error,
+          details: result,
         };
       } else {
         return {

@@ -204,7 +204,15 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     );
   }
 
-  const availableMethods = paymentMethods.filter(method => method.available);
+  const availableMethods = paymentMethods.filter(method => {
+    // First check if the method is available
+    if (!method.available) return false;
+    
+    // On desktop, exclude mobile-only payment methods
+    if (!deviceCaps.isMobile && method.mobileOnly) return false;
+    
+    return true;
+  });
 
   return (
     <Card>

@@ -63,8 +63,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action') || 'create';
+    // Parse request body to get action parameter
+    const requestBody = await req.json();
+    const action = requestBody.action || 'create';
 
     // Get PayPal access token
     const getAccessToken = async (): Promise<string> => {
@@ -98,7 +99,7 @@ serve(async (req) => {
 
     if (action === 'create') {
       // Create PayPal order
-      const { orderData, orderId, userId }: PayPalPaymentRequest = await req.json();
+      const { orderData, orderId, userId }: PayPalPaymentRequest = requestBody;
 
       if (!orderData || !orderId || !userId) {
         return new Response(
@@ -163,7 +164,7 @@ serve(async (req) => {
 
     } else if (action === 'capture') {
       // Capture PayPal payment
-      const { paypalOrderId, orderId, userId }: PayPalCaptureRequest = await req.json();
+      const { paypalOrderId, orderId, userId }: PayPalCaptureRequest = requestBody;
 
       if (!paypalOrderId || !orderId || !userId) {
         return new Response(

@@ -215,7 +215,15 @@ const ModernPaymentMethodSelector: React.FC<ModernPaymentMethodSelectorProps> = 
     );
   }
 
-  const availableMethods = paymentMethods.filter(method => method.available);
+  const availableMethods = paymentMethods.filter(method => {
+    // First check if the method is available
+    if (!method.available) return false;
+    
+    // On desktop, exclude mobile-only payment methods (if any are added in the future)
+    if (!deviceCaps.isMobile && method.mobileOnly) return false;
+    
+    return true;
+  });
 
   return (
     <div className="space-y-6">
