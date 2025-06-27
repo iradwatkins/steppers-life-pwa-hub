@@ -1,13 +1,10 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { Client, Environment } from 'square';
+import { SquareClient } from 'square';
 import { randomUUID } from 'crypto';
 
 // Initialize Square client (CashApp Pay is part of Square)
-const squareClient = new Client({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN,
-  environment: process.env.SQUARE_ENVIRONMENT === 'production' 
-    ? Environment.Production 
-    : Environment.Sandbox,
+const squareClient = new SquareClient({
+  accessToken: process.env.SQUARE_ACCESS_TOKEN
 });
 
 const paymentsApi = squareClient.paymentsApi;

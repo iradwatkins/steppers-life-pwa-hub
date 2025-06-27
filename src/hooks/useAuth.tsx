@@ -143,10 +143,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = async () => {
     try {
+      // Check if there's a session before attempting to sign out
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      if (!currentSession) {
+        // No active session, just clear local state
+        setSession(null);
+        setUser(null);
+        toast.info('Already signed out');
+        return;
+      }
+
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        // If sign out fails due to session issues, clear local state anyway
+        if (error.message.includes('session') || error.message.includes('Auth session missing')) {
+          setSession(null);
+          setUser(null);
+          toast.info('Signed out successfully');
+          return;
+        }
+        throw error;
+      }
     } catch (error) {
       const authError = error as AuthError;
+      // For auth session errors, don't show error toast - just sign out locally
+      if (authError.message?.includes('session') || authError.message?.includes('Auth session missing')) {
+        setSession(null);
+        setUser(null);
+        toast.info('Signed out successfully');
+        return;
+      }
       toast.error(authError.message || 'An error occurred during sign out');
       throw error;
     }

@@ -58,6 +58,7 @@ const OrganizerEventManagementPage: React.FC = () => {
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   const [eventToCancel, setEventToCancel] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState('');
+  const [acknowledgeRefundResponsibility, setAcknowledgeRefundResponsibility] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -150,6 +151,7 @@ const OrganizerEventManagementPage: React.FC = () => {
       setShowCancelDialog(false);
       setEventToCancel(null);
       setCancellationReason('');
+      setAcknowledgeRefundResponsibility(false);
     } catch (error: any) {
       console.error('Error cancelling event:', error);
       toast.error(error.message || 'Failed to cancel event');
@@ -585,15 +587,31 @@ const OrganizerEventManagementPage: React.FC = () => {
         </AlertDialog>
 
         {/* Cancel Event Dialog */}
-        <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <Dialog open={showCancelDialog} onOpenChange={(open) => {
+          setShowCancelDialog(open);
+          if (!open) {
+            setEventToCancel(null);
+            setCancellationReason('');
+            setAcknowledgeRefundResponsibility(false);
+          }
+        }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-orange-600">
                 <Ban className="h-5 w-5" />
                 Cancel Event
               </DialogTitle>
-              <DialogDescription>
-                Cancelling an event will notify all ticket holders and may trigger refunds. Please provide a reason for the cancellation.
+              <DialogDescription className="space-y-3">
+                <p>Cancelling an event will notify all ticket holders and may trigger refunds.</p>
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm font-medium text-yellow-800">
+                    ⚠️ Important: Refund Responsibility
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    By cancelling this event, you acknowledge that you are responsible for processing all customer refunds for tickets sold, minus the SteppersLife.com commission. You must handle refunds directly with your customers or through your payment processor.
+                  </p>
+                </div>
+                <p className="text-sm">Please provide a reason for the cancellation that will be shared with ticket holders.</p>
               </DialogDescription>
             </DialogHeader>
             
@@ -608,16 +626,32 @@ const OrganizerEventManagementPage: React.FC = () => {
                   className="mt-1"
                 />
               </div>
+              
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="acknowledge-refund"
+                  checked={acknowledgeRefundResponsibility}
+                  onCheckedChange={(checked) => setAcknowledgeRefundResponsibility(checked as boolean)}
+                />
+                <Label htmlFor="acknowledge-refund" className="text-sm leading-5">
+                  I understand and acknowledge that I am responsible for processing all customer refunds for tickets sold (minus SteppersLife commission) and will handle this directly with my customers.
+                </Label>
+              </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+              <Button variant="outline" onClick={() => {
+                setShowCancelDialog(false);
+                setEventToCancel(null);
+                setCancellationReason('');
+                setAcknowledgeRefundResponsibility(false);
+              }}>
                 Cancel
               </Button>
               <Button 
                 onClick={() => eventToCancel && handleCancelEvent(eventToCancel)}
                 className="bg-orange-600 hover:bg-orange-700"
-                disabled={!cancellationReason.trim()}
+                disabled={!cancellationReason.trim() || !acknowledgeRefundResponsibility}
               >
                 Cancel Event
               </Button>

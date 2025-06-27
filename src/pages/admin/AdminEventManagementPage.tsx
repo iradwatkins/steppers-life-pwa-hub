@@ -519,8 +519,17 @@ const AdminEventManagementPage: React.FC = () => {
                   <Ban className="h-5 w-5" />
                   Cancel Event
                 </DialogTitle>
-                <DialogDescription>
-                  Cancelling an event will notify all ticket holders and may trigger refunds. Please provide a reason for the cancellation.
+                <DialogDescription className="space-y-3">
+                  <p>Cancelling an event will notify all ticket holders and may trigger refunds.</p>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm font-medium text-blue-800">
+                      ℹ️ Admin Notice: Refund Responsibility
+                    </p>
+                    <p className="text-xs text-blue-700 mt-1">
+                      When cancelling an event, the organizer will be responsible for processing all customer refunds for tickets sold, minus the SteppersLife.com commission. Please ensure the organizer is aware of this responsibility.
+                    </p>
+                  </div>
+                  <p className="text-sm">Please provide a reason for the cancellation that will be shared with ticket holders.</p>
                 </DialogDescription>
               </DialogHeader>
               

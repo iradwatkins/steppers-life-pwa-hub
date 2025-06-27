@@ -301,6 +301,12 @@ const EventDetail = () => {
                   Active
                 </Badge>
               )}
+              {event.status === 'cancelled' && (
+                <Badge variant="outline" className="bg-white/90 text-red-700 border-red-500">
+                  <XCircle className="h-3 w-3 mr-1" />
+                  Cancelled
+                </Badge>
+              )}
             </div>
             
             {/* Top actions */}
@@ -369,6 +375,26 @@ const EventDetail = () => {
             </div>
           )}
         </div>
+
+        {/* Cancelled Event Alert */}
+        {event.status === 'cancelled' && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <span className="font-semibold">This event has been cancelled.</span>
+              {event.additional_info?.cancellation_reason && (
+                <span className="block mt-1">
+                  Reason: {event.additional_info.cancellation_reason}
+                </span>
+              )}
+              {event.additional_info?.cancelled_at && (
+                <span className="block mt-1 text-sm">
+                  Cancelled on: {new Date(event.additional_info.cancelled_at).toLocaleDateString()}
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -474,7 +500,14 @@ const EventDetail = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {Array.isArray(event.ticket_types) && event.ticket_types.length > 0 ? (
+                  {event.status === 'cancelled' ? (
+                    <div className="text-center py-6">
+                      <XCircle className="h-8 w-8 mx-auto mb-2 text-red-500" />
+                      <p className="text-sm text-red-600 font-medium">
+                        Ticket sales unavailable - Event cancelled
+                      </p>
+                    </div>
+                  ) : Array.isArray(event.ticket_types) && event.ticket_types.length > 0 ? (
                     (event.ticket_types || [])
                       .filter((ticket: any) => ticket.is_active)
                       .map((ticket: any) => {
@@ -514,7 +547,7 @@ const EventDetail = () => {
                                       ticket.id, 
                                       Math.max(0, selectedQuantity - 1)
                                     )}
-                                    disabled={selectedQuantity <= 0}
+                                    disabled={selectedQuantity <= 0 || event.status === 'cancelled'}
                                   >
                                     -
                                   </Button>
@@ -526,7 +559,7 @@ const EventDetail = () => {
                                       ticket.id, 
                                       Math.min(availableQuantity, ticket.max_per_order || 10, selectedQuantity + 1)
                                     )}
-                                    disabled={selectedQuantity >= Math.min(availableQuantity, ticket.max_per_order || 10)}
+                                    disabled={selectedQuantity >= Math.min(availableQuantity, ticket.max_per_order || 10) || event.status === 'cancelled'}
                                   >
                                     +
                                   </Button>
@@ -537,9 +570,9 @@ const EventDetail = () => {
                               <Button 
                                 className="w-full bg-stepping-gradient"
                                 onClick={() => handleAddToCart(ticket)}
-                                disabled={selectedQuantity === 0 || isAddingToCart}
+                                disabled={selectedQuantity === 0 || isAddingToCart || event.status === 'cancelled'}
                               >
-                                {isAddingToCart ? 'Adding...' : `Add to Cart - $${(ticket.price * selectedQuantity).toFixed(2)}`}
+                                {event.status === 'cancelled' ? 'Event Cancelled' : isAddingToCart ? 'Adding...' : `Add to Cart - $${(ticket.price * selectedQuantity).toFixed(2)}`}
                               </Button>
                             </div>
                           ) : (
@@ -684,8 +717,12 @@ const EventDetail = () => {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Status:</span>
-                    <Badge variant={event.status === 'published' ? 'default' : 'secondary'}>
-                      {event.status}
+                    <Badge variant={
+                      event.status === 'published' ? 'default' : 
+                      event.status === 'cancelled' ? 'destructive' : 
+                      'secondary'
+                    }>
+                      {event.status === 'cancelled' ? 'CANCELLED' : event.status}
                     </Badge>
                   </div>
                   <div className="flex justify-between">
