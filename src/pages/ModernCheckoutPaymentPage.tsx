@@ -27,6 +27,7 @@ const ModernCheckoutPaymentPage = () => {
 
   useEffect(() => {
     setStep(3);
+    
     // Redirect if no items in cart or no attendee info
     if (state.items.length === 0 || !state.attendeeInfo) {
       // Guard against null eventId
@@ -35,7 +36,32 @@ const ModernCheckoutPaymentPage = () => {
       } else {
         navigate('/events');
       }
+      return;
     }
+
+    // CRITICAL: Verify event requires tickets - prevent access for basic events
+    const validateEventRequiresTickets = async () => {
+      if (state.eventId) {
+        try {
+          const { EventService } = await import('@/services/eventService');
+          const event = await EventService.getEventById(state.eventId);
+          
+          if (!event?.requires_tickets) {
+            console.warn('🚫 Attempted modern checkout access for non-ticketed event:', state.eventId);
+            toast.error('This event does not require tickets. Redirecting to event details.');
+            navigate(`/events/${state.eventId}`);
+            return;
+          }
+        } catch (error) {
+          console.error('Error validating event tickets requirement:', error);
+          toast.error('Unable to verify event details. Please try again.');
+          navigate('/events');
+          return;
+        }
+      }
+    };
+
+    validateEventRequiresTickets();
   }, [setStep, state.items.length, state.attendeeInfo, state.eventId, navigate]);
 
   const handlePaymentSuccess = async (result: any) => {

@@ -37,6 +37,7 @@ interface ModernPaymentMethodSelectorProps {
   onPaymentError: (error: string) => void;
   onPaymentCancel?: () => void;
   disabled?: boolean;
+  requiresTickets?: boolean; // New prop to control initialization
 }
 
 interface PaymentMethodInfo {
@@ -61,6 +62,7 @@ const ModernPaymentMethodSelector: React.FC<ModernPaymentMethodSelectorProps> = 
   onPaymentError,
   onPaymentCancel,
   disabled = false,
+  requiresTickets = true, // Default to true for backward compatibility
 }) => {
   const [availability, setAvailability] = useState<PaymentMethodAvailability>({
     square: false,
@@ -85,6 +87,14 @@ const ModernPaymentMethodSelector: React.FC<ModernPaymentMethodSelectorProps> = 
   }, [selectedMethod, amount]);
 
   const initializePaymentMethods = async () => {
+    // Skip initialization if event doesn't require tickets
+    if (!requiresTickets) {
+      console.log('🚫 Skipping modern payment method initialization - event does not require tickets');
+      setError('This event does not require payment.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);

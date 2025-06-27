@@ -31,6 +31,7 @@ interface PaymentMethodSelectorProps {
   onFeesCalculated: (fees: { processingFee: number; totalAmount: number }) => void;
   selectedMethod?: PaymentMethod;
   disabled?: boolean;
+  requiresTickets?: boolean; // New prop to control initialization
 }
 
 interface PaymentMethodInfo {
@@ -51,6 +52,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   onFeesCalculated,
   selectedMethod,
   disabled = false,
+  requiresTickets = true, // Default to true for backward compatibility
 }) => {
   const [availability, setAvailability] = useState<PaymentMethodAvailability>({
     square: false,
@@ -75,6 +77,14 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   }, [selectedMethod, amount, onFeesCalculated]);
 
   const initializePaymentMethods = async () => {
+    // Skip initialization if event doesn't require tickets
+    if (!requiresTickets) {
+      console.log('🚫 Skipping payment method initialization - event does not require tickets');
+      setError('This event does not require payment.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);

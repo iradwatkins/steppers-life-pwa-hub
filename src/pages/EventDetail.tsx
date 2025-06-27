@@ -146,6 +146,13 @@ const EventDetail = () => {
   };
 
   const handleAddToCart = async (ticketType: any) => {
+    // CRITICAL: Validate event requires tickets before allowing cart operations
+    if (!event?.requires_tickets) {
+      console.warn('🚫 Attempted to add ticket to cart for non-ticketed event:', event?.id);
+      toast.error('This event does not require tickets.');
+      return;
+    }
+
     const quantity = selectedTicketQuantities[ticketType.id] || 1;
     
     setIsAddingToCart(true);
@@ -454,22 +461,24 @@ const EventDetail = () => {
 
           {/* Enhanced Sidebar */}
           <div className="space-y-6">
-            {/* Ticket Purchase with Real-time Inventory */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Get Tickets
-                </CardTitle>
-                <CardDescription>
-                  Select your tickets and add to cart
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {Array.isArray(event.ticket_types) && event.ticket_types.length > 0 ? (
-                  (event.ticket_types || [])
-                    .filter((ticket: any) => ticket.is_active)
-                    .map((ticket: any) => {
+            {/* Conditional: Ticket Purchase OR RSVP based on event.requires_tickets */}
+            {event.requires_tickets ? (
+              /* Ticket Purchase with Real-time Inventory */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Get Tickets
+                  </CardTitle>
+                  <CardDescription>
+                    Select your tickets and add to cart
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {Array.isArray(event.ticket_types) && event.ticket_types.length > 0 ? (
+                    (event.ticket_types || [])
+                      .filter((ticket: any) => ticket.is_active)
+                      .map((ticket: any) => {
                       const availableQuantity = ticket.quantity_available - (ticket.quantity_sold || 0);
                       const selectedQuantity = selectedTicketQuantities[ticket.id] || 0;
                       
@@ -549,12 +558,58 @@ const EventDetail = () => {
                       Tickets will be available soon
                     </p>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            ) : event.rsvp_enabled ? (
+              /* RSVP Section for Basic Events */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    RSVP
+                  </CardTitle>
+                  <CardDescription>
+                    Let us know you're coming
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      This is a free event. RSVP to help us plan accordingly.
+                    </p>
+                    {event.max_rsvps && (
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Limited to {event.max_rsvps} attendees
+                      </p>
+                    )}
+                    <Button className="w-full bg-stepping-gradient">
+                      RSVP for This Event
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              /* No Action Required - Basic Event Listing */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Event Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">
+                      This is an informational event listing. No registration required.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Promo Code Integration */}
-            {event.ticket_types && event.ticket_types.length > 0 && (
+            {/* Promo Code Integration - Only for ticketed events */}
+            {event.requires_tickets && event.ticket_types && event.ticket_types.length > 0 && (
               <PromoCodeInput 
                 eventId={event.id.toString()}
                 subtotal={0}

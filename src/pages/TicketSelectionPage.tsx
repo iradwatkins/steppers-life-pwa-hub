@@ -63,6 +63,18 @@ const TicketSelectionPage = () => {
 
         console.log('✅ Event data loaded:', eventData);
 
+        // CRITICAL: Check if event requires tickets - redirect basic events
+        if (!eventData.requires_tickets) {
+          console.warn('🚫 Attempted ticket selection access for non-ticketed event:', eventId);
+          toast({
+            title: "No Tickets Required",
+            description: "This event does not require tickets. Redirecting to event details.",
+            variant: "default"
+          });
+          navigate(`/events/${eventId}`);
+          return;
+        }
+
         // Fetch ticket types for this event
         console.log('🎫 Fetching ticket types...');
         const { data: ticketTypesData, error: ticketTypesError } = await supabase
