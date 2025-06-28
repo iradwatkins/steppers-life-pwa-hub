@@ -1,111 +1,136 @@
-# 🚀 PRODUCTION DEPLOYMENT CHECKLIST - CRITICAL
+# 🚀 PRODUCTION DEPLOYMENT CHECKLIST
 
-## ✅ **COMPLETED - Mock Data Removal**
+## Critical: Image Upload System Production Setup
 
-### **Ticket Selection Page** - `src/pages/TicketSelectionPage.tsx`
-- ✅ **REMOVED**: All mock event data
-- ✅ **ADDED**: Real Supabase database queries for events
-- ✅ **ADDED**: Real Supabase database queries for ticket_types
-- ✅ **ADDED**: Proper loading states
-- ✅ **ADDED**: Error handling for missing events/tickets
-- ✅ **ADDED**: Production-ready data fetching
+### ✅ **Pre-Deployment Verification**
 
-### **Inventory Service** - `src/services/inventoryService.ts`
-- ✅ **ADDED**: Failed query caching to prevent infinite loops
-- ✅ **ADDED**: Proper error handling for missing ticket types
-- ✅ **MAINTAINED**: Real-time inventory management
-- ✅ **REMOVED**: Mock data fallbacks (production-ready)
+1. **Environment Variables**
+   - [ ] Production Supabase URL: `https://voaxyetbqhmgbvcxsttf.supabase.co`
+   - [ ] Production Supabase Anon Key configured
+   - [ ] `VITE_APP_ENV=production` set correctly
 
-## 🔍 **DATABASE REQUIREMENTS FOR PRODUCTION**
+2. **Database Schema**
+   - [ ] All migrations applied to production database
+   - [ ] BMAD follower system deployed
+   - [ ] Team member permissions added
+   - [ ] Role consolidation (admin/organizer/user) complete
 
-### **Required Tables**
-1. **`events`** table with columns:
-   - `id` (primary key)
-   - `title` (text)
-   - `description` (text)
-   - `event_date` (date)
-   - `start_time` (time)
-   - `venue` (text)
-   - `image_url` (text, optional)
+### 🔥 **CRITICAL: Execute Production SQL Script**
 
-2. **`ticket_types`** table with columns:
-   - `id` (primary key)
-   - `event_id` (foreign key to events)
-   - `name` (text)
-   - `description` (text)
-   - `price` (decimal)
-   - `quantity_available` (integer)
-   - `quantity_sold` (integer)
-
-### **Sample Data Structure**
-```sql
--- Sample event
-INSERT INTO events (id, title, description, event_date, start_time, venue) VALUES
-('b3cb4200-617e-4d36-bdf3-621af232a1ee', 'Chicago Stepping Championship', 'Join us for the most prestigious stepping competition in Chicago.', '2024-12-15', '19:00', 'Navy Pier Grand Ballroom');
-
--- Sample ticket types
-INSERT INTO ticket_types (id, event_id, name, description, price, quantity_available, quantity_sold) VALUES
-('general-admission', 'b3cb4200-617e-4d36-bdf3-621af232a1ee', 'General Admission', 'Access to main floor seating and dance area', 45.00, 150, 0),
-('vip-experience', 'b3cb4200-617e-4d36-bdf3-621af232a1ee', 'VIP Experience', 'Premium seating, complimentary drinks, and meet & greet', 85.00, 25, 0),
-('reserved-table', 'b3cb4200-617e-4d36-bdf3-621af232a1ee', 'Reserved Table (8 seats)', 'Private table for 8 with premium service', 320.00, 10, 0);
+**MUST RUN IN PRODUCTION DASHBOARD:**
+```
+URL: https://supabase.com/dashboard/project/voaxyetbqhmgbvcxsttf/sql/new
+FILE: COMPLETE-PRODUCTION-DEPLOYMENT.sql
 ```
 
-## 🚨 **CRITICAL PRODUCTION CHECKS**
+This script includes:
+- ✅ Image storage bucket creation with 50MB limit
+- ✅ RLS policies for authenticated uploads
+- ✅ BMAD follower system deployment
+- ✅ Admin role consolidation
+- ✅ Team member QR scanning permissions
+- ✅ Event type system
+- ✅ Production verification queries
 
-### **1. No Mock Data** ✅
-- ✅ Removed all mock event data
-- ✅ Removed all mock ticket data
-- ✅ Removed mock data fallbacks
-- ✅ Only real database queries used
+### 📝 **Post-Deployment Testing**
 
-### **2. Error Handling** ✅
-- ✅ Proper loading states
-- ✅ Event not found handling
-- ✅ No tickets available handling
-- ✅ Database connection error handling
+#### Test 1: Profile Image Upload
+- [ ] Login to production site
+- [ ] Go to Profile page
+- [ ] Upload profile picture
+- [ ] Verify image displays correctly
+- [ ] Check Supabase storage bucket has image
 
-### **3. Performance** ✅
-- ✅ Query caching for failed requests
-- ✅ No infinite loops
-- ✅ Efficient bulk inventory queries
+#### Test 2: Event Image Upload  
+- [ ] Create new event in production
+- [ ] Upload featured image
+- [ ] Upload gallery images
+- [ ] Verify images display on event page
+- [ ] Check images stored in Supabase
 
-### **4. User Experience** ✅
-- ✅ Loading spinners
-- ✅ Clear error messages
-- ✅ Graceful degradation
-- ✅ Navigation fallbacks
+#### Test 3: Store Image Upload
+- [ ] Create new store listing
+- [ ] Upload store photos (up to 5)
+- [ ] Verify images display correctly
+- [ ] Check community browse page shows images
 
-## 🔧 **DEPLOYMENT STEPS**
+#### Test 4: Service Image Upload
+- [ ] Create new service listing
+- [ ] Upload business images (up to 5)
+- [ ] Upload portfolio images (up to 10)
+- [ ] Verify both types display correctly
 
-1. **Database Setup**
-   - Ensure `events` and `ticket_types` tables exist
-   - Add sample data or real event data
-   - Verify foreign key relationships
+### 🔍 **Production Environment Verification**
 
-2. **Environment Variables**
-   - Verify Supabase connection details
-   - Check API keys and permissions
+Run these checks in production Supabase dashboard:
 
-3. **Testing**
-   - Test with real event IDs
-   - Verify ticket selection works
-   - Test inventory management
-   - Check error states
+```sql
+-- Check storage bucket
+SELECT * FROM storage.buckets WHERE id = 'images';
 
-4. **Monitoring**
-   - Monitor for database errors
-   - Watch for failed queries
-   - Check user experience
+-- Check storage policies
+SELECT policyname, cmd FROM pg_policies 
+WHERE tablename = 'objects' AND schemaname = 'storage';
 
-## ⚠️ **KNOWN ISSUES TO MONITOR**
+-- Check role distribution
+SELECT role, COUNT(*) FROM profiles GROUP BY role;
 
-1. **Event ID Routing**: Ensure event URLs use real database IDs
-2. **Ticket Type IDs**: Verify ticket type IDs match database records
-3. **Inventory Sync**: Monitor real-time inventory updates
-4. **Error Rates**: Watch for 404s on missing events
+-- Check BMAD tables exist
+SELECT table_name FROM information_schema.tables 
+WHERE table_name LIKE 'follower_%';
+```
+
+### 🚨 **Critical Production Issues to Watch**
+
+1. **Storage Permissions**
+   - If uploads fail with "bucket not found" → Re-run storage setup section
+   - If uploads fail with "permission denied" → Check RLS policies
+
+2. **Image Display Issues**  
+   - If images don't display → Check public bucket access
+   - If old images broken → Verify production URL configuration
+
+3. **Role System Issues**
+   - If admin features don't work → Verify role consolidation completed
+   - If organizer permissions fail → Check organizer policies
+
+### 📋 **Environment-Specific Configuration**
+
+#### Development
+- Supabase URL: `https://nwoteszpvvefbopbbvrl.supabase.co`
+- Local development server: `http://localhost:8080`
+
+#### Production  
+- Supabase URL: `https://voaxyetbqhmgbvcxsttf.supabase.co`
+- Production URL: `https://stepperslife.com`
+
+### 🔒 **Security Verification**
+
+- [ ] RLS enabled on all sensitive tables
+- [ ] Storage policies restrict access appropriately
+- [ ] Admin policies only allow admin role access
+- [ ] User data isolation maintained
+
+### 📊 **Performance Verification**
+
+- [ ] Image optimization working (check compression ratios)
+- [ ] Upload speeds acceptable in production
+- [ ] Large images (up to 50MB) can be uploaded
+- [ ] Multiple file uploads work simultaneously
 
 ---
 
-**STATUS**: ✅ **PRODUCTION READY** - No mock data, real database queries only
-**RISK LEVEL**: 🟢 **LOW** - Proper error handling and fallbacks implemented
-**TESTING**: ⚠️ **REQUIRED** - Test with real database data before full deployment 
+## 🎯 **SUCCESS CRITERIA**
+
+✅ **Complete when ALL of the following work in production:**
+
+1. ✅ Profile image upload and display
+2. ✅ Event featured and gallery image upload
+3. ✅ Store image upload (up to 5 images)
+4. ✅ Service business and portfolio images
+5. ✅ Images display correctly on website
+6. ✅ Images stored properly in Supabase storage
+7. ✅ Edit functionality allows image updates
+8. ✅ Delete functionality removes images properly
+
+**CRITICAL:** Do not consider deployment complete until ALL image functionality is verified working in the live production environment.
