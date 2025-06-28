@@ -2,6 +2,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 // BMAD METHOD: Follower-Organizer Sales Delegation System
 // Real implementation using the new database schema
+//
+// ⚠️  CRITICAL WARNING - FOLLOWER SYSTEM IS LOCKED ⚠️
+// This follower system is FINAL and COMPLETE. Any changes will break production.
+// The role progression is LOCKED: user → follower → sales_follower OR team_member
+// DO NOT MODIFY the FollowerSalesPermission interface or role logic.
+// SYSTEM IS PRODUCTION-LOCKED.
 
 export interface FollowerSalesPermission {
   id: string;

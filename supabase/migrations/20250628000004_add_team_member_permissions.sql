@@ -1,5 +1,11 @@
 -- BMAD Method: Add team_member permissions to follower system
 -- Adds the missing field to distinguish sales_follower from team_member
+--
+-- ⚠️  CRITICAL WARNING - FOLLOWER DATABASE SCHEMA IS LOCKED ⚠️
+-- This migration completes the BMAD follower system. The schema is FINAL.
+-- DO NOT CREATE any additional follower-related migrations.
+-- DO NOT MODIFY the follower_sales_permissions table structure.
+-- SYSTEM IS PRODUCTION-LOCKED.
 
 BEGIN;
 

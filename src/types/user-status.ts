@@ -1,6 +1,15 @@
 /**
  * BMAD METHOD: Comprehensive User Status System
  * Complete enumeration of all user roles, statuses, and progression paths
+ * 
+ * ⚠️  CRITICAL WARNING - NEVER MODIFY THIS FILE ⚠️
+ * This role system is FINAL and COMPLETE. Any changes will break the entire system.
+ * The follower roles below are locked and must never be altered:
+ * - follower: Follow organizers/stores/services for easy tracking (no extra privileges)
+ * - sales_follower: Sell tickets + earn commission (requires organizer invitation)
+ * - team_member: Sell tickets + earn commission + scan QR codes at events
+ * 
+ * DO NOT ADD, REMOVE, OR MODIFY ANY ROLES. SYSTEM IS PRODUCTION-LOCKED.
  */
 
 // Core database roles (from Supabase types)
@@ -16,7 +25,7 @@ export type ExtendedUserStatus =
   | 'service_provider'      // Users who offer services (Epic K)
   | 'verified_business'     // Verified store/service providers
   
-  // Commission & Sales Roles (BMAD progression-controlled)
+  // Commission & Sales Roles (BMAD progression-controlled) - ⚠️ LOCKED - NEVER MODIFY ⚠️
   | 'follower'              // Users who follow organizers/stores/services for easy tracking
   | 'sales_follower'        // Followers with ticket selling permissions + commission earning
   | 'team_member'           // Organizer team member: sell tickets + earn commission + scan QR codes at events
