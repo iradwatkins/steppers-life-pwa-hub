@@ -11,6 +11,8 @@ export interface FollowerSalesPermission {
   can_sell_tickets: boolean;
   can_create_promo_codes: boolean;
   can_view_sales_analytics: boolean;
+  is_team_member: boolean;
+  can_scan_qr_codes: boolean;
   commission_type: 'percentage' | 'fixed_amount' | 'tiered';
   commission_rate: number;
   commission_fixed_amount: number;

@@ -4,7 +4,10 @@
  */
 
 // Core database roles (from Supabase types)
-export type CoreUserRole = 'user' | 'organizer' | 'admin' | 'super_admin';
+// admin: Full administrative privileges 
+// organizer: Can create events and delegate permissions to followers
+// user: Can buy tickets, become followers of organizers
+export type CoreUserRole = 'user' | 'organizer' | 'admin';
 
 // Extended user statuses based on activities and epic completion
 export type ExtendedUserStatus = 
@@ -14,11 +17,9 @@ export type ExtendedUserStatus =
   | 'verified_business'     // Verified store/service providers
   
   // Commission & Sales Roles (BMAD progression-controlled)
-  | 'follower'              // Users who follow organizers
-  | 'sales_follower'        // Followers with ticket selling permissions
-  | 'team_member'           // Organizer's team with sales delegation
-  | 'sales_agent'           // Advanced sales role with trackable links
-  | 'commission_earner'     // Any user earning commissions from sales
+  | 'follower'              // Users who follow organizers/stores/services for easy tracking
+  | 'sales_follower'        // Followers with ticket selling permissions + commission earning
+  | 'team_member'           // Organizer team member: sell tickets + earn commission + scan QR codes at events
   
   // Activity-based statuses
   | 'attendee'              // Event attendees
@@ -98,8 +99,6 @@ export const BMAD_EPIC_REQUIREMENTS: Record<ExtendedUserStatus, string[]> = {
   'follower': ['profile-setup'],
   'sales_follower': ['profile-setup', 'community-engagement', 'sales-training'],
   'team_member': ['profile-setup', 'community-engagement', 'sales-training', 'team-certification'],
-  'sales_agent': ['profile-setup', 'community-engagement', 'sales-training', 'advanced-sales'],
-  'commission_earner': ['profile-setup', 'sales-training'],
   
   // Activity-based
   'attendee': ['profile-setup'],
@@ -117,8 +116,7 @@ export const BMAD_EPIC_REQUIREMENTS: Record<ExtendedUserStatus, string[]> = {
 export const BMAD_ROLE_PROGRESSION: Record<CoreUserRole, CoreUserRole[]> = {
   'user': ['organizer'],                    // Users can become organizers
   'organizer': ['admin'],                   // Organizers can become admins (with approval)
-  'admin': ['admin'],                       // Admins stay admins
-  'super_admin': ['super_admin']            // Super admins stay super admins (locked)
+  'admin': ['admin']                        // Admins stay admins (highest level)
 };
 
 // Status combinations that are allowed
@@ -132,14 +130,10 @@ export const VALID_STATUS_COMBINATIONS: Array<{
   },
   {
     coreRole: 'organizer', 
-    allowedStatuses: ['follower', 'sales_follower', 'team_member', 'sales_agent', 'commission_earner', 'attendee', 'buyer', 'reviewer', 'content_creator', 'verified_user', 'store_owner', 'service_provider', 'verified_business']
+    allowedStatuses: ['follower', 'sales_follower', 'team_member', 'attendee', 'buyer', 'reviewer', 'content_creator', 'verified_user', 'store_owner', 'service_provider', 'verified_business']
   },
   {
     coreRole: 'admin',
-    allowedStatuses: ['community_moderator', 'trusted_reviewer', 'content_creator', 'verified_user', 'store_owner', 'service_provider', 'verified_business']
-  },
-  {
-    coreRole: 'super_admin',
     allowedStatuses: ['community_moderator', 'trusted_reviewer', 'content_creator', 'verified_user', 'store_owner', 'service_provider', 'verified_business']
   }
 ];
@@ -157,7 +151,7 @@ export const FEATURE_AUTHORIZATIONS: FeatureAuthorization[] = [
   // Store Management
   {
     featureName: 'create_store',
-    requiredCoreRole: ['user', 'organizer', 'admin', 'super_admin'],
+    requiredCoreRole: ['user', 'organizer', 'admin'],
     requiredEpics: ['profile-setup', 'community-engagement', 'business-verification'],
     additionalChecks: (user) => user.businessPermissions.canCreateStore
   },
@@ -165,7 +159,7 @@ export const FEATURE_AUTHORIZATIONS: FeatureAuthorization[] = [
   // Service Management  
   {
     featureName: 'create_service',
-    requiredCoreRole: ['user', 'organizer', 'admin', 'super_admin'],
+    requiredCoreRole: ['user', 'organizer', 'admin'],
     requiredEpics: ['profile-setup', 'community-engagement', 'service-certification'],
     additionalChecks: (user) => user.businessPermissions.canCreateService
   },
@@ -173,8 +167,8 @@ export const FEATURE_AUTHORIZATIONS: FeatureAuthorization[] = [
   // Commission System
   {
     featureName: 'earn_commissions',
-    requiredCoreRole: ['user', 'organizer', 'admin', 'super_admin'],
-    requiredStatuses: ['sales_follower', 'team_member', 'sales_agent'],
+    requiredCoreRole: ['user', 'organizer', 'admin'],
+    requiredStatuses: ['sales_follower', 'team_member'],
     requiredEpics: ['profile-setup', 'sales-training'],
     additionalChecks: (user) => user.commissionPermissions.canEarnCommissions
   },
@@ -182,8 +176,8 @@ export const FEATURE_AUTHORIZATIONS: FeatureAuthorization[] = [
   // Ticket Sales Delegation
   {
     featureName: 'sell_tickets_for_others',
-    requiredCoreRole: ['user', 'organizer', 'admin', 'super_admin'], 
-    requiredStatuses: ['sales_follower', 'team_member', 'sales_agent'],
+    requiredCoreRole: ['user', 'organizer', 'admin'], 
+    requiredStatuses: ['sales_follower', 'team_member'],
     requiredEpics: ['profile-setup', 'sales-training'],
     additionalChecks: (user) => user.commissionPermissions.canSellTicketsForOthers
   },
@@ -191,7 +185,7 @@ export const FEATURE_AUTHORIZATIONS: FeatureAuthorization[] = [
   // Business Promotion
   {
     featureName: 'promote_business_in_community',
-    requiredCoreRole: ['user', 'organizer', 'admin', 'super_admin'],
+    requiredCoreRole: ['user', 'organizer', 'admin'],
     requiredStatuses: ['store_owner', 'service_provider', 'verified_business'],
     requiredEpics: ['profile-setup', 'community-engagement', 'business-verification'],
     additionalChecks: (user) => user.businessPermissions.canPromoteInCommunity
@@ -200,7 +194,7 @@ export const FEATURE_AUTHORIZATIONS: FeatureAuthorization[] = [
   // Event Creation
   {
     featureName: 'create_events',
-    requiredCoreRole: ['organizer', 'admin', 'super_admin'],
+    requiredCoreRole: ['organizer', 'admin'],
     requiredEpics: ['profile-setup', 'event-creation'],
     additionalChecks: (user) => user.extendedStatuses.includes('verified_user')
   },
@@ -208,7 +202,7 @@ export const FEATURE_AUTHORIZATIONS: FeatureAuthorization[] = [
   // Admin Functions
   {
     featureName: 'admin_panel_access',
-    requiredCoreRole: ['admin', 'super_admin'],
+    requiredCoreRole: ['admin'],
     requiredEpics: ['admin-tools'],
     additionalChecks: (user) => user.verificationLevel !== 'unverified'
   }
