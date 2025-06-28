@@ -139,19 +139,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 };
 
 // Convenience components for common protection patterns
-export const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
-  
-  // Debug logging
-  console.log('AdminRoute - User:', user?.email);
-  console.log('AdminRoute - Checking admin access...');
-  
-  return (
-    <ProtectedRoute requiredRole={['admin', 'super_admin']}>
-      {children}
-    </ProtectedRoute>
-  );
-};
+export const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <ProtectedRoute requiredRole="admin">
+    {children}
+  </ProtectedRoute>
+);
 
 export const OrganizerRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <ProtectedRoute requireOrganizer>

@@ -106,7 +106,6 @@ export const useRoles = () => {
           role: 'user',
           isAdmin: false,
           isOrganizer: false,
-          isSuperAdmin: false,
           isUser: true,
           hasOrganizer: false,
         });

@@ -3,19 +3,18 @@ import type { Database } from '@/integrations/supabase/types';
 
 type UserRole = Database['public']['Enums']['user_role'];
 
-// CRITICAL: ONLY these emails can EVER become super_admin
-// This is hardcoded for security - NO OTHER USERS can bypass BMAD method epics
-const AUTHORIZED_SUPER_ADMIN_EMAILS = Object.freeze([
+// Admin emails for initial setup
+const AUTHORIZED_ADMIN_EMAILS = Object.freeze([
   'bobbygwatkins@gmail.com',
   'iradwatkins@gmail.com'
 ]);
 
 export class AdminService {
   /**
-   * Validate if email is authorized for super_admin role
+   * Validate if email is authorized for admin role
    */
-  private static isAuthorizedSuperAdmin(email: string): boolean {
-    return AUTHORIZED_SUPER_ADMIN_EMAILS.includes(email.toLowerCase().trim());
+  private static isAuthorizedAdmin(email: string): boolean {
+    return AUTHORIZED_ADMIN_EMAILS.includes(email.toLowerCase().trim());
   }
 
   /**
@@ -43,19 +42,11 @@ export class AdminService {
   }
 
   /**
-   * Update user role by email address with strict security controls
-   * CRITICAL: Only authorized emails can become super_admin
+   * Update user role by email address with security controls
    */
   static async updateUserRole(email: string, role: UserRole): Promise<boolean> {
     try {
       const normalizedEmail = email.toLowerCase().trim();
-      
-      // SECURITY CHECK: Prevent unauthorized super_admin elevation
-      if (role === 'super_admin' && !this.isAuthorizedSuperAdmin(normalizedEmail)) {
-        console.error(`🚨 SECURITY VIOLATION: Attempt to elevate unauthorized user to super_admin: ${normalizedEmail}`);
-        await this.logRoleChange(normalizedEmail, 'unknown', 'super_admin', false);
-        throw new Error('Unauthorized: Only specific authorized users can become super_admin');
-      }
 
       // Get current role for audit logging
       const { data: currentUser } = await supabase
@@ -89,92 +80,27 @@ export class AdminService {
   }
 
   /**
-   * Set specific users as super admins - ONLY works for authorized emails
-   * This method includes additional validation layers
+   * Set authorized users as admins
    */
-  static async setSuperAdmins(): Promise<boolean> {
-    console.log('🔐 Executing setSuperAdmins with strict security controls...');
+  static async setAuthorizedAdmins(): Promise<boolean> {
+    console.log('🔐 Setting up authorized admins...');
     
     let allSuccess = true;
 
-    for (const email of AUTHORIZED_SUPER_ADMIN_EMAILS) {
-      console.log(`🔧 Processing super_admin setup for: ${email}`);
+    for (const email of AUTHORIZED_ADMIN_EMAILS) {
+      console.log(`🔧 Processing admin setup for: ${email}`);
       
-      // Double-check authorization (redundant but critical for security)
-      if (!this.isAuthorizedSuperAdmin(email)) {
-        console.error(`🚨 CRITICAL ERROR: ${email} not in authorized list - this should never happen!`);
-        allSuccess = false;
-        continue;
-      }
-
-      const success = await this.updateUserRole(email, 'super_admin');
+      const success = await this.updateUserRole(email, 'admin');
       if (!success) {
-        console.error(`❌ Failed to set super_admin for ${email}`);
+        console.error(`❌ Failed to set admin for ${email}`);
         allSuccess = false;
       } else {
-        console.log(`✅ Successfully set super_admin for ${email}`);
+        console.log(`✅ Successfully set admin for ${email}`);
       }
     }
 
-    console.log(allSuccess ? '🎉 All authorized super admins configured successfully' : '⚠️ Some super admin setups failed');
+    console.log(allSuccess ? '🎉 All authorized admins configured successfully' : '⚠️ Some admin setups failed');
     return allSuccess;
-  }
-
-  /**
-   * BMAD Method: Controlled role progression for non-super-admin users
-   * This ensures all other users follow proper epic progression
-   */
-  static async updateUserRoleBMAD(email: string, newRole: UserRole, currentUserEmail?: string): Promise<boolean> {
-    const normalizedEmail = email.toLowerCase().trim();
-    
-    // ABSOLUTE BLOCK: No one except authorized emails can become super_admin
-    if (newRole === 'super_admin') {
-      console.error(`🚨 BMAD SECURITY: Blocked attempt to elevate ${normalizedEmail} to super_admin through BMAD method`);
-      console.error(`🚨 Only setSuperAdmins() can create super_admin users for authorized emails`);
-      return false;
-    }
-
-    // For other roles, follow BMAD progression logic
-    console.log(`📈 BMAD Role Progression: ${normalizedEmail} → ${newRole}`);
-    
-    // Get current role to validate progression
-    const { data: currentUser } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('email', normalizedEmail)
-      .single();
-
-    const currentRole = currentUser?.role || 'user';
-    
-    // BMAD Epic Validation Rules
-    const isValidProgression = this.validateBMADProgression(currentRole, newRole);
-    
-    if (!isValidProgression) {
-      console.error(`🚫 Invalid BMAD progression: ${currentRole} → ${newRole} for ${normalizedEmail}`);
-      return false;
-    }
-
-    // Use standard updateUserRole (which already has super_admin blocks)
-    return await this.updateUserRole(normalizedEmail, newRole);
-  }
-
-  /**
-   * Validate BMAD method role progression rules
-   */
-  private static validateBMADProgression(currentRole: string, newRole: UserRole): boolean {
-    // Define valid BMAD epic progressions
-    const validProgressions: Record<string, UserRole[]> = {
-      'user': ['organizer'], // Users can become organizers
-      'organizer': ['admin'], // Organizers can become admins (with approval)
-      'admin': ['admin'], // Admins can stay admins
-      'super_admin': ['super_admin'] // Super admins stay super admins (but this method shouldn't be used for them)
-    };
-
-    const allowedRoles = validProgressions[currentRole] || [];
-    const isValid = allowedRoles.includes(newRole);
-    
-    console.log(`📋 BMAD Progression Check: ${currentRole} → ${newRole} | Valid: ${isValid}`);
-    return isValid;
   }
 
   /**
@@ -185,8 +111,8 @@ export class AdminService {
       const { data, error } = await supabase
         .from('profiles')
         .select('email, role, full_name')
-        .in('role', ['admin', 'super_admin'])
-        .order('role', { ascending: false });
+        .eq('role', 'admin')
+        .order('email');
 
       if (error) {
         console.error('Error fetching admin users:', error);

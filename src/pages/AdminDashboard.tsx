@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AdminRoute } from '@/components/auth/ProtectedRoute';
 import { EventService } from '@/services/eventService';
-import { SuperAdminSetup } from '@/components/admin/SuperAdminSetup';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Shield, 
@@ -41,7 +40,7 @@ interface DashboardStats {
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const { role, isSuperAdmin, isAdmin } = useRoles();
+  const { role, isAdmin } = useRoles();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
@@ -397,23 +396,6 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Super Admin Setup - Only visible to super admins */}
-          {isSuperAdmin && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Super Admin Configuration
-                </CardTitle>
-                <CardDescription>
-                  Configure super administrator privileges and permissions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <SuperAdminSetup />
-              </CardContent>
-            </Card>
-          )}
 
         </div>
       </div>

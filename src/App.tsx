@@ -102,7 +102,6 @@ import MagazineManagementPage from "./pages/admin/MagazineManagementPage";
 import MagazineEditorPage from "./pages/admin/MagazineEditorPage";
 import CommunityManagementPage from "./pages/admin/CommunityManagementPage";
 import StoreManagementPage from "./pages/admin/StoreManagementPage";
-import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
 import CreatePhysicalClassPage from "./pages/classes/CreatePhysicalClassPage";
 import InstructorDashboard from "./pages/instructor/InstructorDashboard";
 import ComparativeAnalyticsPage from "./pages/ComparativeAnalyticsPage";
@@ -258,16 +257,6 @@ const RouterWrapper = () => {
         <Route path="/organizer/automated-reports" element={
           <OrganizerRoute>
             <AutomatedReportsPage />
-          </OrganizerRoute>
-        } />
-        <Route path="/organizer/team" element={
-          <OrganizerRoute>
-            <FollowerManagementPage />
-          </OrganizerRoute>
-        } />
-        <Route path="/organizer/event/:eventId/team" element={
-          <OrganizerRoute>
-            <FollowerManagementPage />
           </OrganizerRoute>
         } />
         <Route path="/cash-payment" element={
