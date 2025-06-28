@@ -1,129 +1,77 @@
-/**
- * Device Detection Utilities
- * Used to show appropriate payment methods based on device capabilities
- */
-
-export interface DeviceCapabilities {
-  isMobile: boolean;
-  isIOS: boolean;
-  isAndroid: boolean;
-  supportsApplePay: boolean;
-  supportsGooglePay: boolean;
-  supportsCashApp: boolean;
-  userAgent: string;
-}
 
 export class DeviceDetection {
-  private static capabilities: DeviceCapabilities | null = null;
-
-  static getCapabilities(): DeviceCapabilities {
-    if (!this.capabilities) {
-      this.capabilities = this.detectCapabilities();
-    }
-    return this.capabilities;
-  }
-
-  private static detectCapabilities(): DeviceCapabilities {
-    const userAgent = navigator.userAgent;
-    
-    // Mobile detection
-    const isMobile = /iPhone|iPad|iPod|Android|BlackBerry|Opera Mini|IEMobile|WPDesktop/i.test(userAgent);
-    
-    // iOS detection
-    const isIOS = /iPhone|iPad|iPod/i.test(userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    
-    // Android detection
-    const isAndroid = /Android/i.test(userAgent);
-    
-    // Apple Pay support detection
-    let supportsApplePay = false;
-    try {
-      supportsApplePay = isIOS && 
-                         'ApplePaySession' in window && 
-                         typeof window.ApplePaySession !== 'undefined' &&
-                         window.ApplePaySession.canMakePayments();
-    } catch (error) {
-      // Apple Pay not available or permission denied
-      supportsApplePay = false;
-    }
-    
-    // Google Pay support detection
-    let supportsGooglePay = false;
-    try {
-      supportsGooglePay = isAndroid && 
-                          'PaymentRequest' in window &&
-                          typeof window.PaymentRequest !== 'undefined';
-    } catch (error) {
-      // Google Pay not available
-      supportsGooglePay = false;
-    }
-    
-    // Cash App support (mobile browsers)
-    const supportsCashApp = isMobile && (
-      /Safari/i.test(userAgent) || // iOS Safari
-      /Chrome/i.test(userAgent)    // Android Chrome or iOS Chrome
-    );
-
+  static getCapabilities() {
     return {
-      isMobile,
-      isIOS,
-      isAndroid,
-      supportsApplePay,
-      supportsGooglePay,
-      supportsCashApp,
-      userAgent
+      touchScreen: 'ontouchstart' in window,
+      camera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
+      geolocation: 'geolocation' in navigator,
+      webGL: !!document.createElement('canvas').getContext('webgl'),
+      serviceWorker: 'serviceWorker' in navigator,
+      pushNotifications: 'Notification' in window && 'serviceWorker' in navigator,
+      webAuthn: 'credentials' in navigator,
+      biometrics: 'credentials' in navigator && 'PublicKeyCredential' in window,
     };
   }
 
   static shouldShowApplePay(): boolean {
-    const caps = this.getCapabilities();
-    return caps.supportsApplePay;
+    // Check if device supports Apple Pay
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && 'ApplePaySession' in window;
   }
 
   static shouldShowGooglePay(): boolean {
-    const caps = this.getCapabilities();
-    return caps.supportsGooglePay;
+    // Check if device supports Google Pay (Android or Chrome on desktop)
+    return /Android/.test(navigator.userAgent) || 
+           /Chrome/.test(navigator.userAgent) ||
+           'PaymentRequest' in window;
   }
 
   static shouldShowCashApp(): boolean {
-    const caps = this.getCapabilities();
-    return caps.supportsCashApp;
+    // Cash App Pay is available on mobile devices
+    return /Mobi|Android/i.test(navigator.userAgent);
   }
 
-  static isMobileDevice(): boolean {
-    const caps = this.getCapabilities();
-    return caps.isMobile;
-  }
-
-  static getDeviceType(): 'desktop' | 'mobile' | 'tablet' {
-    const caps = this.getCapabilities();
+  static getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
+    const userAgent = navigator.userAgent;
     
-    if (!caps.isMobile) {
-      return 'desktop';
+    if (/Mobi|Android/i.test(userAgent)) {
+      return 'mobile';
     }
     
-    // iPad detection
-    if (caps.isIOS && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) {
+    if (/Tablet|iPad/i.test(userAgent)) {
       return 'tablet';
     }
     
-    // Android tablet detection (rough approximation)
-    if (caps.isAndroid && screen.width >= 768) {
-      return 'tablet';
-    }
-    
-    return 'mobile';
+    return 'desktop';
   }
 
-  static debugInfo(): DeviceCapabilities & { deviceType: string } {
-    const caps = this.getCapabilities();
+  static isMobile(): boolean {
+    return this.getDeviceType() === 'mobile';
+  }
+
+  static isTablet(): boolean {
+    return this.getDeviceType() === 'tablet';
+  }
+
+  static isDesktop(): boolean {
+    return this.getDeviceType() === 'desktop';
+  }
+
+  static getBrowserInfo() {
+    const userAgent = navigator.userAgent;
+    
+    let browser = 'Unknown';
+    if (userAgent.includes('Chrome')) browser = 'Chrome';
+    else if (userAgent.includes('Firefox')) browser = 'Firefox';
+    else if (userAgent.includes('Safari')) browser = 'Safari';
+    else if (userAgent.includes('Edge')) browser = 'Edge';
+    
     return {
-      ...caps,
-      deviceType: this.getDeviceType()
+      browser,
+      userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      cookieEnabled: navigator.cookieEnabled,
+      onLine: navigator.onLine,
     };
   }
 }
-
-// Export for direct use
-export const deviceDetection = DeviceDetection;

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,7 +38,7 @@ export const PWAStatus: React.FC = () => {
 };
 
 export const PWAInstallPrompt: React.FC = () => {
-  const { isInstallable, installPWA } = usePWA();
+  const { isInstallable, install } = usePWA();
 
   if (!isInstallable) return null;
 
@@ -53,7 +54,7 @@ export const PWAInstallPrompt: React.FC = () => {
         <p className="text-sm text-muted-foreground mb-4">
           Install the app for a better experience with offline access and native features.
         </p>
-        <Button onClick={installPWA} className="w-full">
+        <Button onClick={install} className="w-full">
           <Download className="w-4 h-4 mr-2" />
           Install App
         </Button>

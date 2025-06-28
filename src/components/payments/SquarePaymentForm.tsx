@@ -12,22 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle } from 'lucide-react';
-import { ModernSquarePaymentService, type SquarePaymentRequest } from '@/services/paymentGateways/modernSquarePaymentService';
+import { ModernSquarePaymentService, type SquarePaymentRequest, type SquareTokenResult } from '@/services/paymentGateways/modernSquarePaymentService';
 import { DeviceDetection } from '@/utils/deviceDetection';
-
-// Define TokenResult type since it's not exported from the SDK
-interface TokenResult {
-  token: string;
-  details: {
-    method: string;
-    card?: {
-      brand: string;
-      last4: string;
-      expMonth: number;
-      expYear: number;
-    };
-  };
-}
 
 interface SquarePaymentFormProps {
   applicationId: string;
@@ -63,12 +49,19 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
   const showGooglePay = DeviceDetection.shouldShowGooglePay();
   const showCashApp = DeviceDetection.shouldShowCashApp();
 
-  const handlePaymentSubmit = async (tokenResult: TokenResult, buyer?: any) => {
+  const handlePaymentSubmit = async (tokenResult: any, buyer?: any) => {
     if (disabled || isProcessing) return;
 
     setIsProcessing(true);
     
     try {
+      // Convert to our expected format
+      const squareTokenResult: SquareTokenResult = {
+        token: tokenResult.token || '',
+        status: tokenResult.status || 'OK',
+        details: tokenResult.details || { method: 'card' }
+      };
+
       let result;
       
       if (process.env.NODE_ENV === 'development') {
@@ -76,7 +69,7 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
         result = await paymentService.mockPayment(paymentRequest);
       } else {
         // Process real payment
-        result = await paymentService.processPayment(tokenResult, paymentRequest);
+        result = await paymentService.processPayment(squareTokenResult, paymentRequest);
       }
 
       if (result.success) {
