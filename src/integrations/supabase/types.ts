@@ -224,7 +224,6 @@ export type Database = {
         Row: {
           additional_info: Json | null
           age_restriction: string | null
-          allow_waitlist: boolean
           category: string | null
           created_at: string | null
           description: string | null
@@ -235,13 +234,9 @@ export type Database = {
           id: string
           is_online: boolean | null
           max_attendees: number | null
-          max_rsvps: number | null
           online_link: string | null
           organizer_id: string | null
           parking_info: string | null
-          requires_tickets: boolean
-          rsvp_deadline: string | null
-          rsvp_enabled: boolean
           short_description: string | null
           start_date: string
           status: Database["public"]["Enums"]["event_status"] | null
@@ -254,7 +249,6 @@ export type Database = {
         Insert: {
           additional_info?: Json | null
           age_restriction?: string | null
-          allow_waitlist?: boolean
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -265,13 +259,9 @@ export type Database = {
           id?: string
           is_online?: boolean | null
           max_attendees?: number | null
-          max_rsvps?: number | null
           online_link?: string | null
           organizer_id?: string | null
           parking_info?: string | null
-          requires_tickets?: boolean
-          rsvp_deadline?: string | null
-          rsvp_enabled?: boolean
           short_description?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["event_status"] | null
@@ -284,7 +274,6 @@ export type Database = {
         Update: {
           additional_info?: Json | null
           age_restriction?: string | null
-          allow_waitlist?: boolean
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -295,13 +284,9 @@ export type Database = {
           id?: string
           is_online?: boolean | null
           max_attendees?: number | null
-          max_rsvps?: number | null
           online_link?: string | null
           organizer_id?: string | null
           parking_info?: string | null
-          requires_tickets?: boolean
-          rsvp_deadline?: string | null
-          rsvp_enabled?: boolean
           short_description?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["event_status"] | null
@@ -331,16 +316,19 @@ export type Database = {
       instructor_class_performance: {
         Row: {
           average_rating: number | null
-          cancellations: number | null
           category: string
           class_id: string | null
           class_name: string
+          completion_rate: number | null
           created_at: string | null
           difficulty_level: string | null
           duration_minutes: number | null
           id: string
           instructor_id: string | null
-          no_shows: number | null
+          last_offered: string | null
+          popularity_trend: string | null
+          profit_margin: number | null
+          repeated_bookings: number | null
           revenue: number | null
           total_bookings: number | null
           total_ratings: number | null
@@ -348,16 +336,19 @@ export type Database = {
         }
         Insert: {
           average_rating?: number | null
-          cancellations?: number | null
           category: string
           class_id?: string | null
           class_name: string
+          completion_rate?: number | null
           created_at?: string | null
           difficulty_level?: string | null
           duration_minutes?: number | null
           id?: string
           instructor_id?: string | null
-          no_shows?: number | null
+          last_offered?: string | null
+          popularity_trend?: string | null
+          profit_margin?: number | null
+          repeated_bookings?: number | null
           revenue?: number | null
           total_bookings?: number | null
           total_ratings?: number | null
@@ -365,16 +356,19 @@ export type Database = {
         }
         Update: {
           average_rating?: number | null
-          cancellations?: number | null
           category?: string
           class_id?: string | null
           class_name?: string
+          completion_rate?: number | null
           created_at?: string | null
           difficulty_level?: string | null
           duration_minutes?: number | null
           id?: string
           instructor_id?: string | null
-          no_shows?: number | null
+          last_offered?: string | null
+          popularity_trend?: string | null
+          profit_margin?: number | null
+          repeated_bookings?: number | null
           revenue?: number | null
           total_bookings?: number | null
           total_ratings?: number | null
@@ -505,39 +499,42 @@ export type Database = {
       }
       instructor_revenue_analytics: {
         Row: {
-          classes_taught: number | null
-          commission_amount: number | null
+          average_revenue_per_class: number | null
+          commission_earned: number | null
           commission_rate: number | null
           created_at: string | null
-          date: string
           id: string
           instructor_id: string | null
           net_revenue: number | null
-          students_served: number | null
+          period_end: string
+          period_start: string
+          revenue_growth: number | null
           total_revenue: number | null
         }
         Insert: {
-          classes_taught?: number | null
-          commission_amount?: number | null
+          average_revenue_per_class?: number | null
+          commission_earned?: number | null
           commission_rate?: number | null
           created_at?: string | null
-          date: string
           id?: string
           instructor_id?: string | null
           net_revenue?: number | null
-          students_served?: number | null
+          period_end: string
+          period_start: string
+          revenue_growth?: number | null
           total_revenue?: number | null
         }
         Update: {
-          classes_taught?: number | null
-          commission_amount?: number | null
+          average_revenue_per_class?: number | null
+          commission_earned?: number | null
           commission_rate?: number | null
           created_at?: string | null
-          date?: string
           id?: string
           instructor_id?: string | null
           net_revenue?: number | null
-          students_served?: number | null
+          period_end?: string
+          period_start?: string
+          revenue_growth?: number | null
           total_revenue?: number | null
         }
         Relationships: [
@@ -552,37 +549,37 @@ export type Database = {
       }
       instructor_student_feedback: {
         Row: {
+          aspects: Json | null
           class_id: string | null
-          comment: string | null
-          created_at: string | null
-          feedback_date: string | null
           id: string
           instructor_id: string | null
-          is_anonymous: boolean | null
           rating: number | null
+          review: string | null
           student_id: string | null
+          submitted_at: string | null
+          verified: boolean | null
         }
         Insert: {
+          aspects?: Json | null
           class_id?: string | null
-          comment?: string | null
-          created_at?: string | null
-          feedback_date?: string | null
           id?: string
           instructor_id?: string | null
-          is_anonymous?: boolean | null
           rating?: number | null
+          review?: string | null
           student_id?: string | null
+          submitted_at?: string | null
+          verified?: boolean | null
         }
         Update: {
+          aspects?: Json | null
           class_id?: string | null
-          comment?: string | null
-          created_at?: string | null
-          feedback_date?: string | null
           id?: string
           instructor_id?: string | null
-          is_anonymous?: boolean | null
           rating?: number | null
+          review?: string | null
           student_id?: string | null
+          submitted_at?: string | null
+          verified?: boolean | null
         }
         Relationships: [
           {
@@ -597,81 +594,129 @@ export type Database = {
       inventory_audit_logs: {
         Row: {
           action: string
-          created_at: string | null
-          created_by: string | null
+          channel: string | null
+          event_id: string | null
           id: string
+          metadata: Json | null
           new_quantity: number | null
           previous_quantity: number | null
           quantity_change: number | null
           reason: string | null
+          session_id: string | null
           ticket_type_id: string | null
+          timestamp: string | null
+          user_id: string | null
         }
         Insert: {
           action: string
-          created_at?: string | null
-          created_by?: string | null
+          channel?: string | null
+          event_id?: string | null
           id?: string
+          metadata?: Json | null
           new_quantity?: number | null
           previous_quantity?: number | null
           quantity_change?: number | null
           reason?: string | null
+          session_id?: string | null
           ticket_type_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
         }
         Update: {
           action?: string
-          created_at?: string | null
-          created_by?: string | null
+          channel?: string | null
+          event_id?: string | null
           id?: string
+          metadata?: Json | null
           new_quantity?: number | null
           previous_quantity?: number | null
           quantity_change?: number | null
           reason?: string | null
+          session_id?: string | null
           ticket_type_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "inventory_audit_logs_ticket_type_id_fkey"
-            columns: ["ticket_type_id"]
+            foreignKeyName: "inventory_audit_logs_event_id_fkey"
+            columns: ["event_id"]
             isOneToOne: false
-            referencedRelation: "ticket_types"
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
       }
       inventory_holds: {
         Row: {
+          channel: string | null
           created_at: string | null
+          event_id: string | null
           expires_at: string
-          held_by: string | null
           id: string
+          metadata: Json | null
           quantity: number
+          session_id: string
+          status: string | null
           ticket_type_id: string | null
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
+          channel?: string | null
           created_at?: string | null
+          event_id?: string | null
           expires_at: string
-          held_by?: string | null
           id?: string
+          metadata?: Json | null
           quantity: number
+          session_id: string
+          status?: string | null
           ticket_type_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
+          channel?: string | null
           created_at?: string | null
+          event_id?: string | null
           expires_at?: string
-          held_by?: string | null
           id?: string
+          metadata?: Json | null
           quantity?: number
+          session_id?: string
+          status?: string | null
           ticket_type_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "inventory_holds_ticket_type_id_fkey"
-            columns: ["ticket_type_id"]
+            foreignKeyName: "inventory_holds_event_id_fkey"
+            columns: ["event_id"]
             isOneToOne: false
-            referencedRelation: "ticket_types"
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
+      }
+      notes: {
+        Row: {
+          created_at: string
+          id: number
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          title?: string | null
+        }
+        Relationships: []
       }
       order_items: {
         Row: {
@@ -805,6 +850,7 @@ export type Database = {
           description: string | null
           id: string
           organization_name: string
+          profile_picture_url: string | null
           updated_at: string | null
           user_id: string | null
           verified: boolean | null
@@ -817,6 +863,7 @@ export type Database = {
           description?: string | null
           id?: string
           organization_name: string
+          profile_picture_url?: string | null
           updated_at?: string | null
           user_id?: string | null
           verified?: boolean | null
@@ -829,6 +876,7 @@ export type Database = {
           description?: string | null
           id?: string
           organization_name?: string
+          profile_picture_url?: string | null
           updated_at?: string | null
           user_id?: string | null
           verified?: boolean | null
@@ -896,31 +944,46 @@ export type Database = {
       }
       performance_alerts: {
         Row: {
-          alert_message: string
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          actions: string[] | null
           alert_type: string
-          created_at: string | null
+          class_id: string | null
+          current_value: number | null
           id: string
           instructor_id: string | null
-          is_read: boolean | null
-          severity: string | null
+          message: string
+          severity: string
+          threshold_value: number | null
+          triggered_at: string | null
         }
         Insert: {
-          alert_message: string
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          actions?: string[] | null
           alert_type: string
-          created_at?: string | null
+          class_id?: string | null
+          current_value?: number | null
           id?: string
           instructor_id?: string | null
-          is_read?: boolean | null
-          severity?: string | null
+          message: string
+          severity: string
+          threshold_value?: number | null
+          triggered_at?: string | null
         }
         Update: {
-          alert_message?: string
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          actions?: string[] | null
           alert_type?: string
-          created_at?: string | null
+          class_id?: string | null
+          current_value?: number | null
           id?: string
           instructor_id?: string | null
-          is_read?: boolean | null
-          severity?: string | null
+          message?: string
+          severity?: string
+          threshold_value?: number | null
+          triggered_at?: string | null
         }
         Relationships: [
           {
@@ -1196,51 +1259,61 @@ export type Database = {
       }
       saved_event_categories: {
         Row: {
-          category_id: string | null
+          color_code: string | null
           created_at: string | null
+          description: string | null
           id: string
-          user_id: string | null
+          name: string
         }
         Insert: {
-          category_id?: string | null
+          color_code?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
-          user_id?: string | null
+          name: string
         }
         Update: {
-          category_id?: string | null
+          color_code?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
-          user_id?: string | null
+          name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "saved_event_categories_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "platform_categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       saved_events: {
         Row: {
-          event_id: string | null
+          event_id: string
           id: string
+          last_viewed_at: string | null
+          metadata: Json | null
+          notes: string | null
+          notifications_enabled: boolean | null
+          priority: number | null
           saved_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
-          event_id?: string | null
+          event_id: string
           id?: string
+          last_viewed_at?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          notifications_enabled?: boolean | null
+          priority?: number | null
           saved_at?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
-          event_id?: string | null
+          event_id?: string
           id?: string
+          last_viewed_at?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          notifications_enabled?: boolean | null
+          priority?: number | null
           saved_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -1254,43 +1327,58 @@ export type Database = {
       }
       saved_payment_methods: {
         Row: {
-          brand: string | null
+          card_brand: string
+          cardholder_name: string | null
           created_at: string | null
-          exp_month: number | null
-          exp_year: number | null
+          expiry_month: number
+          expiry_year: number
           id: string
+          is_active: boolean | null
           is_default: boolean | null
-          last_four: string | null
-          payment_type: string
-          stripe_payment_method_id: string
+          last_four: string
+          last_used_at: string | null
+          metadata: Json | null
+          payment_processor_token: string | null
+          processor_customer_id: string | null
+          type: string
           updated_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
-          brand?: string | null
+          card_brand: string
+          cardholder_name?: string | null
           created_at?: string | null
-          exp_month?: number | null
-          exp_year?: number | null
+          expiry_month: number
+          expiry_year: number
           id?: string
+          is_active?: boolean | null
           is_default?: boolean | null
-          last_four?: string | null
-          payment_type: string
-          stripe_payment_method_id: string
+          last_four: string
+          last_used_at?: string | null
+          metadata?: Json | null
+          payment_processor_token?: string | null
+          processor_customer_id?: string | null
+          type: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
-          brand?: string | null
+          card_brand?: string
+          cardholder_name?: string | null
           created_at?: string | null
-          exp_month?: number | null
-          exp_year?: number | null
+          expiry_month?: number
+          expiry_year?: number
           id?: string
+          is_active?: boolean | null
           is_default?: boolean | null
-          last_four?: string | null
-          payment_type?: string
-          stripe_payment_method_id?: string
+          last_four?: string
+          last_used_at?: string | null
+          metadata?: Json | null
+          payment_processor_token?: string | null
+          processor_customer_id?: string | null
+          type?: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1344,156 +1432,69 @@ export type Database = {
       }
       security_activity_log: {
         Row: {
-          activity_type_id: string | null
-          additional_data: Json | null
+          activity_type: string
           created_at: string | null
+          description: string
+          device_type: string | null
           id: string
           ip_address: unknown | null
+          is_suspicious: boolean | null
+          location: string | null
+          metadata: Json | null
           risk_score: number | null
-          session_id: string | null
           user_agent: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
-          activity_type_id?: string | null
-          additional_data?: Json | null
+          activity_type: string
           created_at?: string | null
+          description: string
+          device_type?: string | null
           id?: string
           ip_address?: unknown | null
+          is_suspicious?: boolean | null
+          location?: string | null
+          metadata?: Json | null
           risk_score?: number | null
-          session_id?: string | null
           user_agent?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
-          activity_type_id?: string | null
-          additional_data?: Json | null
+          activity_type?: string
           created_at?: string | null
+          description?: string
+          device_type?: string | null
           id?: string
           ip_address?: unknown | null
+          is_suspicious?: boolean | null
+          location?: string | null
+          metadata?: Json | null
           risk_score?: number | null
-          session_id?: string | null
           user_agent?: string | null
-          user_id?: string | null
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "security_activity_log_activity_type_id_fkey"
-            columns: ["activity_type_id"]
-            isOneToOne: false
-            referencedRelation: "security_activity_types"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       security_activity_types: {
         Row: {
-          created_at: string | null
           default_risk_score: number | null
-          description: string | null
-          id: string
+          description: string
           is_high_risk: boolean | null
           type_name: string
         }
         Insert: {
-          created_at?: string | null
           default_risk_score?: number | null
-          description?: string | null
-          id?: string
+          description: string
           is_high_risk?: boolean | null
           type_name: string
         }
         Update: {
-          created_at?: string | null
           default_risk_score?: number | null
-          description?: string | null
-          id?: string
+          description?: string
           is_high_risk?: boolean | null
           type_name?: string
         }
         Relationships: []
-      }
-      ticket_purchases: {
-        Row: {
-          created_at: string | null
-          event_id: string
-          id: string
-          metadata: Json | null
-          order_id: string | null
-          payment_method: string | null
-          payment_reference: string | null
-          payment_status: string | null
-          purchase_date: string | null
-          purchaser_email: string | null
-          purchaser_name: string | null
-          quantity: number
-          ticket_type_id: string | null
-          total_price: number
-          unit_price: number
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          event_id: string
-          id?: string
-          metadata?: Json | null
-          order_id?: string | null
-          payment_method?: string | null
-          payment_reference?: string | null
-          payment_status?: string | null
-          purchase_date?: string | null
-          purchaser_email?: string | null
-          purchaser_name?: string | null
-          quantity?: number
-          ticket_type_id?: string | null
-          total_price: number
-          unit_price: number
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          event_id?: string
-          id?: string
-          metadata?: Json | null
-          order_id?: string | null
-          payment_method?: string | null
-          payment_reference?: string | null
-          payment_status?: string | null
-          purchase_date?: string | null
-          purchaser_email?: string | null
-          purchaser_name?: string | null
-          quantity?: number
-          ticket_type_id?: string | null
-          total_price?: number
-          unit_price?: number
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ticket_purchases_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ticket_purchases_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ticket_purchases_ticket_type_id_fkey"
-            columns: ["ticket_type_id"]
-            isOneToOne: false
-            referencedRelation: "ticket_types"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       ticket_types: {
         Row: {
@@ -1852,7 +1853,66 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_security_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      detect_suspicious_login: {
+        Args: { p_user_id: string; p_ip_address: string; p_location: string }
+        Returns: boolean
+      }
+      get_user_saved_events: {
+        Args: { p_user_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          saved_event_id: string
+          event_id: string
+          event_title: string
+          event_description: string
+          event_category: string
+          event_start_date: string
+          event_end_date: string
+          event_is_online: boolean
+          venue_name: string
+          venue_city: string
+          venue_state: string
+          min_price: number
+          max_price: number
+          notes: string
+          priority: number
+          saved_at: string
+          last_viewed_at: string
+        }[]
+      }
+      get_user_saved_events_count: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      is_event_saved_by_user: {
+        Args: { p_user_id: string; p_event_id: string }
+        Returns: boolean
+      }
+      log_security_activity: {
+        Args: {
+          p_user_id: string
+          p_activity_type: string
+          p_description: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_location?: string
+          p_device_type?: string
+          p_is_suspicious?: boolean
+          p_metadata?: Json
+        }
+        Returns: string
+      }
+      reorder_categories: {
+        Args: { category_ids: string[] }
+        Returns: undefined
+      }
+      update_saved_event_viewed: {
+        Args: { p_user_id: string; p_event_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       category_type: "event" | "class" | "content"
@@ -1863,7 +1923,7 @@ export type Database = {
       payment_status: "pending" | "completed" | "failed" | "refunded"
       setting_type: "string" | "number" | "boolean" | "json" | "array"
       ticket_status: "active" | "sold" | "reserved" | "cancelled"
-      user_role: "user" | "organizer" | "admin"
+      user_role: "user" | "admin" | "organizer" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1987,7 +2047,7 @@ export const Constants = {
       payment_status: ["pending", "completed", "failed", "refunded"],
       setting_type: ["string", "number", "boolean", "json", "array"],
       ticket_status: ["active", "sold", "reserved", "cancelled"],
-      user_role: ["user", "organizer", "admin"],
+      user_role: ["user", "admin", "organizer", "super_admin"],
     },
   },
 } as const
