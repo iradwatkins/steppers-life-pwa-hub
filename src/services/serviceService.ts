@@ -6,7 +6,7 @@
  */
 
 import { apiClient } from './apiClient';
-import { bMADValidationService } from './bMADValidationService';
+// import { bMADValidationService } from './bMADValidationService';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Service,
@@ -172,25 +172,12 @@ class ServiceDirectoryService {
         throw new Error('Authentication required to create service');
       }
 
-      // BMAD VALIDATION: Check epic requirements for service creation
-      const validation = await bMADValidationService.validateFeatureAccess(
-        user.id,
-        'create_service'
-      );
-
-      if (!validation.isValid) {
-        const errorMessage = validation.errors.join(', ');
-        console.error('BMAD: Service creation denied:', errorMessage);
-        
-        // Provide helpful guidance on required epics
-        const missingEpics = validation.missingEpics.join(', ');
-        throw new Error(
-          `Service creation requires completing these BMAD epics: ${missingEpics}. ` +
-          `Current status: ${errorMessage}`
-        );
+      // Simple validation: Check if user has organizer role or higher
+      if (!user?.user_metadata?.role || user.user_metadata.role === 'user') {
+        throw new Error('Service creation requires organizer role or higher');
       }
 
-      console.log('BMAD: Service creation authorized for user:', user.id, 'Completed epics:', validation.completedEpics);
+      console.log('Service creation authorized for user:', user.id);
 
       const response = await apiClient.post(this.baseUrl, {
         ...serviceData,
@@ -223,14 +210,9 @@ class ServiceDirectoryService {
         throw new Error('Authentication required to update service');
       }
 
-      // BMAD VALIDATION: Verify user can manage service listings
-      const validation = await bMADValidationService.validateFeatureAccess(
-        user.id,
-        'create_service' // Using same permissions as creation
-      );
-
-      if (!validation.isValid) {
-        throw new Error(`Service update denied: ${validation.errors.join(', ')}`);
+      // Simple validation: Check if user has organizer role or higher
+      if (!user?.user_metadata?.role || user.user_metadata.role === 'user') {
+        throw new Error('Service update requires organizer role or higher');
       }
 
       const updateData = { ...serviceData };
@@ -316,17 +298,9 @@ class ServiceDirectoryService {
         throw new Error('Authentication required to feature services');
       }
 
-      // BMAD VALIDATION: Check business promotion permissions
-      const validation = await bMADValidationService.validateFeatureAccess(
-        user.id,
-        'promote_business_in_community'
-      );
-
-      if (!validation.isValid) {
-        throw new Error(
-          `Service promotion denied: ${validation.errors.join(', ')}. ` +
-          `Required epics: ${validation.missingEpics.join(', ')}`
-        );
+      // Simple validation: Check if user has admin role for featuring services
+      if (!user?.user_metadata?.role || !['admin', 'super_admin'].includes(user.user_metadata.role)) {
+        throw new Error('Service promotion requires admin privileges');
       }
 
       console.log('BMAD: Service promotion authorized:', id, 'User:', user.id, 'Featured:', featured);
@@ -511,14 +485,9 @@ class ServiceDirectoryService {
         throw new Error('Authentication required to upload service images');
       }
 
-      // BMAD VALIDATION: Check service permissions for image uploads
-      const validation = await bMADValidationService.validateFeatureAccess(
-        user.id,
-        'create_service'
-      );
-
-      if (!validation.isValid) {
-        throw new Error(`Service image upload denied: ${validation.errors.join(', ')}`);
+      // Simple validation: Check if user has organizer role or higher
+      if (!user?.user_metadata?.role || user.user_metadata.role === 'user') {
+        throw new Error('Service image upload requires organizer role or higher');
       }
 
       const formData = new FormData();
@@ -562,14 +531,9 @@ class ServiceDirectoryService {
         throw new Error('Authentication required to upload portfolio items');
       }
 
-      // BMAD VALIDATION: Check service permissions for portfolio uploads
-      const validation = await bMADValidationService.validateFeatureAccess(
-        user.id,
-        'create_service'
-      );
-
-      if (!validation.isValid) {
-        throw new Error(`Portfolio upload denied: ${validation.errors.join(', ')}`);
+      // Simple validation: Check if user has organizer role or higher
+      if (!user?.user_metadata?.role || user.user_metadata.role === 'user') {
+        throw new Error('Portfolio upload requires organizer role or higher');
       }
 
       const formData = new FormData();

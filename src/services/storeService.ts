@@ -6,7 +6,6 @@
  */
 
 import { apiClient } from './apiClient';
-import { bMADValidationService } from './bMADValidationService';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Store,
@@ -144,25 +143,12 @@ class StoreService {
         throw new Error('Authentication required to create store');
       }
 
-      // BMAD VALIDATION: Check epic requirements for store creation
-      const validation = await bMADValidationService.validateFeatureAccess(
-        user.id,
-        'create_store'
-      );
-
-      if (!validation.isValid) {
-        const errorMessage = validation.errors.join(', ');
-        console.error('BMAD: Store creation denied:', errorMessage);
-        
-        // Provide helpful guidance on required epics
-        const missingEpics = validation.missingEpics.join(', ');
-        throw new Error(
-          `Store creation requires completing these BMAD epics: ${missingEpics}. ` +
-          `Current status: ${errorMessage}`
-        );
+      // Simple validation: Check if user has organizer role or higher
+      if (!user?.user_metadata?.role || user.user_metadata.role === 'user') {
+        throw new Error('Store creation requires organizer role or higher');
       }
 
-      console.log('BMAD: Store creation authorized for user:', user.id, 'Completed epics:', validation.completedEpics);
+      console.log('Store creation authorized for user:', user.id);
 
       const response = await apiClient.post(this.baseUrl, {
         ...storeData,
@@ -196,13 +182,9 @@ class StoreService {
       }
 
       // BMAD VALIDATION: Verify user can manage business listings
-      const validation = await bMADValidationService.validateFeatureAccess(
-        user.id,
-        'create_store' // Using same permissions as creation
-      );
-
-      if (!validation.isValid) {
-        throw new Error(`Store update denied: ${validation.errors.join(', ')}`);
+      // Simple validation: Check if user has organizer role or higher
+      if (!user?.user_metadata?.role || user.user_metadata.role === 'user') {
+        throw new Error('Store update requires organizer role or higher');
       }
 
       const updateData = { ...storeData };
@@ -211,12 +193,8 @@ class StoreService {
         updateData.slug = this.generateSlug(storeData.name);
       }
 
-      // Add BMAD tracking
-      updateData.bmad_last_updated = {
-        updated_at: new Date().toISOString(),
-        updated_by: user.id,
-        user_status: validation.userStatus?.extendedStatuses
-      };
+      // Add tracking
+      updateData.last_updated = new Date().toISOString();
 
       const response = await apiClient.patch(`${this.baseUrl}/${storeData.id}`, updateData);
 
@@ -288,29 +266,17 @@ class StoreService {
         throw new Error('Authentication required to feature stores');
       }
 
-      // BMAD VALIDATION: Check business promotion permissions
-      const validation = await bMADValidationService.validateFeatureAccess(
-        user.id,
-        'promote_business_in_community'
-      );
-
-      if (!validation.isValid) {
-        throw new Error(
-          `Store promotion denied: ${validation.errors.join(', ')}. ` +
-          `Required epics: ${validation.missingEpics.join(', ')}`
-        );
+      // Simple validation: Check if user has admin role for featuring stores
+      if (!user?.user_metadata?.role || !['admin', 'super_admin'].includes(user.user_metadata.role)) {
+        throw new Error('Store promotion requires admin privileges');
       }
 
-      console.log('BMAD: Store promotion authorized:', id, 'User:', user.id, 'Featured:', featured);
+      console.log('Store promotion authorized:', id, 'User:', user.id, 'Featured:', featured);
 
       const response = await apiClient.patch(`${this.baseUrl}/${id}/featured`, {
         is_featured: featured,
-        bmad_promotion: {
-          promoted_by: user.id,
-          promoted_at: new Date().toISOString(),
-          user_status: validation.userStatus?.extendedStatuses,
-          completed_epics: validation.completedEpics
-        }
+        promoted_by: user.id,
+        promoted_at: new Date().toISOString()
       });
 
       console.log('BMAD: Store featured status updated:', id, featured);
@@ -423,14 +389,9 @@ class StoreService {
         throw new Error('Authentication required to upload store images');
       }
 
-      // BMAD VALIDATION: Check business permissions for image uploads
-      const validation = await bMADValidationService.validateFeatureAccess(
-        user.id,
-        'create_store'
-      );
-
-      if (!validation.isValid) {
-        throw new Error(`Store image upload denied: ${validation.errors.join(', ')}`);
+      // Simple validation: Check if user has organizer role or higher
+      if (!user?.user_metadata?.role || user.user_metadata.role === 'user') {
+        throw new Error('Store image upload requires organizer role or higher');
       }
 
       const formData = new FormData();
@@ -439,9 +400,8 @@ class StoreService {
         formData.append('caption', caption);
       }
 
-      // Add BMAD metadata
-      formData.append('bmad_user_id', user.id);
-      formData.append('bmad_user_status', JSON.stringify(validation.userStatus?.extendedStatuses));
+      // Add metadata
+      formData.append('user_id', user.id);
 
       const response = await apiClient.post(`${this.baseUrl}/${storeId}/images`, formData, {
         headers: {
