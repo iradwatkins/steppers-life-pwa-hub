@@ -6,8 +6,7 @@ import {
   ApplePay, 
   GooglePay, 
   CashAppPay,
-  type PaymentFormProps,
-  type TokenResult
+  type PaymentFormProps
 } from 'react-square-web-payments-sdk';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,20 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle } from 'lucide-react';
 import { ModernSquarePaymentService, type SquarePaymentRequest } from '@/services/paymentGateways/modernSquarePaymentService';
 import { DeviceDetection } from '@/utils/deviceDetection';
+
+// Define TokenResult type since it's not exported from the SDK
+interface TokenResult {
+  token: string;
+  details: {
+    method: string;
+    card?: {
+      brand: string;
+      last4: string;
+      expMonth: number;
+      expYear: number;
+    };
+  };
+}
 
 interface SquarePaymentFormProps {
   applicationId: string;
