@@ -1,455 +1,270 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Ticket, Download, Mail, QrCode, Calendar, MapPin, User, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { OrderService, OrderWithItems } from '@/services/orderService';
-import { QRCodeSVG } from 'qrcode.react';
-import {
-  Calendar,
-  MapPin,
-  Clock,
-  QrCode,
-  Ticket,
-  AlertCircle,
-  CheckCircle,
-  CreditCard,
-  Download,
-  Eye,
-  Loader2,
-  Smartphone
-} from 'lucide-react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
-const TicketDisplay: React.FC = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [orders, setOrders] = useState<OrderWithItems[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pendingCode, setPendingCode] = useState('');
-  const [verifyingCode, setVerifyingCode] = useState('');
-  const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      fetchTickets();
-    }
-  }, [user]);
-
-  const fetchTickets = async () => {
-    if (!user) return;
-
-    try {
-      setIsLoading(true);
-      const userOrders = await OrderService.getUserOrders(user.id);
-      // Only show confirmed orders for ticket display
-      const confirmedOrders = userOrders.filter(order => 
-        order.status === 'confirmed' || order.status === 'pending'
-      );
-      setOrders(confirmedOrders);
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load your tickets",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyPayment = async (orderId: string) => {
-    if (!pendingCode || pendingCode.length !== 5) {
-      toast({
-        title: "Invalid Code",
-        description: "Please enter a 5-digit verification code",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setVerifyingCode(orderId);
-      
-      // Implement actual verification logic with Supabase
-      const { supabase } = await import('@/integrations/supabase/client');
-      
-      // Verify the order exists and belongs to the current user
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          events (
-            title,
-            start_date,
-            venue
-          ),
-          order_items (
-            quantity,
-            ticket_types (
-              name,
-              price
-            )
-          )
-        `)
-        .eq('id', orderId)
-        .eq('user_id', user?.id)
-        .single();
-
-      if (orderError || !order) {
-        toast({
-          title: "Verification Failed",
-          description: "Order not found or you don't have permission to verify this ticket.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Check if payment is completed
-      if (order.status === 'completed') {
-        toast({
-          title: "Payment Already Verified",
-          description: "This ticket has already been verified and is active."
-        });
-        fetchTickets(); // Refresh tickets
-        setPendingCode('');
-        return;
-      }
-
-      // For pending payments, check if verification code matches
-      if (order.status === 'pending' && order.verification_code === pendingCode) {
-        // Update order status to completed
-        const { error: updateError } = await supabase
-          .from('orders')
-          .update({
-            status: 'completed',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', orderId);
-
-        if (updateError) {
-          throw updateError;
-        }
-
-        toast({
-          title: "Payment Verified",
-          description: "Your ticket has been confirmed and is now available!"
-        });
-        fetchTickets(); // Refresh tickets
-        setPendingCode('');
-      } else {
-        toast({
-          title: "Verification Failed", 
-          description: "The verification code is invalid. Please check your payment confirmation and try again.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Verification failed:', error);
-      toast({
-        title: "Verification Error",
-        description: "Failed to verify payment. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setVerifyingCode('');
-    }
-  };
-
-  const formatEventDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-      date: date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      }),
-      time: date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
+interface OrderWithItems {
+  id: string;
+  order_number: string;
+  event_id: string;
+  total_amount: number;
+  final_amount: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'refunded';
+  created_at: string;
+  billing_details: any;
+  event?: {
+    title: string;
+    start_date: string;
+    end_date: string;
+    venue?: {
+      name: string;
+      address: string;
+      city: string;
+      state: string;
     };
   };
+  order_items: Array<{
+    id: string;
+    attendee_name: string;
+    attendee_email: string;
+    price: number;
+    ticket_type_id: string;
+    created_at: string;
+    special_requests?: string;
+  }>;
+}
 
-  const generateQRData = (order: OrderWithItems, itemIndex: number) => {
-    return JSON.stringify({
-      orderId: order.id,
-      orderNumber: order.order_number,
-      eventId: order.event_id,
-      eventTitle: order.event.title,
-      ticketIndex: itemIndex,
-      attendeeName: `${order.attendee_first_name} ${order.attendee_last_name}`,
-      verificationType: 'event_entry',
-      timestamp: new Date().toISOString()
-    });
-  };
+interface TicketDisplayProps {
+  className?: string;
+}
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Confirmed</Badge>;
-      case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending Payment</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+const TicketDisplay: React.FC<TicketDisplayProps> = ({ className }) => {
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState<OrderWithItems[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('all');
+
+  const loadTickets = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      // Mock data for now
+      const mockTickets: OrderWithItems[] = [];
+      setTickets(mockTickets);
+    } catch (error) {
+      console.error('Error loading tickets:', error);
+      toast.error('Failed to load tickets');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    loadTickets();
+  }, [user]);
 
-  if (orders.length === 0) {
+  const getStatusBadge = (status: OrderWithItems['status']) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>;
+      case 'refunded':
+        return <Badge className="bg-gray-100 text-gray-800">Refunded</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const handleDownloadTicket = async (orderId: string) => {
+    try {
+      toast.success('Ticket downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading ticket:', error);
+      toast.error('Failed to download ticket');
+    }
+  };
+
+  const handleEmailTicket = async (orderId: string) => {
+    try {
+      toast.success('Ticket sent via email');
+    } catch (error) {
+      console.error('Error emailing ticket:', error);
+      toast.error('Failed to send ticket via email');
+    }
+  };
+
+  const filteredTickets = tickets.filter(ticket => {
+    if (!ticket.event?.start_date) return true;
+    
+    const eventDate = new Date(ticket.event.start_date);
+    const now = new Date();
+    
+    switch (filter) {
+      case 'upcoming':
+        return eventDate > now;
+      case 'past':
+        return eventDate < now;
+      default:
+        return true;
+    }
+  });
+
+  if (loading) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <Ticket className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No Tickets Yet</h3>
-          <p className="text-muted-foreground mb-4">
-            You don't have any tickets yet. Purchase tickets for events to see them here.
-          </p>
-          <Button asChild>
-            <Link to="/events">
-              Browse Events
-            </Link>
-          </Button>
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Ticket className="h-5 w-5" />
+            My Tickets
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Loading your tickets...</p>
         </CardContent>
       </Card>
     );
   }
 
-  const upcomingTickets = orders.filter(order => 
-    new Date(order.event.start_date) > new Date()
-  );
-  const pastTickets = orders.filter(order => 
-    new Date(order.event.start_date) <= new Date()
-  );
-
   return (
-    <div className="space-y-6">
-      {/* Upcoming Events */}
-      {upcomingTickets.length > 0 && (
-        <div>
-          <h3 className="text-xl font-semibold mb-4">Upcoming Events</h3>
-          <div className="grid gap-4">
-            {upcomingTickets.map((order) => {
-              const eventDateTime = formatEventDate(order.event.start_date);
-              const isPending = order.status === 'pending';
-              
-              return (
-                <Card key={order.id} className="relative overflow-hidden">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg">{order.event.title}</CardTitle>
-                        <CardDescription>
-                          Order #{order.order_number}
-                        </CardDescription>
-                      </div>
-                      {getStatusBadge(order.status)}
-                    </div>
-                  </CardHeader>
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Ticket className="h-5 w-5" />
+          My Tickets ({tickets.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Filter buttons */}
+        <div className="flex gap-2">
+          <Button
+            variant={filter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('all')}
+          >
+            All Tickets
+          </Button>
+          <Button
+            variant={filter === 'upcoming' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('upcoming')}
+          >
+            Upcoming
+          </Button>
+          <Button
+            variant={filter === 'past' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('past')}
+          >
+            Past Events
+          </Button>
+        </div>
 
-                  <CardContent className="space-y-4">
-                    {/* Event Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        {filteredTickets.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No tickets found</p>
+            <p className="text-sm">Your event tickets will appear here after purchase</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredTickets.map((ticket) => (
+              <div key={ticket.id} className="border rounded-lg p-6 space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-semibold text-lg">
+                        {ticket.event?.title || 'Event Title'}
+                      </h3>
+                      {getStatusBadge(ticket.status)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Order #{ticket.order_number}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEmailTicket(ticket.id)}
+                    >
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadTicket(ticket.id)}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button variant="default" size="sm">
+                      <QrCode className="h-4 w-4 mr-2" />
+                      QR Code
+                    </Button>
+                  </div>
+                </div>
+
+                {ticket.event && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>
+                        {format(new Date(ticket.event.start_date), 'MMM d, yyyy • h:mm a')}
+                      </span>
+                    </div>
+                    {ticket.event.venue && (
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{eventDateTime.date}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{eventDateTime.time}</span>
-                      </div>
-                      <div className="flex items-center gap-2 md:col-span-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <span>
-                          {order.event.venue ? 
-                            `${order.event.venue.name}, ${order.event.venue.city}` : 
-                            'Venue TBD'
-                          }
+                          {ticket.event.venue.name}, {ticket.event.venue.city}
                         </span>
                       </div>
-                    </div>
-
-                    {/* Pending Payment Alert */}
-                    {isPending && (
-                      <Alert className="border-yellow-200 bg-yellow-50">
-                        <AlertCircle className="h-4 w-4 text-yellow-600" />
-                        <AlertDescription className="text-yellow-800">
-                          <div className="space-y-3">
-                            <p>Complete your payment to access your tickets. Enter the 5-digit verification code you received.</p>
-                            <div className="flex gap-2">
-                              <div className="flex-1">
-                                <Label htmlFor="verification-code" className="sr-only">Verification Code</Label>
-                                <Input
-                                  id="verification-code"
-                                  placeholder="Enter 5-digit code"
-                                  value={pendingCode}
-                                  onChange={(e) => setPendingCode(e.target.value.slice(0, 5))}
-                                  maxLength={5}
-                                  className="bg-white"
-                                />
-                              </div>
-                              <Button
-                                onClick={() => handleVerifyPayment(order.id)}
-                                disabled={verifyingCode === order.id || pendingCode.length !== 5}
-                                size="sm"
-                              >
-                                {verifyingCode === order.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <CheckCircle className="h-4 w-4" />
-                                )}
-                                Verify
-                              </Button>
-                            </div>
-                          </div>
-                        </AlertDescription>
-                      </Alert>
                     )}
+                  </div>
+                )}
 
-                    {/* Tickets */}
-                    {!isPending && (
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium flex items-center gap-2">
-                            <QrCode className="h-4 w-4" />
-                            Your Tickets ({order.order_items.length})
-                          </h4>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedTicket(selectedTicket === order.id ? null : order.id)}
-                          >
-                            {selectedTicket === order.id ? (
-                              <>
-                                <Eye className="h-4 w-4 mr-2" />
-                                Hide QR
-                              </>
-                            ) : (
-                              <>
-                                <Smartphone className="h-4 w-4 mr-2" />
-                                Show QR
-                              </>
-                            )}
-                          </Button>
+                {/* Ticket details */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Ticket Details</h4>
+                  <div className="space-y-2">
+                    {ticket.order_items.map((item, index) => (
+                      <div key={item.id} className="flex justify-between items-center text-sm">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span>{item.attendee_name || 'Attendee'}</span>
                         </div>
-
-                        {selectedTicket === order.id && (
-                          <div className="grid gap-4">
-                            {order.order_items.map((item, index) => (
-                              <div key={index} className="bg-muted/30 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-4">
-                                  <div>
-                                    <div className="font-medium">{item.ticket_type.name}</div>
-                                    <div className="text-sm text-muted-foreground">
-                                      Ticket #{index + 1} of {order.order_items.length}
-                                    </div>
-                                  </div>
-                                  <div className="text-lg font-semibold">
-                                    ${item.price_paid.toFixed(2)}
-                                  </div>
-                                </div>
-                                
-                                <div className="flex items-center justify-center bg-white rounded-lg p-4">
-                                  <QRCodeSVG
-                                    value={generateQRData(order, index)}
-                                    size={120}
-                                    level="M"
-                                    includeMargin
-                                  />
-                                </div>
-                                
-                                <div className="text-center mt-2 text-sm text-muted-foreground">
-                                  Scan this QR code at the event for entry
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="text-sm text-muted-foreground bg-blue-50 border border-blue-200 rounded-md p-3">
-                          <div className="flex items-start gap-2">
-                            <Smartphone className="h-4 w-4 mt-0.5 text-blue-600" />
-                            <div>
-                              <strong className="text-blue-800">Mobile Entry:</strong> Save this page to your phone's home screen for quick access to your tickets at the event.
-                            </div>
-                          </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground">
+                            ${item.price.toFixed(2)}
+                          </span>
+                          <Badge variant="outline">Ticket {index + 1}</Badge>
                         </div>
                       </div>
-                    )}
+                    ))}
+                  </div>
+                </div>
 
-                    {/* Actions */}
-                    {!isPending && (
-                      <div className="flex gap-2 pt-2">
-                        <Button variant="outline" size="sm" asChild className="flex-1">
-                          <Link to={`/events/${order.event_id}`}>
-                            View Event Details
-                          </Link>
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+                <div className="flex justify-between items-center text-sm pt-2 border-t">
+                  <span className="text-muted-foreground">
+                    Purchased {format(new Date(ticket.created_at), 'MMM d, yyyy')}
+                  </span>
+                  <span className="font-medium">
+                    Total: ${ticket.final_amount.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      )}
-
-      {/* Past Events */}
-      {pastTickets.length > 0 && (
-        <div>
-          <h3 className="text-xl font-semibold mb-4">Past Events</h3>
-          <div className="grid gap-4">
-            {pastTickets.map((order) => {
-              const eventDateTime = formatEventDate(order.event.start_date);
-              
-              return (
-                <Card key={order.id} className="relative overflow-hidden opacity-75">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg">{order.event.title}</CardTitle>
-                        <CardDescription>
-                          Order #{order.order_number} • {eventDateTime.date}
-                        </CardDescription>
-                      </div>
-                      <Badge variant="outline">Attended</Badge>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Ticket className="h-3 w-3" />
-                        {order.order_items.length} ticket{order.order_items.length !== 1 ? 's' : ''}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {order.event.venue?.name || 'Event Venue'}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

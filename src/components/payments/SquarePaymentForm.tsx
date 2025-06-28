@@ -1,9 +1,4 @@
 
-/**
- * Square Payment Form using Official React SDK
- * Story B.010: Payment Gateway Integration - Modern Square Implementation
- */
-
 import React, { useState } from 'react';
 import { 
   PaymentForm, 
@@ -11,12 +6,13 @@ import {
   ApplePay, 
   GooglePay, 
   CashAppPay,
-  type PaymentFormProps
+  type PaymentFormProps,
+  type TokenResult
 } from 'react-square-web-payments-sdk';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { ModernSquarePaymentService, type SquarePaymentRequest } from '@/services/paymentGateways/modernSquarePaymentService';
 import { DeviceDetection } from '@/utils/deviceDetection';
 
@@ -54,7 +50,7 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
   const showGooglePay = DeviceDetection.shouldShowGooglePay();
   const showCashApp = DeviceDetection.shouldShowCashApp();
 
-  const handlePaymentSubmit = async (tokenResult: any, buyer?: any) => {
+  const handlePaymentSubmit = async (tokenResult: TokenResult, buyer?: any) => {
     if (disabled || isProcessing) return;
 
     setIsProcessing(true);
@@ -99,6 +95,32 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
         label: 'Total',
       },
     }),
+    children: (
+      <div className="space-y-4">
+        {paymentMethod === 'card' && (
+          <div className="space-y-4">
+            <CreditCard includeInputLabels />
+            {isProcessing && (
+              <Alert>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <AlertDescription>
+                  Processing your payment securely...
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        )}
+
+        {paymentMethod === 'apple_pay' && showApplePay && <ApplePay />}
+        {paymentMethod === 'google_pay' && showGooglePay && <GooglePay />}
+        {paymentMethod === 'cash_app' && showCashApp && (
+          <CashAppPay
+            redirectURL={window.location.origin + '/payment/cash-app/callback'}
+            referenceId={`cash-app-${paymentRequest.orderId}`}
+          />
+        )}
+      </div>
+    )
   };
 
   return (
@@ -167,30 +189,7 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
         </div>
 
         {/* Payment Form */}
-        <PaymentForm {...paymentFormProps}>
-          {paymentMethod === 'card' && (
-            <div className="space-y-4">
-              <CreditCard includeInputLabels />
-              {isProcessing && (
-                <Alert>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <AlertDescription>
-                    Processing your payment securely...
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          )}
-
-          {paymentMethod === 'apple_pay' && showApplePay && <ApplePay />}
-          {paymentMethod === 'google_pay' && showGooglePay && <GooglePay />}
-          {paymentMethod === 'cash_app' && showCashApp && (
-            <CashAppPay
-              redirectURL={window.location.origin + '/payment/cash-app/callback'}
-              referenceId={`cash-app-${paymentRequest.orderId}`}
-            />
-          )}
-        </PaymentForm>
+        <PaymentForm {...paymentFormProps} />
 
         {/* Security Notice */}
         <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
