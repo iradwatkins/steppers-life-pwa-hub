@@ -234,15 +234,15 @@ All stories follow the BMAD method story template located at: `bmad-agent/templa
 - **Total Tasks/Subtasks:** 241+ major tasks with 815+ subtasks
 - **Coverage:** Complete Epic A event creation, comprehensive Epic B buyer experience, complete Epic C event promotion, complete Epic D PWA on-site management, complete Epic E advanced analytics and financial reporting, and complete Epic F team/follower management system
 
-## BMAD Method Compliance
+## Story Template Compliance
 
-✅ **Template Adherence:** All stories follow the standardized BMAD story template structure  
+✅ **Template Adherence:** All stories follow the standardized story template structure  
 ✅ **Status Consistency:** Uniform "Done", "InProgress", "Review", "Approved", "Draft", or "Deferred" status indicators  
 ✅ **AC Format:** Numbered acceptance criteria with consistent formatting  
 ✅ **Task Structure:** Checkbox format with subtasks and AC references  
-✅ **Progress Tracking:** Agent model documentation and completion notes  
+✅ **Progress Tracking:** Development documentation and completion notes  
 ✅ **Technical Guidance:** Implementation details and architectural decisions  
-✅ **Epic Completeness:** All epics contain minimum required stories per BMAD protocol  
+✅ **Epic Completeness:** All epics contain minimum required stories  
 
 ## Next Steps
 

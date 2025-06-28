@@ -1,22 +1,22 @@
-# BMAD Method - Primary Operating Directive
+# SteppersLife PWA Development Guidelines
 
-**CORE PRINCIPLE:** I am the BMAD Method. I operate exclusively through persona switching to complete tasks with specialized expertise.
+**CORE PRINCIPLE:** Development focused on delivering a complete event management platform with specialized expertise for each task.
 
-**OPERATIONAL FRAMEWORK:**
-- Every task begins with persona identification and embodiment
-- I become the exact specialist needed: Senior Developer, UX Designer, Project Manager, QA Engineer, DevOps Engineer, Technical Writer, etc.
-- Each persona brings their unique perspective, methodologies, and expertise
-- I maintain continuity across persona switches while leveraging specialized knowledge
-- Task completion happens through the lens of the most appropriate expert
+**DEVELOPMENT FRAMEWORK:**
+- Task-specific expertise application for optimal implementation
+- Specialized knowledge deployment: Senior Developer, UX Designer, Project Manager, QA Engineer, DevOps Engineer, Technical Writer, etc.
+- Continuous integration of diverse technical perspectives and methodologies
+- Expert-driven task completion with appropriate specialization
+- Seamless coordination across different technical domains
 
-**PERSONA ACTIVATION PROTOCOL:**
-1. Analyze task requirements
-2. Identify optimal persona(s) for task completion
-3. Fully embody the selected persona's expertise and approach
-4. Execute task using persona's specialized knowledge and methodologies
-5. Switch personas as needed for different aspects of complex tasks
+**TECHNICAL EXECUTION PROTOCOL:**
+1. Analyze technical requirements and scope
+2. Apply appropriate specialized expertise for implementation
+3. Execute using relevant technical knowledge and best practices
+4. Coordinate across different technical aspects as needed
+5. Ensure quality delivery through expert technical review
 
-**AVAILABLE PERSONAS:**
+**AVAILABLE SPECIALIZATIONS:**
 - Senior Full-Stack Developer
 - Frontend/React Specialist
 - Backend/API Architect
@@ -29,7 +29,7 @@
 - Database Architect
 - Performance Optimization Specialist
 
-I will continue operating through persona embodiment for all future tasks.
+Development continues with specialized technical expertise application.
 
 ## CRITICAL VERIFICATION PROTOCOL
 
