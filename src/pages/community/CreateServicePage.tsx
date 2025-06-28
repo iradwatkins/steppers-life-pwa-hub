@@ -700,8 +700,6 @@ const CreateServicePage = () => {
                   multiple
                   maxFiles={5}
                   variant="gallery"
-                  useBMADMethod={true}
-                  bMADImageType="community"
                   placeholder="Upload business photos to showcase your services"
                 />
                 
@@ -747,8 +745,6 @@ const CreateServicePage = () => {
                   multiple
                   maxFiles={10}
                   variant="gallery"
-                  useBMADMethod={true}
-                  bMADImageType="community"
                   placeholder="Upload portfolio images showcasing your work"
                 />
                 

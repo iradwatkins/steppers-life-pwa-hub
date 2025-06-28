@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, X, Camera, Image as ImageIcon, User, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageUploadService } from '@/services/imageUploadService';
-import { BMADImageService } from '@/services/bMADImageService';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles } from '@/hooks/useRoles';
 
@@ -21,10 +20,6 @@ interface ImageUploadProps {
   accept?: string;
   maxSize?: number; // in MB
   placeholder?: string;
-  // BMAD Method compliance
-  useBMADMethod?: boolean;
-  bMADImageType?: 'profile' | 'event' | 'community' | 'admin' | 'system';
-  entityId?: string; // For event/community images
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -38,41 +33,15 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   accept = 'image/*',
   maxSize = 5,
   placeholder,
-  useBMADMethod = false,
-  bMADImageType = 'profile',
-  entityId
 }) => {
   const { user } = useAuth();
   const { organizerId } = useRoles();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [bMADPermissions, setBMADPermissions] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentValue = Array.isArray(value) ? value : (value ? [value] : []);
 
-  // Load BMAD permissions when component mounts or when BMAD mode is enabled
-  React.useEffect(() => {
-    if (useBMADMethod && user?.id) {
-      loadBMADPermissions();
-    }
-  }, [useBMADMethod, user?.id, bMADImageType]);
-
-  const loadBMADPermissions = async () => {
-    try {
-      if (!user?.id) return;
-      
-      const config = await BMADImageService.getBMADImageConfig(user.id);
-      const permissions = BMADImageService.getBMADImagePermissions(config.userRole, config.hasCompletedEpics);
-      
-      setBMADPermissions({ config, permissions });
-      console.log('🔐 BMAD Permissions loaded:', { config, permissions });
-      
-    } catch (error) {
-      console.error('Error loading BMAD permissions:', error);
-      setUploadError('Failed to load upload permissions');
-    }
-  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -87,32 +56,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     setUploadError(null);
 
     try {
-      // Use BMAD method if enabled
-      if (useBMADMethod) {
-        if (!bMADPermissions) {
-          throw new Error('BMAD permissions not loaded. Please wait and try again.');
-        }
-
-        // Upload files using BMAD service
-        const uploadPromises = files.map(async (file) => {
-          const config = {
-            ...bMADPermissions.config,
-            organizerId: organizerId || bMADPermissions.config.organizerId
-          };
-          
-          return await BMADImageService.uploadImageBMAD(file, bMADImageType, config, entityId);
-        });
-
-        const uploadResults = await Promise.all(uploadPromises);
-        const newImageUrls = uploadResults.map(result => result.url);
-
-        if (multiple) {
-          onChange([...currentValue, ...newImageUrls]);
-        } else {
-          onChange(newImageUrls[0]);
-        }
-        
-      } else {
+      {
         // Original upload logic
         // Validate files
         for (const file of files) {
@@ -144,7 +88,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         } else {
           onChange(newImageUrls[0]);
         }
-      }
       
     } catch (error) {
       console.error('Upload error:', error);

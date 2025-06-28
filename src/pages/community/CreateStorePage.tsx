@@ -612,8 +612,6 @@ const CreateStorePage = () => {
                   multiple
                   maxFiles={5}
                   variant="gallery"
-                  useBMADMethod={true}
-                  bMADImageType="community"
                   placeholder="Upload store photos to showcase your business"
                 />
                 

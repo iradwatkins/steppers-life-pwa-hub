@@ -986,9 +986,6 @@ const CreateEventPage = () => {
                   value={featuredImage}
                   onChange={setFeaturedImage}
                   variant="featured"
-                  useBMADMethod={true}
-                  bMADImageType="event"
-                  entityId={editEventId || undefined}
                   placeholder="Upload a high-quality image that represents your event"
                 />
               </CardContent>
@@ -1012,9 +1009,6 @@ const CreateEventPage = () => {
                   variant="gallery"
                   multiple
                   maxFiles={3}
-                  useBMADMethod={true}
-                  bMADImageType="event"
-                  entityId={editEventId || undefined}
                   placeholder="Add more images to give attendees a better sense of your event"
                 />
               </CardContent>
