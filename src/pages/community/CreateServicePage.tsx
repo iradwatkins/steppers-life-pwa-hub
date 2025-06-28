@@ -80,8 +80,8 @@ const CreateServicePage = () => {
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCategorySuggestion, setShowCategorySuggestion] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
-  const [portfolioImages, setPortfolioImages] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
 
   const form = useForm<ServiceFormData>({
     resolver: zodResolver(serviceFormSchema),
@@ -188,12 +188,14 @@ const CreateServicePage = () => {
     }
   };
 
-  const handleImageUpload = (files: File[]) => {
-    setUploadedImages(prev => [...prev, ...files]);
+  const handleImageUpload = (urls: string | string[]) => {
+    const urlArray = Array.isArray(urls) ? urls : [urls];
+    setUploadedImages(prev => [...prev, ...urlArray]);
   };
 
-  const handlePortfolioUpload = (files: File[]) => {
-    setPortfolioImages(prev => [...prev, ...files]);
+  const handlePortfolioUpload = (urls: string | string[]) => {
+    const urlArray = Array.isArray(urls) ? urls : [urls];
+    setPortfolioImages(prev => [...prev, ...urlArray]);
   };
 
   const removeImage = (index: number, type: 'main' | 'portfolio') => {
@@ -693,18 +695,22 @@ const CreateServicePage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <ImageUpload
-                  onUpload={handleImageUpload}
-                  maxFiles={5}
-                  accept="image/*"
+                  value={uploadedImages}
+                  onChange={handleImageUpload}
                   multiple
+                  maxFiles={5}
+                  variant="gallery"
+                  useBMADMethod={true}
+                  bMADImageType="community"
+                  placeholder="Upload business photos to showcase your services"
                 />
                 
                 {uploadedImages.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {uploadedImages.map((file, index) => (
+                    {uploadedImages.map((imageUrl, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={URL.createObjectURL(file)}
+                          src={imageUrl}
                           alt={`Business image ${index + 1}`}
                           className="w-full h-24 object-cover rounded-md"
                         />
@@ -736,18 +742,22 @@ const CreateServicePage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <ImageUpload
-                  onUpload={handlePortfolioUpload}
-                  maxFiles={10}
-                  accept="image/*"
+                  value={portfolioImages}
+                  onChange={handlePortfolioUpload}
                   multiple
+                  maxFiles={10}
+                  variant="gallery"
+                  useBMADMethod={true}
+                  bMADImageType="community"
+                  placeholder="Upload portfolio images showcasing your work"
                 />
                 
                 {portfolioImages.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {portfolioImages.map((file, index) => (
+                    {portfolioImages.map((imageUrl, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={URL.createObjectURL(file)}
+                          src={imageUrl}
                           alt={`Portfolio image ${index + 1}`}
                           className="w-full h-24 object-cover rounded-md"
                         />

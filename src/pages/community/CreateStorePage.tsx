@@ -75,7 +75,7 @@ const CreateStorePage = () => {
   const [categories, setCategories] = useState<StoreCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCategorySuggestion, setShowCategorySuggestion] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const form = useForm<StoreFormData>({
     resolver: zodResolver(storeFormSchema),
@@ -173,8 +173,9 @@ const CreateStorePage = () => {
     }
   };
 
-  const handleImageUpload = (files: File[]) => {
-    setUploadedImages(prev => [...prev, ...files]);
+  const handleImageUpload = (urls: string | string[]) => {
+    const urlArray = Array.isArray(urls) ? urls : [urls];
+    setUploadedImages(prev => [...prev, ...urlArray]);
   };
 
   const removeImage = (index: number) => {
@@ -606,19 +607,23 @@ const CreateStorePage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <ImageUpload
-                  onUpload={handleImageUpload}
-                  maxFiles={5}
-                  accept="image/*"
+                  value={uploadedImages}
+                  onChange={handleImageUpload}
                   multiple
+                  maxFiles={5}
+                  variant="gallery"
+                  useBMADMethod={true}
+                  bMADImageType="community"
+                  placeholder="Upload store photos to showcase your business"
                 />
                 
                 {uploadedImages.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {uploadedImages.map((file, index) => (
+                    {uploadedImages.map((imageUrl, index) => (
                       <div key={index} className="relative">
                         <img
-                          src={URL.createObjectURL(file)}
-                          alt={`Upload ${index + 1}`}
+                          src={imageUrl}
+                          alt={`Store image ${index + 1}`}
                           className="w-full h-24 object-cover rounded-md"
                         />
                         <Button

@@ -14,7 +14,6 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { EventType, EVENT_TYPE_LABELS, EVENT_TYPE_DESCRIPTIONS } from '@/types/eventTypes';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles } from '@/hooks/useRoles';
@@ -987,6 +986,9 @@ const CreateEventPage = () => {
                   value={featuredImage}
                   onChange={setFeaturedImage}
                   variant="featured"
+                  useBMADMethod={true}
+                  bMADImageType="event"
+                  entityId={editEventId || undefined}
                   placeholder="Upload a high-quality image that represents your event"
                 />
               </CardContent>
@@ -1010,6 +1012,9 @@ const CreateEventPage = () => {
                   variant="gallery"
                   multiple
                   maxFiles={3}
+                  useBMADMethod={true}
+                  bMADImageType="event"
+                  entityId={editEventId || undefined}
                   placeholder="Add more images to give attendees a better sense of your event"
                 />
               </CardContent>
