@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -41,7 +42,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentValue = Array.isArray(value) ? value : (value ? [value] : []);
-
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -200,13 +200,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 {placeholder || `Drag and drop or click to select ${multiple ? 'images' : 'an image'}`}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Max {useBMADMethod && bMADPermissions ? bMADPermissions.permissions.maxFileSize : maxSize}MB per file • {multiple ? `${maxFiles} files max` : 'Single file'} • {useBMADMethod && bMADPermissions ? bMADPermissions.permissions.allowedFormats.map(f => f.split('/')[1]).join(', ').toUpperCase() : 'JPG, PNG, GIF'}
+                Max {maxSize}MB per file • {multiple ? `${maxFiles} files max` : 'Single file'} • JPG, PNG, GIF
               </p>
-              {useBMADMethod && bMADPermissions && (
-                <div className="text-xs text-blue-600 mt-1">
-                  🔐 BMAD Mode: {bMADPermissions.config.userRole} • Epics: {bMADPermissions.config.hasCompletedEpics.length}
-                </div>
-              )}
             </div>
 
             <Button
