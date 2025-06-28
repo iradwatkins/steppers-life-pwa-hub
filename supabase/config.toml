@@ -1,1 +1,23 @@
+# Supabase Production Configuration
+# Connected to production database via GitHub integration
+
 project_id = "voaxyetbqhmgbvcxsttf"
+
+[db]
+# Production database settings
+port = 5432
+major_version = 15
+
+[api]
+enabled = true
+port = 54321
+
+[auth]
+enabled = true
+
+[storage] 
+enabled = true
+
+[migrations]
+# Enable migrations to run with elevated privileges
+enabled = true
