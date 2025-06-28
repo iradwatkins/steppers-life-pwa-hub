@@ -1,3 +1,4 @@
+
 /**
  * SocialShareButtons Component
  * Reusable social sharing buttons with multiple layout options
@@ -37,7 +38,7 @@ import { SocialSharingService, type SocialShareOptions } from '@/services/social
 interface SocialShareButtonsProps {
   shareOptions: SocialShareOptions;
   variant?: 'inline' | 'popover' | 'modal' | 'icon-only';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'default' | 'lg';
   showLabels?: boolean;
   maxButtons?: number;
   className?: string;
@@ -48,7 +49,7 @@ interface SocialShareButtonsProps {
 const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
   shareOptions,
   variant = 'inline',
-  size = 'md',
+  size = 'default',
   showLabels = true,
   maxButtons = 6,
   className = '',
