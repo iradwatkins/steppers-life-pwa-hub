@@ -56,7 +56,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     setUploadError(null);
 
     try {
-      {
         // Original upload logic
         // Validate files
         for (const file of files) {
