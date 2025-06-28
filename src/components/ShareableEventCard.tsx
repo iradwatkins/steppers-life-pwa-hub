@@ -1,3 +1,4 @@
+
 /**
  * ShareableEventCard Component
  * Enhanced event card with built-in social sharing capabilities
@@ -316,11 +317,8 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
                 )}
                 {event.organizer_id && (
                   <FollowButton
-                    entityId={event.organizer_id}
-                    entityType="organizer"
-                    entityName={event.organizers?.organization_name}
-                    variant="icon"
-                    size="sm"
+                    userId={event.organizer_id}
+                    className="h-8 w-8 p-0"
                   />
                 )}
               </div>
@@ -439,11 +437,8 @@ const ShareableEventCard: React.FC<ShareableEventCardProps> = ({
             </div>
             {event.organizer_id && (
               <FollowButton
-                entityId={event.organizer_id}
-                entityType="organizer"
-                entityName={event.organizers?.organization_name}
-                variant="icon"
-                size="sm"
+                userId={event.organizer_id}
+                className="h-8 w-8 p-0"
               />
             )}
           </div>

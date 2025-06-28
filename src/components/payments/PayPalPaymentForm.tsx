@@ -1,3 +1,4 @@
+
 /**
  * PayPal Payment Form using Official React SDK
  * Story B.010: Payment Gateway Integration - Modern PayPal Implementation
@@ -9,10 +10,6 @@ import {
   PayPalScriptProvider,
   usePayPalScriptReducer,
   type PayPalButtonsComponentProps,
-  type CreateOrderData,
-  type CreateOrderActions,
-  type OnApproveData,
-  type OnApproveActions,
 } from '@paypal/react-paypal-js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -47,10 +44,7 @@ const PayPalButtonWrapper: React.FC<PayPalPaymentFormProps> = ({
     currency: paymentRequest.currency,
   });
 
-  const createOrder: PayPalButtonsComponentProps['createOrder'] = async (
-    data: CreateOrderData,
-    actions: CreateOrderActions
-  ) => {
+  const createOrder: PayPalButtonsComponentProps['createOrder'] = async (data, actions) => {
     try {
       return await actions.order.create({
         intent: 'CAPTURE',
@@ -94,10 +88,7 @@ const PayPalButtonWrapper: React.FC<PayPalPaymentFormProps> = ({
     }
   };
 
-  const onApprove: PayPalButtonsComponentProps['onApprove'] = async (
-    data: OnApproveData,
-    actions: OnApproveActions
-  ) => {
+  const onApprove: PayPalButtonsComponentProps['onApprove'] = async (data, actions) => {
     if (disabled || isProcessing) return;
 
     setIsProcessing(true);

@@ -1,3 +1,4 @@
+
 /**
  * Square Payment Form using Official React SDK
  * Story B.010: Payment Gateway Integration - Modern Square Implementation
@@ -16,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
-import { ModernSquarePaymentService, type SquarePaymentRequest, type SquareTokenResult } from '@/services/paymentGateways/modernSquarePaymentService';
+import { ModernSquarePaymentService, type SquarePaymentRequest } from '@/services/paymentGateways/modernSquarePaymentService';
 import { DeviceDetection } from '@/utils/deviceDetection';
 
 interface SquarePaymentFormProps {
@@ -53,7 +54,7 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
   const showGooglePay = DeviceDetection.shouldShowGooglePay();
   const showCashApp = DeviceDetection.shouldShowCashApp();
 
-  const handlePaymentSubmit = async (tokenResult: SquareTokenResult, buyer?: any) => {
+  const handlePaymentSubmit = async (tokenResult: any, buyer?: any) => {
     if (disabled || isProcessing) return;
 
     setIsProcessing(true);
@@ -169,19 +170,7 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
         <PaymentForm {...paymentFormProps}>
           {paymentMethod === 'card' && (
             <div className="space-y-4">
-              <CreditCard
-                buttonProps={{
-                  isLoading: isProcessing,
-                  css: {
-                    '&[data-theme="dark"]': {
-                      backgroundColor: 'hsl(var(--background))',
-                      color: 'hsl(var(--foreground))',
-                      border: '1px solid hsl(var(--border))',
-                    },
-                  },
-                }}
-                includeInputLabels
-              />
+              <CreditCard includeInputLabels />
               {isProcessing && (
                 <Alert>
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -193,27 +182,10 @@ const SquarePaymentForm: React.FC<SquarePaymentFormProps> = ({
             </div>
           )}
 
-          {paymentMethod === 'apple_pay' && showApplePay && (
-            <ApplePay
-              buttonProps={{
-                isLoading: isProcessing,
-              }}
-            />
-          )}
-
-          {paymentMethod === 'google_pay' && showGooglePay && (
-            <GooglePay
-              buttonProps={{
-                isLoading: isProcessing,
-              }}
-            />
-          )}
-
+          {paymentMethod === 'apple_pay' && showApplePay && <ApplePay />}
+          {paymentMethod === 'google_pay' && showGooglePay && <GooglePay />}
           {paymentMethod === 'cash_app' && showCashApp && (
             <CashAppPay
-              buttonProps={{
-                isLoading: isProcessing,
-              }}
               redirectURL={window.location.origin + '/payment/cash-app/callback'}
               referenceId={`cash-app-${paymentRequest.orderId}`}
             />

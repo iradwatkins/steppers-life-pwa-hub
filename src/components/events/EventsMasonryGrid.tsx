@@ -1,3 +1,4 @@
+
 import React from 'react';
 import EventCard from './EventCard';
 import type { Database } from '@/integrations/supabase/types';
@@ -49,10 +50,7 @@ const EventsMasonryGrid: React.FC<EventsMasonryGridProps> = ({
             <div key={event.id}>
               <EventCard
                 event={event}
-                variant={variant}
-                showRating={showRating}
-                showSoldOutStatus={showSoldOutStatus}
-                showSocialShare={showSocialShare}
+                showActions={true}
               />
             </div>
           ))}
