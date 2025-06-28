@@ -1,6 +1,8 @@
 
 export class DeviceDetection {
   static getCapabilities() {
+    const isMobile = this.isMobile();
+    
     return {
       touchScreen: 'ontouchstart' in window,
       camera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
@@ -10,6 +12,7 @@ export class DeviceDetection {
       pushNotifications: 'Notification' in window && 'serviceWorker' in navigator,
       webAuthn: 'credentials' in navigator,
       biometrics: 'credentials' in navigator && 'PublicKeyCredential' in window,
+      isMobile, // Add this property
     };
   }
 

@@ -18,6 +18,8 @@ export interface SquarePaymentRequest {
   currency: string;
   orderId: string;
   userId?: string;
+  customerEmail?: string; // Add this missing property
+  customerName?: string; // Add this missing property
   description?: string;
 }
 

@@ -1,245 +1,127 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { InventoryService, type InventoryStatus } from '@/services/inventoryService';
 
-interface UseInventoryOptions {
-  autoRefresh?: boolean;
-  refreshInterval?: number;
-}
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { InventoryStatus } from '@/types/inventory';
 
-export const useInventory = (ticketTypeId: string, options: UseInventoryOptions = {}) => {
-  const { autoRefresh = true, refreshInterval = 30000 } = options;
-  const [status, setStatus] = useState<InventoryStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export const useInventory = (ticketTypeId: string) => {
+  const [status, setStatus] = useState<InventoryStatus>({
+    isAvailable: true,
+    available: 0,
+    sold: 0,
+    held: 0,
+    total: 0,
+  });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const fetchInventoryStatus = async () => {
     try {
-      setError(null);
-      const inventoryStatus = await InventoryService.getInventoryStatus(ticketTypeId);
-      setStatus(inventoryStatus);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch inventory status');
+      setLoading(true);
+      
+      // Fetch ticket type details
+      const { data: ticketType, error: ticketError } = await supabase
+        .from('ticket_types')
+        .select('quantity')
+        .eq('id', ticketTypeId)
+        .single();
+
+      if (ticketError) throw ticketError;
+
+      // Fetch sold tickets count
+      const { count: soldCount, error: soldError } = await supabase
+        .from('tickets')
+        .select('*', { count: 'exact' })
+        .eq('ticket_type_id', ticketTypeId)
+        .eq('status', 'active');
+
+      if (soldError) throw soldError;
+
+      // Fetch held tickets count
+      const { count: heldCount, error: heldError } = await supabase
+        .from('inventory_holds')
+        .select('*', { count: 'exact' })
+        .eq('ticket_type_id', ticketTypeId)
+        .gt('expires_at', new Date().toISOString());
+
+      if (heldError) throw heldError;
+
+      const total = ticketType?.quantity || 0;
+      const sold = soldCount || 0;
+      const held = heldCount || 0;
+      const available = Math.max(0, total - sold - held);
+
+      setStatus({
+        isAvailable: available > 0,
+        available,
+        sold,
+        held,
+        total,
+      });
+    } catch (error) {
+      console.error('Error fetching inventory status:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch inventory');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const holdTickets = async (quantity: number, userId: string): Promise<boolean> => {
+    try {
+      if (!status.isAvailable || status.available < quantity) {
+        return false;
+      }
+
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15-minute hold
+
+      const { error } = await supabase
+        .from('inventory_holds')
+        .insert({
+          user_id: userId,
+          ticket_type_id: ticketTypeId,
+          quantity,
+          expires_at: expiresAt.toISOString(),
+        });
+
+      if (error) throw error;
+
+      await fetchInventoryStatus();
+      return true;
+    } catch (error) {
+      console.error('Error holding tickets:', error);
+      return false;
+    }
+  };
+
+  const releaseHold = async (holdId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('inventory_holds')
+        .delete()
+        .eq('id', holdId);
+
+      if (error) throw error;
+
+      await fetchInventoryStatus();
+      return true;
+    } catch (error) {
+      console.error('Error releasing hold:', error);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    if (ticketTypeId) {
+      fetchInventoryStatus();
     }
   }, [ticketTypeId]);
 
-  useEffect(() => {
-    if (!ticketTypeId) return;
-
-    // Initial fetch
-    fetchStatus();
-
-    // Set up real-time subscription if auto-refresh is enabled
-    if (autoRefresh) {
-      const unsubscribe = InventoryService.subscribeToInventoryChanges(
-        ticketTypeId,
-        (newStatus) => {
-          setStatus(newStatus);
-          setError(null);
-        }
-      );
-      unsubscribeRef.current = unsubscribe;
-
-      return () => {
-        unsubscribe();
-      };
-    }
-  }, [ticketTypeId, autoRefresh, fetchStatus]);
-
-  const refresh = useCallback(() => {
-    setIsLoading(true);
-    fetchStatus();
-  }, [fetchStatus]);
-
   return {
     status,
-    isLoading,
+    loading,
     error,
-    refresh,
-    isAvailable: status?.isAvailable ?? false,
-    availableQuantity: status?.available ?? 0,
-    isLowStock: status ? InventoryService.isLowInventory(status) : false,
-  };
-};
-
-export const useBulkInventory = (ticketTypeIds: string[]) => {
-  const [statuses, setStatuses] = useState<InventoryStatus[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchStatuses = useCallback(async () => {
-    if (ticketTypeIds.length === 0) {
-      setStatuses([]);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setError(null);
-      const inventoryStatuses = await InventoryService.getBulkInventoryStatus(ticketTypeIds);
-      setStatuses(inventoryStatuses);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch inventory statuses');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [ticketTypeIds]);
-
-  useEffect(() => {
-    fetchStatuses();
-  }, [fetchStatuses]);
-
-  const refresh = useCallback(() => {
-    setIsLoading(true);
-    fetchStatuses();
-  }, [fetchStatuses]);
-
-  return {
-    statuses,
-    isLoading,
-    error,
-    refresh,
-  };
-};
-
-export const useInventoryHold = () => {
-  const [isCreatingHold, setIsCreatingHold] = useState(false);
-  const [currentHolds, setCurrentHolds] = useState<Record<string, any>>({});
-
-  const createHold = useCallback(async (
-    ticketTypeId: string,
-    quantity: number,
-    sessionId: string,
-    userId?: string
-  ) => {
-    setIsCreatingHold(true);
-    try {
-      const hold = await InventoryService.createInventoryHold(
-        ticketTypeId,
-        quantity,
-        sessionId,
-        userId
-      );
-      
-      if (hold) {
-        setCurrentHolds(prev => ({
-          ...prev,
-          [ticketTypeId]: hold
-        }));
-      }
-      
-      return hold;
-    } catch (error) {
-      console.error('Error creating inventory hold:', error);
-      return null;
-    } finally {
-      setIsCreatingHold(false);
-    }
-  }, []);
-
-  const releaseHold = useCallback(async (sessionId: string, ticketTypeId?: string) => {
-    try {
-      const success = await InventoryService.releaseInventoryHold(sessionId, ticketTypeId);
-      
-      if (success && ticketTypeId) {
-        setCurrentHolds(prev => {
-          const updated = { ...prev };
-          delete updated[ticketTypeId];
-          return updated;
-        });
-      } else if (success) {
-        setCurrentHolds({});
-      }
-      
-      return success;
-    } catch (error) {
-      console.error('Error releasing inventory hold:', error);
-      return false;
-    }
-  }, []);
-
-  const confirmHold = useCallback(async (
-    sessionId: string,
-    orderId: string,
-    ticketTypeId: string,
-    quantity: number
-  ) => {
-    try {
-      const success = await InventoryService.confirmInventoryHold(
-        sessionId,
-        orderId,
-        ticketTypeId,
-        quantity
-      );
-      
-      if (success) {
-        setCurrentHolds(prev => {
-          const updated = { ...prev };
-          delete updated[ticketTypeId];
-          return updated;
-        });
-      }
-      
-      return success;
-    } catch (error) {
-      console.error('Error confirming inventory hold:', error);
-      return false;
-    }
-  }, []);
-
-  return {
-    createHold,
+    refetch: fetchInventoryStatus,
+    holdTickets,
     releaseHold,
-    confirmHold,
-    isCreatingHold,
-    currentHolds,
-  };
-};
-
-export const useEventInventory = (eventId: string) => {
-  const [summary, setSummary] = useState<{
-    totalAvailable: number;
-    totalSold: number;
-    totalCapacity: number;
-    ticketTypes: InventoryStatus[];
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchSummary = useCallback(async () => {
-    if (!eventId) return;
-
-    try {
-      setError(null);
-      const eventSummary = await InventoryService.getEventInventorySummary(eventId);
-      setSummary(eventSummary);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch event inventory summary');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [eventId]);
-
-  useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
-
-  const refresh = useCallback(() => {
-    setIsLoading(true);
-    fetchSummary();
-  }, [fetchSummary]);
-
-  return {
-    summary,
-    isLoading,
-    error,
-    refresh,
-    isSoldOut: summary ? summary.totalAvailable === 0 && summary.totalCapacity > 0 : false,
-    isLowStock: summary ? summary.totalAvailable <= 10 && summary.totalAvailable > 0 : false,
-    soldOutPercentage: summary && summary.totalCapacity > 0 
-      ? Math.round((summary.totalSold / summary.totalCapacity) * 100) 
-      : 0,
   };
 };
