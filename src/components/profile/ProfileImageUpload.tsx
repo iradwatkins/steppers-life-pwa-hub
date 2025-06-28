@@ -49,14 +49,14 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     try {
       console.log('🔄 Uploading optimized profile image...');
       
-      // Use the optimized ImageUploadService
+      // Use the optimized ImageUploadService with enhanced error handling
       const uploadResult = await ImageUploadService.uploadProfilePicture(file, userId);
       
       console.log('✅ Optimized image uploaded successfully:', {
         url: uploadResult.url,
-        originalSize: uploadResult.originalSize,
-        optimizedSize: uploadResult.optimizedSize,
-        compressionRatio: uploadResult.compressionRatio
+        originalSize: uploadResult.originalSize ? `${(uploadResult.originalSize / (1024 * 1024)).toFixed(2)}MB` : 'Unknown',
+        optimizedSize: uploadResult.optimizedSize ? `${(uploadResult.optimizedSize / (1024 * 1024)).toFixed(2)}MB` : 'Unknown',
+        compressionRatio: uploadResult.compressionRatio ? `${uploadResult.compressionRatio.toFixed(1)}%` : 'N/A'
       });
 
       // Update user profile with new image URL
@@ -70,7 +70,15 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
       if (updateError) {
         console.error('❌ Profile update error:', updateError);
-        throw updateError;
+        
+        // Provide specific error message based on error type
+        if (updateError.message.includes('violates row-level security')) {
+          throw new Error('Permission denied updating profile. Please ensure you are logged in.');
+        } else if (updateError.message.includes('not found')) {
+          throw new Error('Profile not found. Please contact support.');
+        }
+        
+        throw new Error(`Failed to update profile: ${updateError.message}`);
       }
 
       console.log('✅ Profile updated with new optimized image URL');
@@ -78,10 +86,29 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       // Call callback to update parent component
       onImageUpdate(uploadResult.url);
       
-      toast.success('Profile picture updated successfully!');
+      // Show success message with optimization stats
+      const compressionInfo = uploadResult.compressionRatio 
+        ? ` (${uploadResult.compressionRatio.toFixed(1)}% smaller)`
+        : '';
+      toast.success(`Profile picture updated successfully!${compressionInfo}`);
+      
     } catch (error) {
       console.error('❌ Error uploading profile image:', error);
-      toast.error('Failed to upload profile picture. Please try again.');
+      
+      // Provide user-friendly error messages
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload profile picture';
+      
+      if (errorMessage.includes('bucket not found')) {
+        toast.error('Upload system not configured. Please contact support.');
+      } else if (errorMessage.includes('permission') || errorMessage.includes('authentication')) {
+        toast.error('Please log in again and try uploading.');
+      } else if (errorMessage.includes('File too large')) {
+        toast.error('Image file is too large. Please use an image smaller than 10MB.');
+      } else if (errorMessage.includes('network') || errorMessage.includes('timeout')) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else {
+        toast.error(`Upload failed: ${errorMessage}`);
+      }
       
       // Reset preview on error
       setPreviewUrl(currentImageUrl || null);

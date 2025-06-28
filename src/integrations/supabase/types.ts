@@ -1863,7 +1863,7 @@ export type Database = {
       payment_status: "pending" | "completed" | "failed" | "refunded"
       setting_type: "string" | "number" | "boolean" | "json" | "array"
       ticket_status: "active" | "sold" | "reserved" | "cancelled"
-      user_role: "user" | "admin" | "organizer" | "super_admin"
+      user_role: "user" | "organizer" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1987,7 +1987,7 @@ export const Constants = {
       payment_status: ["pending", "completed", "failed", "refunded"],
       setting_type: ["string", "number", "boolean", "json", "array"],
       ticket_status: ["active", "sold", "reserved", "cancelled"],
-      user_role: ["user", "admin", "organizer", "super_admin"],
+      user_role: ["user", "organizer", "admin"],
     },
   },
 } as const

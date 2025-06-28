@@ -245,8 +245,8 @@ export class BMADImageService {
       const filename = `${timestamp}-${config.userRole}-${imageType}.${fileExt}`;
       const fullPath = `${storagePath}/${filename}`;
 
-      // Upload using standard ImageUploadService with BMAD path
-      const result = await ImageUploadService.uploadImage(file, 'images', storagePath);
+      // Upload using enhanced ImageUploadService with BMAD path
+      const result = await ImageUploadService.uploadImage(file, 'images', storagePath, true, 3);
 
       console.log('✅ BMAD Image Upload Successful:', result);
 
@@ -355,6 +355,66 @@ export class BMADImageService {
     } catch (error) {
       console.error('Error fetching epic completion:', error);
       return [];
+    }
+  }
+
+  /**
+   * Test BMAD image system connectivity and permissions
+   */
+  static async testBMADImageSystem(userId: string): Promise<{ 
+    canUpload: boolean; 
+    permissions: BMADImagePermissions; 
+    config: ImageAccessConfig;
+    error?: string 
+  }> {
+    try {
+      console.log('🧪 Testing BMAD Image System for user:', userId);
+      
+      // Get user configuration
+      const config = await this.getBMADImageConfig(userId);
+      const permissions = this.getBMADImagePermissions(config.userRole, config.hasCompletedEpics);
+      
+      // Test storage connectivity
+      const storageTest = await ImageUploadService.testStorageConnectivity();
+      if (!storageTest) {
+        return {
+          canUpload: false,
+          permissions,
+          config,
+          error: 'Storage system not accessible'
+        };
+      }
+      
+      console.log('✅ BMAD Image System Test Passed:', {
+        userRole: config.userRole,
+        completedEpics: config.hasCompletedEpics,
+        canUploadProfile: permissions.canUploadProfile,
+        canUploadEvent: permissions.canUploadEventImages,
+        maxFileSize: `${permissions.maxFileSize}MB`
+      });
+      
+      return {
+        canUpload: true,
+        permissions,
+        config
+      };
+      
+    } catch (error) {
+      console.error('❌ BMAD Image System Test Failed:', error);
+      
+      // Return safe defaults on error
+      const fallbackConfig: ImageAccessConfig = {
+        userId,
+        userRole: 'user',
+        hasCompletedEpics: []
+      };
+      
+      return {
+        canUpload: false,
+        permissions: this.getBMADImagePermissions('user', []),
+        config: fallbackConfig,
+        error: error instanceof Error ? error.message : 'System test failed'
+      };
     }
   }
 

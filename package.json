@@ -17,7 +17,10 @@
     "deploy:schema:prod": "supabase link --project-ref voaxyetbqhmgbvcxsttf && psql $SUPABASE_DB_URL -f COMPLETE-PRODUCTION-SCHEMA-DEPLOYMENT.sql",
     "reset:prod:clean": "supabase link --project-ref voaxyetbqhmgbvcxsttf && psql $SUPABASE_DB_URL -f PRODUCTION-DATABASE-RESET-CLEAN.sql",
     "check:prod": "supabase link --project-ref voaxyetbqhmgbvcxsttf && psql $SUPABASE_DB_URL -f PRODUCTION-DATABASE-CHECK.sql",
-    "deploy:production": "npm run build && npm run migrate:prod"
+    "deploy:production": "npm run build && npm run migrate:prod",
+    "diagnose:images": "vite-node scripts/diagnose_images.ts",
+    "db:setup": "vite-node scripts/run_sql.ts",
+    "supabase:list-buckets": "vite-node scripts/list_buckets.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -111,6 +114,7 @@
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vite-node": "^3.2.4"
   }
 }

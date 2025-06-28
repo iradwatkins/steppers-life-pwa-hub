@@ -9,7 +9,6 @@ interface UserRoles {
   role: UserRole;
   isAdmin: boolean;
   isOrganizer: boolean;
-  isSuperAdmin: boolean;
   isUser: boolean;
   hasOrganizer: boolean;
   organizerId?: string;
@@ -21,7 +20,6 @@ export const useRoles = () => {
     role: 'user',
     isAdmin: false,
     isOrganizer: false,
-    isSuperAdmin: false,
     isUser: true,
     hasOrganizer: false,
   });
@@ -35,7 +33,6 @@ export const useRoles = () => {
           role: 'user',
           isAdmin: false,
           isOrganizer: false,
-          isSuperAdmin: false,
           isUser: true,
           hasOrganizer: false,
         });
@@ -95,7 +92,6 @@ export const useRoles = () => {
           role: userRole,
           isAdmin: userRole === 'admin',
           isOrganizer: userRole === 'organizer' || hasOrganizer,
-          isSuperAdmin: userRole === 'super_admin',
           isUser: userRole === 'user',
           hasOrganizer,
           organizerId,
@@ -139,7 +135,6 @@ export const useRoles = () => {
         role: newRole,
         isAdmin: newRole === 'admin',
         isOrganizer: newRole === 'organizer' || prev.hasOrganizer,
-        isSuperAdmin: newRole === 'super_admin',
         isUser: newRole === 'user',
       }));
 
@@ -153,8 +148,8 @@ export const useRoles = () => {
   const hasPermission = (requiredRole: UserRole | UserRole[]): boolean => {
     const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     
-    // Super admin has all permissions
-    if (roles.isSuperAdmin) return true;
+    // Admin has all permissions
+    if (roles.isAdmin) return true;
     
     // Check if user has any of the required roles
     return requiredRoles.some(role => {
@@ -163,8 +158,6 @@ export const useRoles = () => {
           return roles.isAdmin;
         case 'organizer':
           return roles.isOrganizer;
-        case 'super_admin':
-          return roles.isSuperAdmin;
         case 'user':
           return true; // All users have user permissions
         default:
@@ -174,18 +167,18 @@ export const useRoles = () => {
   };
 
   const canCreateEvents = (): boolean => {
-    return roles.hasOrganizer || roles.isAdmin || roles.isSuperAdmin;
+    return roles.hasOrganizer || roles.isAdmin;
   };
 
   const canManageEvents = (eventOrganizerId?: string): boolean => {
-    if (roles.isSuperAdmin || roles.isAdmin) return true;
+    if (roles.isAdmin) return true;
     if (!roles.hasOrganizer) return false;
     if (!eventOrganizerId) return false;
     return roles.organizerId === eventOrganizerId;
   };
 
   const canAccessAdmin = (): boolean => {
-    return roles.isAdmin || roles.isSuperAdmin;
+    return roles.isAdmin;
   };
 
   return {

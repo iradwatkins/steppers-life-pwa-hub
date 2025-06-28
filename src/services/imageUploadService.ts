@@ -23,17 +23,32 @@ export class ImageUploadService {
   static async diagnoseStorage(): Promise<StorageDiagnostic> {
     try {
       console.log('🔍 Diagnosing storage configuration...');
+      console.log('🌍 Environment:', {
+        isDev: import.meta.env.DEV,
+        isProd: import.meta.env.PROD,
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL?.substring(0, 30) + '...',
+        hasAnonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+      });
       
       // Check what buckets exist
       const { data: buckets, error: listError } = await supabase.storage.listBuckets();
       
       if (listError) {
         console.error('❌ Cannot list buckets:', listError);
+        
+        // Provide specific guidance based on error type
+        let errorMessage = `Cannot list buckets: ${listError.message}`;
+        if (listError.message.includes('JWT')) {
+          errorMessage = 'Authentication failed. Please check your Supabase credentials.';
+        } else if (listError.message.includes('network') || listError.message.includes('fetch')) {
+          errorMessage = 'Network error connecting to Supabase. Please check your internet connection.';
+        }
+        
         return {
           bucketsExist: [],
           imagesBucket: false,
           canUpload: false,
-          error: `Cannot list buckets: ${listError.message}`
+          error: errorMessage
         };
       }
       
@@ -43,17 +58,38 @@ export class ImageUploadService {
       console.log('📊 Storage diagnostic:', {
         availableBuckets: bucketNames,
         hasImagesBucket,
-        totalBuckets: bucketNames.length
+        totalBuckets: bucketNames.length,
+        environment: import.meta.env.PROD ? 'production' : 'development'
       });
       
       if (!hasImagesBucket) {
-        console.error('❌ Images bucket not found. Please run the storage setup SQL script in your Supabase dashboard.');
+        const errorMessage = import.meta.env.PROD 
+          ? 'Images bucket not found in production. Please execute the PRODUCTION-STORAGE-SETUP.sql script in your Supabase dashboard.'
+          : 'Images bucket not found in development. Please check your development database setup.';
+          
+        console.error('❌', errorMessage);
         return {
           bucketsExist: bucketNames,
           imagesBucket: false,
           canUpload: false,
-          error: 'Images bucket not found. Please create the bucket using the SQL script in your database dashboard.'
+          error: errorMessage
         };
+      }
+      
+      // Test write permissions by attempting a small operation
+      try {
+        const testResult = await this.testUploadPermissions();
+        if (!testResult.canUpload) {
+          return {
+            bucketsExist: bucketNames,
+            imagesBucket: true,
+            canUpload: false,
+            error: `Bucket exists but upload permissions failed: ${testResult.error}`
+          };
+        }
+      } catch (permError) {
+        console.warn('⚠️ Could not test upload permissions:', permError);
+        // Continue anyway - permissions might work for actual uploads
       }
       
       return {
@@ -68,7 +104,30 @@ export class ImageUploadService {
         bucketsExist: [],
         imagesBucket: false,
         canUpload: false,
-        error: `Diagnostic failed: ${error}`
+        error: `Diagnostic failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
+  /**
+   * Test upload permissions without actually uploading a file
+   */
+  private static async testUploadPermissions(): Promise<{ canUpload: boolean; error?: string }> {
+    try {
+      // Try to list objects in the bucket - this tests read permissions
+      const { data, error } = await supabase.storage
+        .from('images')
+        .list('', { limit: 1 });
+        
+      if (error && !error.message.includes('does not exist')) {
+        return { canUpload: false, error: error.message };
+      }
+      
+      return { canUpload: true };
+    } catch (error) {
+      return { 
+        canUpload: false, 
+        error: error instanceof Error ? error.message : 'Permission test failed' 
       };
     }
   }
@@ -76,96 +135,147 @@ export class ImageUploadService {
   /**
    * Upload a single image file to Supabase Storage with optimization
    */
-  static async uploadImage(file: File, bucket: string = 'images', folder?: string, optimize: boolean = true): Promise<UploadResult> {
-    try {
-      console.log('📸 Starting optimized image upload:', { 
-        fileName: file.name, 
-        fileSize: file.size, 
-        bucket, 
-        folder,
-        optimize,
-        environment: import.meta.env.VITE_APP_ENV 
-      });
-
-      // Step 1: Validate file
-      const validation = ImageOptimizer.validateImageFile(file);
-      if (!validation.valid) {
-        throw new Error(validation.error);
-      }
-
-      // Step 2: Diagnose storage before attempting upload
-      const diagnostic = await this.diagnoseStorage();
-      if (!diagnostic.canUpload) {
-        console.error('❌ Storage diagnostic failed:', diagnostic);
-        throw new Error(`Storage not ready: ${diagnostic.error}`);
-      }
-
-      let fileToUpload = file;
-      let optimizationResult: OptimizedImageResult | null = null;
-
-      // Step 3: Optimize image if requested
-      if (optimize) {
-        console.log('🔧 Optimizing image...');
-        optimizationResult = await ImageOptimizer.optimizeImage(file);
-        fileToUpload = optimizationResult.file;
-        
-        console.log('✅ Image optimized:', {
-          originalSize: optimizationResult.originalSize,
-          optimizedSize: optimizationResult.optimizedSize,
-          compressionRatio: optimizationResult.compressionRatio,
-          format: optimizationResult.format
-        });
-      }
-
-      // Step 4: Generate unique filename
-      const fileExt = fileToUpload.name.split('.').pop()?.toLowerCase() || 'webp';
-      const timestamp = Date.now();
-      const random = Math.random().toString(36).substring(2);
-      const fileName = `${timestamp}-${random}.${fileExt}`;
-      const filePath = folder ? `${folder}/${fileName}` : fileName;
-
-      console.log('📤 Uploading to path:', filePath);
-
-      // Step 5: Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, fileToUpload, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: fileToUpload.type
+  static async uploadImage(file: File, bucket: string = 'images', folder?: string, optimize: boolean = true, retries: number = 2): Promise<UploadResult> {
+    const uploadAttempt = async (attemptNumber: number): Promise<UploadResult> => {
+      try {
+        console.log(`📸 Starting image upload (attempt ${attemptNumber}/${retries + 1}):`, { 
+          fileName: file.name, 
+          fileSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+          bucket, 
+          folder,
+          optimize,
+          environment: import.meta.env.PROD ? 'production' : 'development'
         });
 
-      if (error) {
-        console.error('❌ Upload error details:', error);
+        // Step 1: Validate file
+        const validation = ImageOptimizer.validateImageFile(file);
+        if (!validation.valid) {
+          throw new Error(`File validation failed: ${validation.error}`);
+        }
+
+        // Step 2: Diagnose storage before attempting upload (only on first attempt)
+        if (attemptNumber === 1) {
+          const diagnostic = await this.diagnoseStorage();
+          if (!diagnostic.canUpload) {
+            console.error('❌ Storage diagnostic failed:', diagnostic);
+            throw new Error(`Storage not ready: ${diagnostic.error}`);
+          }
+        }
+
+        let fileToUpload = file;
+        let optimizationResult: OptimizedImageResult | null = null;
+
+        // Step 3: Optimize image if requested
+        if (optimize) {
+          console.log('🔧 Optimizing image...');
+          try {
+            optimizationResult = await ImageOptimizer.optimizeImage(file);
+            fileToUpload = optimizationResult.file;
+            
+            console.log('✅ Image optimized:', {
+              originalSize: `${(optimizationResult.originalSize / (1024 * 1024)).toFixed(2)}MB`,
+              optimizedSize: `${(optimizationResult.optimizedSize / (1024 * 1024)).toFixed(2)}MB`,
+              compressionRatio: `${optimizationResult.compressionRatio.toFixed(1)}%`,
+              format: optimizationResult.format
+            });
+          } catch (optimizeError) {
+            console.warn('⚠️ Image optimization failed, uploading original:', optimizeError);
+            fileToUpload = file; // Fall back to original file
+          }
+        }
+
+        // Step 4: Generate unique filename with proper extension handling
+        const fileExt = fileToUpload.name.split('.').pop()?.toLowerCase() || 
+                       (optimizationResult?.format || file.type.split('/')[1] || 'jpg');
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        const fileName = `${timestamp}-${random}.${fileExt}`;
+        const filePath = folder ? `${folder}/${fileName}` : fileName;
+
+        console.log('📤 Uploading to path:', filePath);
+
+        // Step 5: Upload to Supabase Storage with enhanced error handling
+        const uploadStart = Date.now();
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .upload(filePath, fileToUpload, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: fileToUpload.type || 'image/jpeg'
+          });
+
+        const uploadDuration = Date.now() - uploadStart;
+
+        if (error) {
+          console.error('❌ Upload error details:', {
+            error: error.message,
+            filePath,
+            fileSize: fileToUpload.size,
+            attemptNumber,
+            uploadDuration: `${uploadDuration}ms`
+          });
+          
+          // Provide specific error guidance with actionable solutions
+          if (error.message.includes('Bucket not found')) {
+            throw new Error('Images bucket not found. Please execute the PRODUCTION-STORAGE-SETUP.sql script in your Supabase dashboard.');
+          } else if (error.message.includes('violates row-level security')) {
+            throw new Error('Upload permission denied. Please check your authentication status and try again.');
+          } else if (error.message.includes('File size')) {
+            throw new Error(`File too large (${(fileToUpload.size / (1024 * 1024)).toFixed(1)}MB). Maximum allowed size is ${bucket === 'images' ? '50MB' : '10MB'}.`);
+          } else if (error.message.includes('network') || error.message.includes('fetch')) {
+            // This error might be retryable
+            throw new Error(`Network error during upload: ${error.message}`);
+          }
+          
+          throw new Error(`Upload failed: ${error.message}`);
+        }
+
+        console.log('✅ Upload successful:', {
+          path: data.path,
+          fullPath: data.fullPath,
+          uploadDuration: `${uploadDuration}ms`,
+          fileSize: `${(fileToUpload.size / (1024 * 1024)).toFixed(2)}MB`
+        });
+
+        // Step 6: Get public URL and validate it
+        const { data: { publicUrl } } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(filePath);
+
+        // Validate the public URL format
+        if (!publicUrl || !publicUrl.startsWith('http')) {
+          throw new Error(`Invalid public URL generated: ${publicUrl}`);
+        }
+
+        console.log('🔗 Generated public URL:', publicUrl);
+
+        return {
+          url: publicUrl,
+          path: filePath,
+          originalSize: optimizationResult?.originalSize || file.size,
+          optimizedSize: optimizationResult?.optimizedSize || fileToUpload.size,
+          compressionRatio: optimizationResult?.compressionRatio || 0
+        };
+      } catch (error) {
+        const isNetworkError = error instanceof Error && (
+          error.message.includes('network') || 
+          error.message.includes('fetch') ||
+          error.message.includes('timeout')
+        );
         
-        // Provide specific error guidance
-        if (error.message.includes('Bucket not found')) {
-          throw new Error('Images bucket not found in production. Please run the storage-diagnostic-and-fix.sql script in your Supabase dashboard.');
+        // Only retry on network errors and if we have retries left
+        if (isNetworkError && attemptNumber <= retries) {
+          console.warn(`⚠️ Upload attempt ${attemptNumber} failed, retrying...`, error);
+          await new Promise(resolve => setTimeout(resolve, 1000 * attemptNumber)); // Exponential backoff
+          return uploadAttempt(attemptNumber + 1);
         }
         
-        throw new Error(`Upload failed: ${error.message}`);
+        console.error('❌ Image upload error (final):', error);
+        throw error;
       }
+    };
 
-      console.log('✅ Upload successful:', data);
-
-      // Step 6: Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
-
-      console.log('🔗 Generated public URL:', publicUrl);
-
-      return {
-        url: publicUrl,
-        path: filePath,
-        originalSize: optimizationResult?.originalSize,
-        optimizedSize: optimizationResult?.optimizedSize,
-        compressionRatio: optimizationResult?.compressionRatio
-      };
-    } catch (error) {
-      console.error('❌ Image upload error:', error);
-      throw error;
-    }
+    return uploadAttempt(1);
   }
 
   /**
