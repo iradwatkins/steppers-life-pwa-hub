@@ -21,7 +21,7 @@ export const useInventory = (ticketTypeId: string) => {
       // Fetch ticket type details
       const { data: ticketType, error: ticketError } = await supabase
         .from('ticket_types')
-        .select('quantity')
+        .select('quantity_available')
         .eq('id', ticketTypeId)
         .single();
 
@@ -45,7 +45,7 @@ export const useInventory = (ticketTypeId: string) => {
 
       if (heldError) throw heldError;
 
-      const total = ticketType?.quantity || 0;
+      const total = ticketType?.quantity_available || 0;
       const sold = soldCount || 0;
       const held = heldCount || 0;
       const available = Math.max(0, total - sold - held);
@@ -81,6 +81,7 @@ export const useInventory = (ticketTypeId: string) => {
           ticket_type_id: ticketTypeId,
           quantity,
           expires_at: expiresAt.toISOString(),
+          session_id: `session_${Date.now()}`,
         });
 
       if (error) throw error;

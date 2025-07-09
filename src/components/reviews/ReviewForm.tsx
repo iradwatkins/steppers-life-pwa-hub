@@ -1,24 +1,12 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StarRating } from './StarRating';
-import { reviewService } from '@/services/reviewService';
+import { ReviewService } from '@/services/reviewService';
 import { toast } from 'sonner';
 import { X } from 'lucide-react';
-
-const reviewFormSchema = z.object({
-  rating: z.number().min(1, 'Please select a rating').max(5),
-  title: z.string().min(5, 'Title must be at least 5 characters').max(100, 'Title must be less than 100 characters'),
-  comment: z.string().min(20, 'Review must be at least 20 characters').max(1000, 'Review must be less than 1000 characters'),
-});
-
-type ReviewFormData = z.infer<typeof reviewFormSchema>;
 
 interface ReviewFormProps {
   eventId: string;
@@ -26,32 +14,38 @@ interface ReviewFormProps {
   onCancel: () => void;
 }
 
-export const ReviewForm: React.FC<ReviewFormProps> = ({
-  eventId,
-  onReviewSubmitted,
-  onCancel
+export const ReviewForm: React.FC<ReviewFormProps> = ({ 
+  eventId, 
+  onReviewSubmitted, 
+  onCancel 
 }) => {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<ReviewFormData>({
-    resolver: zodResolver(reviewFormSchema),
-    defaultValues: {
-      rating: 0,
-      title: '',
-      comment: '',
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (rating === 0) {
+      toast.error('Please select a rating');
+      return;
+    }
+    
+    if (comment.trim().length < 10) {
+      toast.error('Review must be at least 10 characters long');
+      return;
+    }
 
-  const onSubmit = async (data: ReviewFormData) => {
     setIsSubmitting(true);
+    
     try {
-      await reviewService.createReview({
+      await ReviewService.createReview({
         event_id: eventId,
-        ...data
+        rating,
+        comment: comment.trim()
       });
       
       toast.success('Review submitted successfully!');
-      form.reset();
       onReviewSubmitted();
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -65,108 +59,60 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Write a Review</CardTitle>
-            <CardDescription>
-              Share your experience to help others make informed decisions
-            </CardDescription>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onCancel}
-          >
+          <CardTitle>Write a Review</CardTitle>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
             <X className="h-4 w-4" />
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Rating Field */}
-            <FormField
-              control={form.control}
-              name="rating"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Overall Rating *</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center gap-4">
-                      <StarRating
-                        rating={field.value}
-                        interactive
-                        size="lg"
-                        onChange={field.onChange}
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {field.value > 0 && `${field.value} star${field.value !== 1 ? 's' : ''}`}
-                      </span>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">
+              Rating *
+            </label>
+            <StarRating
+              rating={rating}
+              onRatingChange={setRating}
+              size="lg"
+              interactive
             />
-
-            {/* Title Field */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Review Title *</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Summarize your experience in a few words"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-2 block">
+              Your Review *
+            </label>
+            <Textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Share your experience with this event..."
+              rows={4}
+              maxLength={1000}
             />
-
-            {/* Comment Field */}
-            <FormField
-              control={form.control}
-              name="comment"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Review *</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Tell others about your experience. What did you like? What could be improved?"
-                      className="min-h-[120px] resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <FormMessage />
-                    <span>{field.value?.length || 0}/1000</span>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            {/* Submit Button */}
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Review'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </Form>
+            <p className="text-xs text-muted-foreground mt-1">
+              {comment.length}/1000 characters
+            </p>
+          </div>
+          
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="submit"
+              disabled={isSubmitting || rating === 0 || comment.trim().length < 10}
+              className="flex-1"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Review'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );

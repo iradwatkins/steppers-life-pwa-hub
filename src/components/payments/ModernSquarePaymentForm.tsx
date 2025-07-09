@@ -16,24 +16,34 @@ import { ModernSquarePaymentService, type SquarePaymentRequest, type SquareToken
 import { DeviceDetection } from '@/utils/deviceDetection';
 
 interface ModernSquarePaymentFormProps {
-  applicationId: string;
-  locationId: string;
-  environment: 'sandbox' | 'production';
-  paymentRequest: SquarePaymentRequest;
-  onPaymentSuccess: (result: any) => void;
-  onPaymentError: (error: string) => void;
+  amount: number;
+  currency: string;
+  orderId: string;
+  userId: string;
+  onSuccess: (result: any) => void;
+  onError: (error: string) => void;
   disabled?: boolean;
 }
 
 const ModernSquarePaymentForm: React.FC<ModernSquarePaymentFormProps> = ({
-  applicationId,
-  locationId,
-  environment,
-  paymentRequest,
-  onPaymentSuccess,
-  onPaymentError,
+  amount,
+  currency,
+  orderId,
+  userId,
+  onSuccess,
+  onError,
   disabled = false,
 }) => {
+  const applicationId = 'sandbox-sq0idb-123';
+  const locationId = 'sandbox-location';
+  const environment = 'sandbox' as const;
+  
+  const paymentRequest: SquarePaymentRequest = {
+    amount,
+    currency,
+    orderId,
+    userId,
+  };
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'apple_pay' | 'google_pay' | 'cash_app'>('card');
   
@@ -73,17 +83,17 @@ const ModernSquarePaymentForm: React.FC<ModernSquarePaymentFormProps> = ({
       }
 
       if (result.success) {
-        onPaymentSuccess({
+        onSuccess({
           ...result,
           buyer,
           paymentMethod: 'square',
         });
       } else {
-        onPaymentError(result.errorMessage || 'Payment processing failed');
+        onError(result.errorMessage || 'Payment processing failed');
       }
     } catch (error) {
       console.error('Payment processing error:', error);
-      onPaymentError(error instanceof Error ? error.message : 'Payment processing failed');
+      onError(error instanceof Error ? error.message : 'Payment processing failed');
     } finally {
       setIsProcessing(false);
     }

@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { StarRating } from './StarRating';
 import { ReviewForm } from './ReviewForm';
 import { ReviewList } from './ReviewList';
-import { reviewService, Review, ReviewStats } from '@/services/reviewService';
+import { ReviewService, Review, ReviewStats } from '@/services/reviewService';
 import { PenTool, Star } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -27,8 +26,8 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ eventId }) => {
     try {
       setIsLoading(true);
       const [reviewsData, statsData] = await Promise.all([
-        reviewService.getEventReviews(eventId),
-        reviewService.getEventReviewStats(eventId)
+        ReviewService.getEventReviews(eventId),
+        ReviewService.getEventReviewStats(eventId)
       ]);
       
       setReviews(reviewsData);
@@ -137,7 +136,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ eventId }) => {
               {/* Rating Breakdown */}
               <div className="space-y-3">
                 {[5, 4, 3, 2, 1].map((rating) => {
-                  const count = reviewStats.rating_breakdown[rating as keyof typeof reviewStats.rating_breakdown];
+                  const count = reviewStats.rating_breakdown[rating as keyof typeof reviewStats.rating_breakdown] || 0;
                   const percentage = reviewStats.total_reviews > 0 
                     ? (count / reviewStats.total_reviews) * 100 
                     : 0;
