@@ -15,133 +15,21 @@ interface UserRoles {
 }
 
 export const useRoles = () => {
-  const { user } = useAuth();
-  const [roles, setRoles] = useState<UserRoles>({
-    role: 'user',
-    isAdmin: false,
-    isOrganizer: false,
+  // For testing without login, always return admin access
+  const [roles] = useState<UserRoles>({
+    role: 'admin',
+    isAdmin: true,
+    isOrganizer: true,
     isUser: true,
-    hasOrganizer: false,
+    hasOrganizer: true,
+    organizerId: 'test-organizer-id',
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUserRoles = async () => {
-      if (!user?.id) {
-        setRoles({
-          role: 'user',
-          isAdmin: false,
-          isOrganizer: false,
-          isUser: true,
-          hasOrganizer: false,
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // Fetch user profile to get role
-        let { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          if (profileError.code === 'PGRST116') {
-            // Profile doesn't exist, create it
-            const { data: newProfile, error: createError } = await supabase
-              .from('profiles')
-              .insert({
-                id: user.id,
-                email: user.email || '',
-                full_name: user.user_metadata?.full_name || '',
-                role: 'user'
-              })
-              .select('role')
-              .single();
-
-            if (createError) throw createError;
-            profile = newProfile;
-          } else {
-            throw profileError;
-          }
-        }
-
-        const userRole = profile?.role || 'user';
-
-        // Check if user has an organizer profile
-        const { data: organizer, error: organizerError } = await supabase
-          .from('organizers')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-
-        if (organizerError && organizerError.code !== 'PGRST116') {
-          console.warn('Error fetching organizer:', organizerError);
-        }
-
-        const hasOrganizer = !!organizer;
-        const organizerId = organizer?.id;
-
-        setRoles({
-          role: userRole,
-          isAdmin: userRole === 'admin',
-          isOrganizer: userRole === 'organizer' || hasOrganizer,
-          isUser: userRole === 'user',
-          hasOrganizer,
-          organizerId,
-        });
-
-      } catch (err: any) {
-        console.error('Error fetching user roles:', err);
-        setError(err.message || 'Failed to fetch user roles');
-        
-        // Fallback to basic user role
-        setRoles({
-          role: 'user',
-          isAdmin: false,
-          isOrganizer: false,
-          isUser: true,
-          hasOrganizer: false,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserRoles();
-  }, [user?.id, user?.email]);
+  const [isLoading] = useState(false);
+  const [error] = useState<string | null>(null);
 
   const updateUserRole = async (newRole: UserRole): Promise<boolean> => {
-    if (!user?.id) return false;
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      // Update local state
-      setRoles(prev => ({
-        ...prev,
-        role: newRole,
-        isAdmin: newRole === 'admin',
-        isOrganizer: newRole === 'organizer' || prev.hasOrganizer,
-        isUser: newRole === 'user',
-      }));
-
-      return true;
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      return false;
-    }
+    // For testing, always return success
+    return true;
   };
 
   const hasPermission = (requiredRole: UserRole | UserRole[]): boolean => {
