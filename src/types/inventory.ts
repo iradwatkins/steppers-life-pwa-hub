@@ -44,10 +44,10 @@ export enum PurchaseChannel {
   ADMIN = 'admin'
 }
 
-export const DEFAULT_HOLD_TIMEOUTS = {
-  [PurchaseChannel.ONLINE]: 15, // 15 minutes
-  [PurchaseChannel.CASH]: 480,  // 8 hours
-  [PurchaseChannel.ADMIN]: 60   // 1 hour
+export const DEFAULT_HOLD_TIMEOUTS: Record<PurchaseChannel, number> = {
+  online: 15, // 15 minutes
+  cash: 480,  // 8 hours
+  admin: 60   // 1 hour
 };
 
 export enum HoldStatus {

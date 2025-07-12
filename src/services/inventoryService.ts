@@ -165,7 +165,7 @@ export class InventoryService {
         return { success: false, error: `Only ${currentAvailable} tickets available` };
       }
 
-      const timeoutMinutes = DEFAULT_HOLD_TIMEOUTS[channel];
+      const timeoutMinutes = DEFAULT_HOLD_TIMEOUTS[channel as keyof typeof DEFAULT_HOLD_TIMEOUTS];
       const expiresAt = new Date();
       if (channel === PurchaseChannel.CASH) {
         expiresAt.setHours(expiresAt.getHours() + timeoutMinutes / 60);
